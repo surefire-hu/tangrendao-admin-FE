@@ -228,6 +228,7 @@ export interface BroadcastPayload {
   body: string
   target_role?: string
   target_country?: string
+  image?: File
 }
 
 export interface BroadcastResult {

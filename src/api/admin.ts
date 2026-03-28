@@ -126,6 +126,15 @@ export const adminApi = {
   },
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
-  sendBroadcast: (data: BroadcastPayload) =>
-    apiClient.post<BroadcastResult>('/admin/broadcast/', data),
+  sendBroadcast: (data: BroadcastPayload) => {
+    const form = new FormData()
+    form.append('title', data.title)
+    form.append('body', data.body)
+    if (data.target_role) form.append('target_role', data.target_role)
+    if (data.target_country) form.append('target_country', data.target_country)
+    if (data.image) form.append('image', data.image)
+    return apiClient.post<BroadcastResult>('/admin/broadcast/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }
