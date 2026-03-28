@@ -1,0 +1,198 @@
+import { useState } from 'react'
+import { Layout, Menu, Avatar, Dropdown, Typography, Space, theme } from 'antd'
+import {
+  DashboardOutlined,
+  UserOutlined,
+  NotificationOutlined,
+  ShoppingOutlined,
+  HomeOutlined,
+  SolutionOutlined,
+  AppstoreOutlined,
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  ToolOutlined,
+  TeamOutlined,
+  SendOutlined,
+  AuditOutlined,
+} from '@ant-design/icons'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useAuthStore } from '../../store/authStore'
+
+const { Header, Sider, Content } = Layout
+const { Text } = Typography
+
+export function AdminLayout() {
+  const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user, logout } = useAuthStore()
+  const { token } = theme.useToken()
+
+  const menuItems = [
+    {
+      key: '/',
+      icon: <DashboardOutlined />,
+      label: '控制台',
+    },
+    {
+      key: '/users',
+      icon: <TeamOutlined />,
+      label: '用户管理',
+    },
+    {
+      key: 'publications',
+      icon: <AppstoreOutlined />,
+      label: '内容发布',
+      children: [
+        { key: '/publications/market', icon: <ShoppingOutlined />, label: '买卖市场' },
+        { key: '/publications/local-services', icon: <ToolOutlined />, label: '本地服务' },
+        { key: '/publications/jobs', icon: <SolutionOutlined />, label: '招聘求职' },
+        { key: '/publications/housing', icon: <HomeOutlined />, label: '房屋租售' },
+        { key: '/publications/listings', icon: <AppstoreOutlined />, label: '商家列表' },
+      ],
+    },
+    {
+      key: '/advertisements',
+      icon: <NotificationOutlined />,
+      label: '广告管理',
+    },
+    {
+      key: '/broadcast',
+      icon: <SendOutlined />,
+      label: '广播通知',
+    },
+    ...(user?.is_superuser
+      ? [{
+          key: '/admin-log',
+          icon: <AuditOutlined />,
+          label: '操作日志',
+        }]
+      : []),
+  ]
+
+  const handleMenuClick = ({ key }: { key: string }) => {
+    navigate(key)
+  }
+
+  const getSelectedKey = () => {
+    const path = location.pathname
+    if (path.startsWith('/publications/market')) return '/publications/market'
+    if (path.startsWith('/publications/local-services')) return '/publications/local-services'
+    if (path.startsWith('/publications/jobs')) return '/publications/jobs'
+    if (path.startsWith('/publications/housing')) return '/publications/housing'
+    if (path.startsWith('/publications/listings')) return '/publications/listings'
+    if (path.startsWith('/users')) return '/users'
+    if (path.startsWith('/advertisements')) return '/advertisements'
+    if (path.startsWith('/broadcast')) return '/broadcast'
+    if (path.startsWith('/admin-log')) return '/admin-log'
+    return '/'
+  }
+
+  const getOpenKeys = () => {
+    const path = location.pathname
+    if (path.startsWith('/publications')) return ['publications']
+    return []
+  }
+
+  const userMenu = {
+    items: [
+      {
+        key: 'logout',
+        icon: <LogoutOutlined />,
+        label: '退出登录',
+        onClick: async () => {
+          await logout()
+          navigate('/login')
+        },
+      },
+    ],
+  }
+
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        width={220}
+        style={{
+          background: token.colorBgContainer,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
+          position: 'fixed',
+          height: '100vh',
+          left: 0,
+          top: 0,
+          zIndex: 100,
+          overflow: 'auto',
+        }}
+      >
+        <div
+          style={{
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? 0 : '0 16px',
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            gap: 10,
+          }}
+        >
+          <UserOutlined style={{ fontSize: 22, color: token.colorPrimary }} />
+          {!collapsed && (
+            <Text strong style={{ fontSize: 15, color: token.colorPrimary }}>
+              唐人道 Admin
+            </Text>
+          )}
+        </div>
+        <Menu
+          mode="inline"
+          selectedKeys={[getSelectedKey()]}
+          defaultOpenKeys={getOpenKeys()}
+          items={menuItems}
+          onClick={handleMenuClick}
+          style={{ borderRight: 0, marginTop: 8 }}
+        />
+      </Sider>
+
+      <Layout style={{ marginLeft: collapsed ? 80 : 220, transition: 'margin-left 0.2s' }}>
+        <Header
+          style={{
+            padding: '0 24px',
+            background: token.colorBgContainer,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            top: 0,
+            zIndex: 99,
+          }}
+        >
+          <span
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: 18, cursor: 'pointer', color: token.colorText }}
+          >
+            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          </span>
+
+          <Dropdown menu={userMenu} trigger={['click']}>
+            <Space style={{ cursor: 'pointer' }}>
+              <Avatar
+                size="small"
+                icon={<UserOutlined />}
+                src={user?.avatar}
+                style={{ background: token.colorPrimary }}
+              />
+              <Text>{user?.email ?? user?.username ?? '管理员'}</Text>
+            </Space>
+          </Dropdown>
+        </Header>
+
+        <Content style={{ padding: 24, background: token.colorBgLayout }}>
+          <Outlet />
+        </Content>
+      </Layout>
+    </Layout>
+  )
+}
