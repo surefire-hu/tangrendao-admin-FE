@@ -1,15 +1,10 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { ConfigProvider, theme } from 'antd'
 import itIT from 'antd/locale/it_IT'
-import { useAuthStore } from './store/authStore'
 import { AppRouter } from './router/AppRouter'
 import 'antd/dist/reset.css'
 
 function Root() {
-  const init = useAuthStore((s) => s.init)
-  React.useEffect(() => { init() }, [init])
-
   return (
     <ConfigProvider
       locale={itIT}
@@ -28,7 +23,5 @@ function Root() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Root />
-  </React.StrictMode>,
+  <Root />
 )

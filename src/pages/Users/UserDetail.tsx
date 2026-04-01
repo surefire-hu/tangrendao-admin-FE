@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   Card, Row, Col, Avatar, Tag, Typography, Spin, Button,
   Descriptions, Statistic, Space, Tabs, Alert, Divider, theme,
+  Switch, Checkbox, message,
 } from 'antd'
 import {
   UserOutlined, ArrowLeftOutlined, CalendarOutlined,
@@ -9,7 +10,8 @@ import {
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
-import type { AdminUser, UserOperationStats } from '../../types'
+import type { AdminUser, UserOperationStats, ModeratorContentType } from '../../types'
+import { MODERATOR_CONTENT_LABELS } from '../../types'
 import { DailyChart } from '../../components/charts/DailyChart'
 import { MonthlyChart } from '../../components/charts/MonthlyChart'
 import dayjs from 'dayjs'
@@ -39,16 +41,48 @@ export function UserDetailPage() {
   const [loadingUser, setLoadingUser] = useState(true)
   const [loadingStats, setLoadingStats] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [savingRoles, setSavingRoles] = useState(false)
+  const [localRoles, setLocalRoles] = useState<ModeratorContentType[]>([])
+  const [localJournalist, setLocalJournalist] = useState(false)
+
+  const ALL_CONTENT_TYPES = Object.keys(MODERATOR_CONTENT_LABELS) as ModeratorContentType[]
 
   useEffect(() => {
     if (!id) return
     Promise.all([
-      adminApi.getUser(id).then((r) => setUser(r.data)),
+      adminApi.getUser(id).then((r) => {
+        setUser(r.data)
+        setLocalRoles((r.data.moderator_roles ?? []) as ModeratorContentType[])
+        setLocalJournalist(r.data.is_journalist ?? false)
+      }),
       adminApi.getUserStats(id).then((r) => setOpStats(r.data)),
     ])
       .catch(() => setError('无法加载用户数据。'))
       .finally(() => { setLoadingUser(false); setLoadingStats(false) })
   }, [id])
+
+  async function saveRoles() {
+    if (!id) return
+    setSavingRoles(true)
+    try {
+      const res = await adminApi.updateUser(id, {
+        is_journalist: localJournalist,
+        moderator_roles: localRoles,
+      })
+      setUser(res.data)
+      message.success('角色已保存')
+    } catch {
+      message.error('保存失败')
+    } finally {
+      setSavingRoles(false)
+    }
+  }
+
+  function toggleModRole(ct: ModeratorContentType) {
+    setLocalRoles(prev =>
+      prev.includes(ct) ? prev.filter(r => r !== ct) : [...prev, ct]
+    )
+  }
 
   if (loadingUser) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
   if (error) return <Alert type="error" message={error} showIcon />
@@ -104,6 +138,50 @@ export function UserDetailPage() {
               </Descriptions.Item>
               <Descriptions.Item label="员工权限">{user.is_staff ? '是' : '否'}</Descriptions.Item>
             </Descriptions>
+
+            {/* ── 特殊角色管理 ─────────────────────────────────────── */}
+            <Divider style={{ margin: '12px 0' }} />
+            <Text strong style={{ fontSize: 12, color: token.colorTextSecondary }}>特殊角色</Text>
+
+            {/* 记者 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+              <Space>
+                <span style={{ fontSize: 13 }}>📰 记者</span>
+                <Text type="secondary" style={{ fontSize: 11 }}>可发布新闻</Text>
+              </Space>
+              <Switch
+                size="small"
+                checked={localJournalist}
+                onChange={setLocalJournalist}
+              />
+            </div>
+
+            {/* 板主版块 */}
+            <div style={{ marginTop: 14 }}>
+              <Text style={{ fontSize: 13 }}>🛡️ 板主版块</Text>
+              <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {ALL_CONTENT_TYPES.map(ct => (
+                  <Checkbox
+                    key={ct}
+                    checked={localRoles.includes(ct)}
+                    onChange={() => toggleModRole(ct)}
+                    style={{ fontSize: 12, marginInlineStart: 0 }}
+                  >
+                    {MODERATOR_CONTENT_LABELS[ct]}
+                  </Checkbox>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              type="primary"
+              size="small"
+              loading={savingRoles}
+              onClick={saveRoles}
+              style={{ marginTop: 14, width: '100%' }}
+            >
+              保存角色
+            </Button>
           </Card>
         </Col>
 

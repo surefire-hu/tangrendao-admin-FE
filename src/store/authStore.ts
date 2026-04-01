@@ -9,21 +9,29 @@ interface AuthState {
 
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  init: () => void
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  tokens: null,
-  isLoading: false,
-
-  init: () => {
-    const rawUser = localStorage.getItem('auth_user')
+// Hydrate synchronously from localStorage so ProtectedRoute
+// sees the correct user on the very first render (before any useEffect).
+function loadFromStorage(): { user: AuthUser | null; tokens: AuthTokens | null } {
+  try {
+    const rawUser   = localStorage.getItem('auth_user')
     const rawTokens = localStorage.getItem('auth_tokens')
     if (rawUser && rawTokens) {
-      set({ user: JSON.parse(rawUser), tokens: JSON.parse(rawTokens) })
+      return { user: JSON.parse(rawUser), tokens: JSON.parse(rawTokens) }
     }
-  },
+  } catch {
+    // corrupted storage — ignore
+  }
+  return { user: null, tokens: null }
+}
+
+const persisted = loadFromStorage()
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user:      persisted.user,
+  tokens:    persisted.tokens,
+  isLoading: false,
 
   login: async (email, password) => {
     set({ isLoading: true })

@@ -37,7 +37,7 @@ export const adminApi = {
   getUserStats: (id: string) =>
     apiClient.get<UserOperationStats>(`/admin/users/${id}/stats/`),
 
-  updateUser: (id: string, data: Partial<AdminUser>) =>
+  updateUser: (id: string, data: Partial<AdminUser> & { moderator_roles?: string[] }) =>
     apiClient.patch<AdminUser>(`/admin/users/${id}/`, data),
 
   // ── Advertisements ────────────────────────────────────────────────────────
