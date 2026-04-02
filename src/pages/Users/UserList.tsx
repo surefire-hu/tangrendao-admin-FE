@@ -54,6 +54,7 @@ export function UserListPage() {
         search: search || undefined,
         role: role || undefined,
         ordering: '-created_at',
+        is_registered: true,
       })
       setUsers(res.data.results)
       setTotal(res.data.count)
