@@ -29,6 +29,7 @@ export const adminApi = {
     role?: string
     search?: string
     is_active?: boolean
+    is_registered?: boolean
     ordering?: string
   }) => apiClient.get<PaginatedResponse<AdminUser>>('/admin/users/', { params }),
 
