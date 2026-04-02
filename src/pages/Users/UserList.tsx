@@ -56,7 +56,7 @@ export function UserListPage() {
         ordering: '-created_at',
         is_registered: true,
       })
-      setUsers(res.data.results)
+      setUsers(res.data.results.filter(u => u.is_registered))
       setTotal(res.data.count)
     } catch {
       // handled by global interceptor
