@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import {
   Table, Button, Space, Tag, Switch, Popconfirm, Typography,
-  message, Image, Tooltip,
+  message, Image, Tooltip, theme,
 } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
 import type { AdCard } from '../../types'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 
 export function AdCardListPage() {
+  const { token } = theme.useToken()
   const navigate = useNavigate()
   const [items, setItems]     = useState<AdCard[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,11 +91,25 @@ export function AdCardListPage() {
       sorter: (a: AdCard, b: AdCard) => b.priority - a.priority,
     },
     {
-      title: '曝光 / 点击',
-      render: (_: unknown, r: AdCard) => (
-        <span style={{ fontSize: 12 }}>{r.impressions} / {r.clicks}</span>
-      ),
-      width: 100,
+      title: '曝光量',
+      dataIndex: 'impressions',
+      width: 90,
+      render: (v: number) => v.toLocaleString(),
+    },
+    {
+      title: '点击量',
+      dataIndex: 'clicks',
+      width: 80,
+      render: (v: number) => v.toLocaleString(),
+    },
+    {
+      title: '点击率',
+      key: 'ctr',
+      width: 80,
+      render: (_: unknown, r: AdCard) => {
+        const ctr = r.impressions > 0 ? (r.clicks / r.impressions * 100).toFixed(1) : '0.0'
+        return <Text style={{ color: parseFloat(ctr) > 2 ? token.colorSuccess : undefined }}>{ctr}%</Text>
+      },
     },
     {
       title: '启用',

@@ -91,6 +91,9 @@ export interface AdminUser {
   created_at: string
   last_login: string | null
   avatar: string | null
+  // Virtual currency
+  candy?: number
+  coin?: number
   // Aggregated stats
   events_count?: number
   events_today?: number
@@ -225,6 +228,7 @@ export interface ClassifiedItem {
   author?: { id: string; email: string; username: string }
   views_count: number
   phone_clicks_count: number
+  impression_count?: number
 }
 
 export interface JobPost {
@@ -237,6 +241,7 @@ export interface JobPost {
   created_at: string
   author?: { id: string; email: string; username: string }
   views_count: number
+  impression_count?: number
 }
 
 export interface JobSeek {
@@ -247,6 +252,7 @@ export interface JobSeek {
   city: string
   created_at: string
   author?: { id: string; email: string; username: string }
+  impression_count?: number
 }
 
 export interface Listing {
@@ -257,6 +263,7 @@ export interface Listing {
   city: string
   created_at: string
   views_count: number
+  impression_count?: number
 }
 
 export interface PublicationStats {
@@ -268,6 +275,7 @@ export interface PublicationStats {
   total_views: number
   total_phone_clicks: number
   total_saves: number
+  total_impressions: number
   status: string
   created_at: string
 }
@@ -293,6 +301,80 @@ export interface AdminActivityLog {
 export interface AdminActivityLogList {
   count: number
   results: AdminActivityLog[]
+}
+
+// ── Currency ──────────────────────────────────────────────────────────────────
+
+export interface CurrencyHolder {
+  id: string
+  email: string
+  username: string | null
+  candy: number
+  coin: number
+  is_candy_anomaly?: boolean
+  is_coin_anomaly?: boolean
+}
+
+export interface CurrencyTopupRecord {
+  id: string
+  source: 'admin' | 'stripe'
+  admin_email: string
+  target_email: string
+  target_username: string
+  candy_amount: number
+  coin_amount: number
+  note: string
+  created_at: string
+}
+
+export interface CandyAnomalyLog {
+  id: string
+  status: 'cleared' | 'deducted'
+  discrepancy: number
+  note: string
+  created_at: string
+  admin_email: string
+  target_email: string
+  target_username: string
+}
+
+export interface CandyAnomaly {
+  user_id: string
+  email: string
+  username: string
+  actual: number
+  expected: number
+  discrepancy: number
+  anomaly_type: 'wallet' | 'spending'
+  stripe_in: number
+  admin_net: number
+  promo_net: number
+  spending_excess: number
+  last_review: {
+    status: 'cleared' | 'deducted'
+    note: string
+    created_at: string
+  } | null
+}
+
+export interface CurrencyStats {
+  // Wallet totals
+  total_candy: number
+  total_coin: number
+  total_users: number
+  // Candy reconciliation
+  stripe_candy_in: number
+  admin_candy_net: number
+  admin_coin_net: number
+  promotions_gross: number
+  promotions_refunded: number
+  promotions_net: number
+  expected_candy: number
+  candy_discrepancy: number
+  // Top holders & history
+  top_candy_holders: CurrencyHolder[]
+  top_coin_holders: CurrencyHolder[]
+  recent_topups: CurrencyTopupRecord[]
 }
 
 // ── Broadcast ─────────────────────────────────────────────────────────────────

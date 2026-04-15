@@ -160,6 +160,15 @@ export function PublicationListPage({ type }: Props) {
       render: (c: string) => <Text type="secondary">{c || '—'}</Text>,
     },
     {
+      title: '曝光量',
+      key: 'impression_count',
+      width: 90,
+      render: (_: unknown, item: AnyItem) => {
+        const v = (item as { impression_count?: number }).impression_count ?? 0
+        return <Text style={{ fontSize: 12 }}>{v.toLocaleString()}</Text>
+      },
+    },
+    {
       title: '发布时间',
       dataIndex: 'created_at',
       width: 120,

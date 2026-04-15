@@ -5,7 +5,7 @@ import {
 } from 'antd'
 import {
   ArrowLeftOutlined, EyeOutlined, PhoneOutlined,
-  HeartOutlined, CalendarOutlined,
+  HeartOutlined, CalendarOutlined, FundOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
@@ -91,36 +91,48 @@ export function PublicationDetailPage() {
       {/* KPI */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         {[
+          { label: '卡片曝光量', value: stats.total_impressions, icon: <FundOutlined />, color: token.colorSuccess },
           { label: '总浏览量', value: stats.total_views, icon: <EyeOutlined />, color: token.colorPrimary },
           { label: '电话点击', value: stats.total_phone_clicks, icon: <PhoneOutlined />, color: token.colorWarning },
           { label: '收藏数', value: stats.total_saves, icon: <HeartOutlined />, color: token.colorError },
-          {
-            label: '发布时间',
-            value: dayjs(stats.created_at).format('YY-MM-DD'),
-            icon: <CalendarOutlined />,
-            isText: true,
-          },
         ].map((s) => (
           <Col key={s.label} xs={12} sm={6}>
             <Card size="small" styles={{ body: { padding: '14px 18px' } }}>
-              {s.isText ? (
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 11 }}>{s.label}</Text>}>
-                    <Text strong>{s.value}</Text>
-                  </Descriptions.Item>
-                </Descriptions>
-              ) : (
-                <Statistic
-                  title={<Text type="secondary" style={{ fontSize: 11 }}>{s.label}</Text>}
-                  value={s.value as number}
-                  prefix={s.icon}
-                  valueStyle={{ fontSize: 22, color: s.color }}
-                />
-              )}
+              <Statistic
+                title={<Text type="secondary" style={{ fontSize: 11 }}>{s.label}</Text>}
+                value={s.value}
+                prefix={s.icon}
+                valueStyle={{ fontSize: 22, color: s.color }}
+              />
             </Card>
           </Col>
         ))}
       </Row>
+
+      {/* CTR card: impressioni → visualizzazioni */}
+      {stats.total_impressions > 0 && (
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          <Col xs={24} sm={12}>
+            <Card size="small" styles={{ body: { padding: '14px 18px' } }}>
+              <Statistic
+                title={<Text type="secondary" style={{ fontSize: 11 }}>点击率 (浏览/曝光)</Text>}
+                value={((stats.total_views / stats.total_impressions) * 100).toFixed(1)}
+                suffix="%"
+                valueStyle={{ fontSize: 22, color: stats.total_views / stats.total_impressions > 0.05 ? token.colorSuccess : token.colorTextSecondary }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card size="small" styles={{ body: { padding: '14px 18px' } }}>
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 11 }}>发布时间</Text>}>
+                  <Text strong>{dayjs(stats.created_at).format('YY-MM-DD')}</Text>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* 图表 */}
       <Card styles={{ body: { padding: 16 } }}>

@@ -13,6 +13,8 @@ import { PublicationListPage } from '../pages/Publications/PublicationList'
 import { PublicationDetailPage } from '../pages/Publications/PublicationDetail'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
 import { BroadcastPage } from '../pages/Broadcast/BroadcastPage'
+import { CurrencyPage } from '../pages/Currency/CurrencyPage'
+import { MonitoringPage } from '../pages/Monitoring/MonitoringPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -58,6 +60,8 @@ export function AppRouter() {
           <Route path="publications/listings" element={<PublicationListPage type="listing" />} />
           <Route path="publications/:type/:id" element={<PublicationDetailPage />} />
           <Route path="broadcast" element={<BroadcastPage />} />
+          <Route path="currency" element={<CurrencyPage />} />
+          <Route path="monitoring" element={<MonitoringPage />} />
           <Route
             path="admin-log"
             element={

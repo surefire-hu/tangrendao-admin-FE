@@ -384,9 +384,6 @@ export function AdCardFormPage() {
                 imageUrl={previewImage}
               />
             </div>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              卡片宽度 160px，比例 3:4，在 App 中横向滚动显示。
-            </Text>
           </Card>
         </Col>
       </Row>

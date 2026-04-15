@@ -16,6 +16,8 @@ import {
   SendOutlined,
   AuditOutlined,
   IdcardOutlined,
+  GiftOutlined,
+  MonitorOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -64,6 +66,16 @@ export function AdminLayout() {
       label: '广告卡片',
     },
     {
+      key: '/currency',
+      icon: <GiftOutlined />,
+      label: '糖果/金币',
+    },
+    {
+      key: '/monitoring',
+      icon: <MonitorOutlined />,
+      label: '监控分析',
+    },
+    {
       key: '/broadcast',
       icon: <SendOutlined />,
       label: '广播通知',
@@ -91,6 +103,8 @@ export function AdminLayout() {
     if (path.startsWith('/users')) return '/users'
     if (path.startsWith('/advertisements')) return '/advertisements'
     if (path.startsWith('/adcards')) return '/adcards'
+    if (path.startsWith('/currency')) return '/currency'
+    if (path.startsWith('/monitoring')) return '/monitoring'
     if (path.startsWith('/broadcast')) return '/broadcast'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'

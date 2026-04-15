@@ -18,6 +18,7 @@ import type {
   AdminActivityLogList,
   BroadcastPayload,
   BroadcastResult,
+  CurrencyStats,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -178,6 +179,15 @@ export const adminApi = {
     if (params?.date_to) qs.set('date_to', params.date_to)
     return `${base}/admin/activity-log/export/${qs.toString() ? '?' + qs.toString() : ''}`
   },
+
+  // ── Currency ──────────────────────────────────────────────────────────────────
+  topupCurrency: (userId: string, data: { candy_amount: number; coin_amount: number; note?: string }) =>
+    apiClient.post<{ ok: boolean; new_candy: number; new_coin: number }>(
+      `/admin/users/${userId}/topup/`, data
+    ),
+
+  getCurrencyStats: () =>
+    apiClient.get<CurrencyStats>('/admin/currency/stats/'),
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
   sendBroadcast: (data: BroadcastPayload) => {
