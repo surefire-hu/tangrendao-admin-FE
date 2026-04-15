@@ -6,6 +6,9 @@ import type {
   PaginatedResponse,
   BannerAd,
   BannerAdCreate,
+  AdProduct,
+  AdCard,
+  AdCardCreate,
   ClassifiedItem,
   JobPost,
   JobSeek,
@@ -68,6 +71,56 @@ export const adminApi = {
   },
 
   deleteAd: (id: string) => apiClient.delete(`/ads/banners/admin/${id}/`),
+
+  searchProducts: (params: { type: string; q?: string; country?: string; page?: number; page_size?: number }) =>
+    apiClient.get<{ count: number; has_next: boolean; page: number; results: AdProduct[] }>('/ads/products/', { params }),
+
+  // ── AdCards (Advertisement) ───────────────────────────────────────────────
+  getAdCards: (params?: { page?: number; country?: string; is_active?: boolean }) =>
+    apiClient.get<{ count: number; next: boolean; results: AdCard[] }>('/adcards/admin/', { params }),
+
+  getAdCard: (id: string) =>
+    apiClient.get<AdCard>(`/adcards/admin/${id}/`),
+
+  createAdCard: (data: AdCardCreate) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (k === 'tags') fd.append(k, JSON.stringify(v))
+      else if (v instanceof File) fd.append(k, v)
+      else fd.append(k, String(v))
+    })
+    return apiClient.post<AdCard>('/adcards/admin/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  updateAdCard: (id: string, data: Partial<AdCardCreate>) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (k === 'tags') fd.append(k, JSON.stringify(v))
+      else if (v instanceof File) fd.append(k, v)
+      else fd.append(k, String(v))
+    })
+    return apiClient.patch<AdCard>(`/adcards/admin/${id}/`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteAdCard: (id: string) =>
+    apiClient.delete(`/adcards/admin/${id}/`),
+
+  uploadAdCardThumbnail: (file: File) => {
+    const fd = new FormData()
+    fd.append('thumbnail', file)
+    return apiClient.post<{ url: string }>('/adcards/upload-thumbnail/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  searchAdCardProducts: (params: { type: string; q?: string; country?: string; page?: number; page_size?: number }) =>
+    apiClient.get<{ count: number; has_next: boolean; page: number; results: AdProduct[] }>('/adcards/products/', { params }),
 
   // ── Publications – Classifieds ────────────────────────────────────────────
   getClassifieds: (params?: {

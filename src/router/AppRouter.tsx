@@ -7,6 +7,8 @@ import { UserListPage } from '../pages/Users/UserList'
 import { UserDetailPage } from '../pages/Users/UserDetail'
 import { AdListPage } from '../pages/Advertisements/AdList'
 import { AdFormPage } from '../pages/Advertisements/AdForm'
+import { AdCardListPage } from '../pages/AdCards/AdCardList'
+import { AdCardFormPage } from '../pages/AdCards/AdCardForm'
 import { PublicationListPage } from '../pages/Publications/PublicationList'
 import { PublicationDetailPage } from '../pages/Publications/PublicationDetail'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
@@ -46,6 +48,9 @@ export function AppRouter() {
           <Route path="advertisements" element={<AdListPage />} />
           <Route path="advertisements/create" element={<AdFormPage />} />
           <Route path="advertisements/:id/edit" element={<AdFormPage />} />
+          <Route path="adcards" element={<AdCardListPage />} />
+          <Route path="adcards/create" element={<AdCardFormPage />} />
+          <Route path="adcards/:id/edit" element={<AdCardFormPage />} />
           <Route path="publications/market" element={<PublicationListPage type="market" />} />
           <Route path="publications/local-services" element={<PublicationListPage type="local_service" />} />
           <Route path="publications/jobs" element={<PublicationListPage type="job_post" />} />

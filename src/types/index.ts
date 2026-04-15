@@ -117,8 +117,13 @@ export interface BannerAd {
   id: string
   image: string | null
   image_url: string | null
+  title: string
+  subtitle: string
+  tags: string[]
+  city: string
   link_url: string
   linked_content_type: string
+  linked_content_subtype: string
   linked_content_id: string
   country: AdCountry
   position: AdPosition
@@ -135,8 +140,13 @@ export interface BannerAd {
 
 export interface BannerAdCreate {
   image?: File
+  title?: string
+  subtitle?: string
+  tags?: string[]
+  city?: string
   link_url?: string
   linked_content_type?: string
+  linked_content_subtype?: string
   linked_content_id?: string
   country: AdCountry
   position: AdPosition
@@ -145,6 +155,56 @@ export interface BannerAdCreate {
   display_probability: number
   start_date?: string
   end_date?: string
+}
+
+export interface AdProduct {
+  id: string
+  title: string
+  cover_image: string
+  city: string
+}
+
+export interface AdCard {
+  id: string
+  title: string
+  subtitle: string
+  description: string
+  tags: string[]
+  city: string
+  thumbnail_url: string | null
+  cover_url: string | null
+  cta_text: string
+  cta_url: string
+  ad_type: string
+  linked_content_type: string
+  linked_content_subtype: string
+  linked_content_id: string
+  country: AdCountry
+  is_active: boolean
+  priority: number
+  impressions: number
+  clicks: number
+  start_date: string | null
+  end_date: string | null
+  created_at: string
+}
+
+export interface AdCardCreate {
+  thumbnail?: File
+  thumbnail_url?: string
+  title?: string
+  subtitle?: string
+  description?: string
+  tags?: string[]
+  city?: string
+  cta_text?: string
+  cta_url?: string
+  linked_content_type?: string
+  linked_content_subtype?: string
+  linked_content_id?: string
+  country?: AdCountry
+  is_active?: boolean
+  priority?: number
 }
 
 // ── Publications ──────────────────────────────────────────────────────────────

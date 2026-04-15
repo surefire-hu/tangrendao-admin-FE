@@ -15,6 +15,7 @@ import {
   TeamOutlined,
   SendOutlined,
   AuditOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -55,7 +56,12 @@ export function AdminLayout() {
     {
       key: '/advertisements',
       icon: <NotificationOutlined />,
-      label: '广告管理',
+      label: '横幅广告',
+    },
+    {
+      key: '/adcards',
+      icon: <IdcardOutlined />,
+      label: '广告卡片',
     },
     {
       key: '/broadcast',
@@ -84,6 +90,7 @@ export function AdminLayout() {
     if (path.startsWith('/publications/listings')) return '/publications/listings'
     if (path.startsWith('/users')) return '/users'
     if (path.startsWith('/advertisements')) return '/advertisements'
+    if (path.startsWith('/adcards')) return '/adcards'
     if (path.startsWith('/broadcast')) return '/broadcast'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'

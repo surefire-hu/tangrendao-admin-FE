@@ -7,7 +7,8 @@ import { UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { adminApi } from '../../api/admin'
-import type { BannerAdCreate, AdPosition, AdCountry } from '../../types'
+import type { BannerAdCreate, AdPosition, AdCountry, AdProduct } from '../../types'
+import { ProductSelect } from '../../components/ProductSelect'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
@@ -63,6 +64,15 @@ interface FormValues {
   end_date?: dayjs.Dayjs
 }
 
+const productTypes = [
+  { value: 'listing',       label: '商家 / Listing' },
+  { value: 'housing',       label: '房源' },
+  { value: 'market',        label: '买卖市场' },
+  { value: 'local_service', label: '本地服务' },
+  { value: 'job_post',      label: '招聘' },
+  { value: 'job_seek',      label: '求职' },
+]
+
 export function AdFormPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
@@ -72,6 +82,11 @@ export function AdFormPage() {
   const [error, setError] = useState<string | null>(null)
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const isEdit = !!id
+
+  // product selector
+  const [productType, setProductType]         = useState('listing')
+  const [selectedProduct, setSelectedProduct] = useState<AdProduct | null>(null)
+  const [country, setCountry]                 = useState<AdCountry>('IT')
 
   useEffect(() => {
     if (!id) return
@@ -168,7 +183,7 @@ export function AdFormPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="country" label="国家" rules={[{ required: true }]}>
-                <Select options={countries} />
+                <Select options={countries} onChange={v => setCountry(v)} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -181,6 +196,42 @@ export function AdFormPage() {
           <Form.Item name="link_url" label="外部链接（URL）">
             <Input placeholder="https://..." />
           </Form.Item>
+
+          {/* Product selector */}
+          <Card size="small" title="关联产品（快速填充内容类型和 ID）" style={{ marginBottom: 16 }}>
+            <Row gutter={8} style={{ marginBottom: 8 }}>
+              <Col span={10}>
+                <Select
+                  style={{ width: '100%' }}
+                  options={productTypes}
+                  value={productType}
+                  onChange={v => { setProductType(v); setSelectedProduct(null) }}
+                />
+              </Col>
+              <Col span={14}>
+                <ProductSelect
+                  productType={productType}
+                  country={country}
+                  onSelect={(p) => {
+                    setSelectedProduct(p)
+                    form.setFieldsValue({
+                      linked_content_type: productType,
+                      linked_content_id: p.id,
+                    })
+                  }}
+                  searchFn={adminApi.searchProducts}
+                  selectedId={selectedProduct?.id}
+                />
+              </Col>
+            </Row>
+            {selectedProduct && (
+              <Alert
+                type="success"
+                message={`已选: ${selectedProduct.title}${selectedProduct.city ? ' · ' + selectedProduct.city : ''}`}
+                style={{ marginBottom: 0 }}
+              />
+            )}
+          </Card>
 
           <Row gutter={16}>
             <Col span={12}>
