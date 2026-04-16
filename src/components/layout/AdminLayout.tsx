@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Layout, Menu, Avatar, Dropdown, Typography, Space, theme } from 'antd'
+import { useState, useEffect } from 'react'
+import { Layout, Menu, Avatar, Dropdown, Typography, Space, theme, Badge } from 'antd'
 import {
   DashboardOutlined,
   UserOutlined,
@@ -18,9 +18,11 @@ import {
   IdcardOutlined,
   GiftOutlined,
   MonitorOutlined,
+  MessageOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { apiClient } from '../../api/client'
 
 const { Header, Sider, Content } = Layout
 const { Text } = Typography
@@ -31,6 +33,17 @@ export function AdminLayout() {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { token } = theme.useToken()
+  const [feedbackUnread, setFeedbackUnread] = useState(0)
+
+  useEffect(() => {
+    const fetchUnread = () =>
+      apiClient.get<{ count: number }>('/admin/feedback/unread-count/')
+        .then(r => setFeedbackUnread(r.data.count))
+        .catch(() => {})
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 60_000)
+    return () => clearInterval(interval)
+  }, [])
 
   const menuItems = [
     {
@@ -80,6 +93,15 @@ export function AdminLayout() {
       icon: <SendOutlined />,
       label: '广播通知',
     },
+    {
+      key: '/feedback',
+      icon: <MessageOutlined />,
+      label: (
+        <Badge count={feedbackUnread} size="small" offset={[6, 0]}>
+          问题反馈
+        </Badge>
+      ),
+    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -106,6 +128,7 @@ export function AdminLayout() {
     if (path.startsWith('/currency')) return '/currency'
     if (path.startsWith('/monitoring')) return '/monitoring'
     if (path.startsWith('/broadcast')) return '/broadcast'
+    if (path.startsWith('/feedback')) return '/feedback'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
