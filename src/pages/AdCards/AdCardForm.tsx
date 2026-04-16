@@ -211,8 +211,9 @@ export function AdCardFormPage() {
       const payload: AdCardCreate = {
         ...(values as AdCardCreate),
         tags: previewTags,
-        // Pass the absolute URL (stored at upload time), not the raw File
-        thumbnail_url: uploadedThumbnailUrl || undefined,
+        // Pass the absolute URL (stored at upload time), not the raw File.
+        // Fall back to the selected product's cover if no image was manually uploaded.
+        thumbnail_url: uploadedThumbnailUrl || productCover || undefined,
       }
       if (isEdit && id) {
         await adminApi.updateAdCard(id, payload)
