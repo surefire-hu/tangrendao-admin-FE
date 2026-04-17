@@ -127,7 +127,34 @@ export function PublicationListPage({ type }: Props) {
     return '—'
   }
 
+  const getCover = (item: AnyItem): string | null => {
+    if ('cover_image' in item && item.cover_image) return item.cover_image as string
+    if ('cover_url' in item && (item as any).cover_url) return (item as any).cover_url
+    if ('thumbnail_url' in item && (item as any).thumbnail_url) return (item as any).thumbnail_url
+    if ('images' in item && Array.isArray((item as any).images) && (item as any).images.length > 0) return (item as any).images[0]
+    return null
+  }
+
   const columns: ColumnsType<AnyItem> = [
+    {
+      title: '封面',
+      key: 'cover',
+      width: 64,
+      render: (_, item) => {
+        const src = getCover(item)
+        return src ? (
+          <img
+            src={src}
+            alt=""
+            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, display: 'block' }}
+          />
+        ) : (
+          <div style={{ width: 48, height: 48, borderRadius: 6, background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Text type="secondary" style={{ fontSize: 10 }}>无图</Text>
+          </div>
+        )
+      },
+    },
     {
       title: '标题',
       key: 'title',

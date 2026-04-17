@@ -74,8 +74,15 @@ export function PublicationDetailPage() {
 
       {/* 头部信息 */}
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-          <div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+          {stats.cover_image && (
+            <img
+              src={stats.cover_image}
+              alt=""
+              style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+            />
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <Space>
               <Tag color="blue">{typeLabels[stats.type] ?? stats.type}</Tag>
               <Tag color={statusColors[stats.status]}>{stats.status}</Tag>

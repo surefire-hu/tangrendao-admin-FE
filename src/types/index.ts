@@ -223,6 +223,8 @@ export interface ClassifiedItem {
   price: string | null
   country: string
   city: string
+  cover_image?: string | null
+  images?: string[]
   created_at: string
   updated_at: string
   author?: { id: string; email: string; username: string }
@@ -238,6 +240,7 @@ export interface JobPost {
   status: 'pending' | 'approved' | 'rejected'
   country: string
   city: string
+  cover_image?: string | null
   created_at: string
   author?: { id: string; email: string; username: string }
   views_count: number
@@ -261,6 +264,8 @@ export interface Listing {
   status: 'pending' | 'approved' | 'rejected'
   country: string
   city: string
+  cover_url?: string | null
+  thumbnail_url?: string | null
   created_at: string
   views_count: number
   impression_count?: number
@@ -270,6 +275,7 @@ export interface PublicationStats {
   id: string
   type: PublicationType
   title: string
+  cover_image?: string | null
   daily: DailyDataPoint[]
   monthly: MonthlyDataPoint[]
   total_views: number

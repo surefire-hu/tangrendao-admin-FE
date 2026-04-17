@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Tabs, Card, Row, Col, Statistic, Table, Tag, Typography,
   Form, InputNumber, Input, Button, Select, Space, Alert,
@@ -28,27 +28,27 @@ const { Title, Text } = Typography
 function TopupTab() {
   const { token } = theme.useToken()
   const [form] = Form.useForm()
-  const [search, setSearch]         = useState('')
   const [searching, setSearching]   = useState(false)
   const [users, setUsers]           = useState<AdminUser[]>([])
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult]         = useState<{ new_candy: number; new_coin: number } | null>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleSearch = async () => {
-    if (!search.trim()) return
-    setSearching(true)
-    setSelectedUser(null)
-    setResult(null)
-    try {
-      const res = await adminApi.getUsers({ search: search.trim(), page_size: 10 })
-      setUsers(res.data.results)
-      if (!res.data.results.length) message.info('未找到用户')
-    } catch {
-      message.error('搜索失败')
-    } finally {
-      setSearching(false)
-    }
+  const handleSearch = async (value: string) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    if (!value.trim()) { setUsers([]); return }
+    searchTimer.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await adminApi.getUsers({ search: value.trim(), page_size: 10 })
+        setUsers(res.data.results)
+      } catch {
+        message.error('搜索失败')
+      } finally {
+        setSearching(false)
+      }
+    }, 300)
   }
 
   const handleSubmit = async (values: { candy_amount: number; coin_amount: number; note?: string }) => {
@@ -77,23 +77,13 @@ function TopupTab() {
       {/* Left: user search */}
       <Col xs={24} md={10}>
         <Card title="搜索用户" size="small">
-          <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
-            <Input
-              placeholder="邮箱 / 用户名"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onPressEnter={handleSearch}
-              prefix={<SearchOutlined />}
-            />
-            <Button type="primary" loading={searching} onClick={handleSearch}>
-              搜索
-            </Button>
-          </Space.Compact>
-
           <Select
+            showSearch
+            filterOption={false}
             style={{ width: '100%' }}
-            placeholder="选择用户..."
+            placeholder="输入邮箱或用户名搜索..."
             value={selectedUser?.id}
+            onSearch={handleSearch}
             onChange={(id) => {
               const u = users.find((u) => u.id === id) ?? null
               setSelectedUser(u)
@@ -111,7 +101,10 @@ function TopupTab() {
                 </Space>
               ),
             }))}
-            notFoundContent={searching ? <Spin size="small" /> : null}
+            notFoundContent={searching ? <Spin size="small" /> : <Text type="secondary">输入关键字搜索用户</Text>}
+            suffixIcon={<SearchOutlined />}
+            allowClear
+            onClear={() => { setSelectedUser(null); setUsers([]); setResult(null) }}
           />
 
           {selectedUser && (
