@@ -113,6 +113,7 @@ export type AdPosition =
   | 'any' | 'services' | 'job_detail' | 'restaurant_detail'
   | 'exchange' | 'permesso' | 'forum' | 'forum_detail'
   | 'passport' | 'local_service_detail' | 'housing_detail' | 'market_detail'
+  | 'huangli' | 'fiscal_code' | 'vehicle_check' | 'weather'
 
 export type AdCountry = 'ALL' | 'IT' | 'DE' | 'FR' | 'ES' | 'GB' | 'PT' | 'NL' | 'BE' | 'CH' | 'AT'
 
@@ -183,6 +184,7 @@ export interface AdCard {
   linked_content_subtype: string
   linked_content_id: string
   country: AdCountry
+  position: AdCardPosition
   is_active: boolean
   priority: number
   impressions: number
@@ -206,6 +208,7 @@ export interface AdCardCreate {
   linked_content_subtype?: string
   linked_content_id?: string
   country?: AdCountry
+  position?: AdCardPosition
   is_active?: boolean
   priority?: number
 }
