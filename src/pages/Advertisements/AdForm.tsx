@@ -240,12 +240,12 @@ export function AdFormPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="linked_content_type" label="关联内容类型">
-                <Select options={linkedTypes} />
+                <Select options={linkedTypes} disabled />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="linked_content_id" label="关联内容 ID">
-                <Input placeholder="内容的 UUID" />
+                <Input placeholder="内容的 UUID" disabled />
               </Form.Item>
             </Col>
           </Row>

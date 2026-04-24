@@ -168,6 +168,8 @@ export interface AdProduct {
   city: string
 }
 
+export type AdCardAspectRatio = '3:4' | '4:3'
+
 export interface AdCard {
   id: string
   title: string
@@ -177,6 +179,7 @@ export interface AdCard {
   city: string
   thumbnail_url: string | null
   cover_url: string | null
+  aspect_ratio: AdCardAspectRatio
   cta_text: string
   cta_url: string
   ad_type: string
@@ -209,6 +212,7 @@ export interface AdCardCreate {
   linked_content_id?: string
   country?: AdCountry
   position?: AdCardPosition
+  aspect_ratio?: AdCardAspectRatio
   is_active?: boolean
   priority?: number
 }
@@ -274,6 +278,78 @@ export interface Listing {
   impression_count?: number
 }
 
+export interface PublicationAuthor {
+  id: string
+  email: string
+  username: string | null
+}
+
+export interface PublicationDetails {
+  // Common
+  description?: string
+  country?: string
+  city?: string
+  view_count?: number
+  phone_click_count?: number
+  is_sponsored?: boolean
+  rejection_reason?: string
+  reviewed_at?: string | null
+  author?: PublicationAuthor | null
+  updated_at?: string | null
+
+  // Classified
+  category?: string
+  category_display?: string
+  subcategory?: string
+  sub_type?: string
+  service_type?: string
+  rate_type?: string
+  supply_type?: string
+  condition?: string
+  condition_display?: string
+  price?: number | null
+  price_note?: string
+  price_display?: string
+  contact_phone?: string
+  contact_wechat?: string
+  wechat_qr_url?: string
+  images?: string[]
+
+  // Job
+  industry?: string | null
+  job_types?: string[]
+  employment_types?: string[]
+  employment_types_display?: string[]
+  salary_type?: string
+  salary_fixed?: number | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_period?: string
+  salary_display?: string
+  contact_name?: string
+  contact_email?: string
+  expires_at?: string | null
+  years_experience?: number | null
+
+  // Listing (商家)
+  business_types?: string[]
+  cuisine_types?: string[]
+  price_range?: number | null
+  capacity?: number
+  rating?: number
+  review_count?: number
+  address?: string
+  location_zone?: string
+  latitude?: number | null
+  longitude?: number | null
+  phone?: string
+  website?: string
+  opening_hours?: Record<string, string | string[]>
+  thumbnail?: string | null
+  cover_image?: string | null
+  merchant?: { id: string; business_name: string } | null
+}
+
 export interface PublicationStats {
   id: string
   type: PublicationType
@@ -287,6 +363,76 @@ export interface PublicationStats {
   total_impressions: number
   status: string
   created_at: string
+  details?: PublicationDetails
+}
+
+// ── Forum ─────────────────────────────────────────────────────────────────────
+
+export type ForumKind = 'post' | 'video'
+
+export interface ForumPost {
+  id: string
+  title: string
+  post_type: 'text' | 'photo' | 'video'
+  category: string
+  status: 'pending' | 'approved' | 'rejected'
+  country: string
+  city: string
+  cover_image: string | null
+  video_url: string | null
+  view_count: number
+  like_count: number
+  comment_count: number
+  saved_count: number
+  impression_count: number
+  is_anonymous: boolean
+  is_sponsored: boolean
+  is_active: boolean
+  author_email: string | null
+  author_username: string | null
+  created_at: string
+}
+
+export interface ForumPostDetails {
+  body: string
+  images: string[]
+  video_url: string | null
+  category: string
+  category_display: string
+  post_type: 'text' | 'photo' | 'video'
+  tags: string[]
+  country: string
+  city: string
+  latitude: number | null
+  longitude: number | null
+  view_count: number
+  like_count: number
+  comment_count: number
+  saved_count: number
+  is_anonymous: boolean
+  is_sponsored: boolean
+  is_active: boolean
+  rejection_reason: string
+  reviewed_at: string | null
+  author: PublicationAuthor | null
+  linked_listing: { id: string; name: string } | null
+  updated_at: string | null
+}
+
+export interface ForumPostStats {
+  id: string
+  type: 'forum_post' | 'forum_video'
+  title: string
+  status: string
+  created_at: string
+  cover_image: string | null
+  total_views: number
+  total_phone_clicks: number
+  total_saves: number
+  total_impressions: number
+  daily: DailyDataPoint[]
+  monthly: MonthlyDataPoint[]
+  details: ForumPostDetails
 }
 
 // ── Admin Activity Log ────────────────────────────────────────────────────────

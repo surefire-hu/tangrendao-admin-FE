@@ -19,6 +19,10 @@ import {
   GiftOutlined,
   MonitorOutlined,
   MessageOutlined,
+  CommentOutlined,
+  VideoCameraOutlined,
+  ReadOutlined,
+  FireOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -33,13 +37,18 @@ export function AdminLayout() {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { token } = theme.useToken()
-  const [feedbackUnread, setFeedbackUnread] = useState(0)
+  const [feedbackUnread, setFeedbackUnread]     = useState(0)
+  const [promotionsUnread, setPromotionsUnread] = useState(0)
 
   useEffect(() => {
-    const fetchUnread = () =>
+    const fetchUnread = () => {
       apiClient.get<{ count: number }>('/admin/feedback/unread-count/')
         .then(r => setFeedbackUnread(r.data.count))
         .catch(() => {})
+      apiClient.get<{ count: number }>('/admin/promotions/unread-count/')
+        .then(r => setPromotionsUnread(r.data.count))
+        .catch(() => {})
+    }
     fetchUnread()
     const interval = setInterval(fetchUnread, 60_000)
     return () => clearInterval(interval)
@@ -69,6 +78,15 @@ export function AdminLayout() {
       ],
     },
     {
+      key: 'forum',
+      icon: <CommentOutlined />,
+      label: '论坛管理',
+      children: [
+        { key: '/forum/posts', icon: <ReadOutlined />, label: '帖子' },
+        { key: '/forum/videos', icon: <VideoCameraOutlined />, label: '视频' },
+      ],
+    },
+    {
       key: '/advertisements',
       icon: <NotificationOutlined />,
       label: '横幅广告',
@@ -76,7 +94,7 @@ export function AdminLayout() {
     {
       key: '/adcards',
       icon: <IdcardOutlined />,
-      label: '广告卡片',
+      label: '卡片广告',
     },
     {
       key: '/currency',
@@ -102,6 +120,15 @@ export function AdminLayout() {
         </Badge>
       ),
     },
+    {
+      key: '/promotions',
+      icon: <FireOutlined />,
+      label: (
+        <Badge count={promotionsUnread} size="small" offset={[6, 0]}>
+          推广记录
+        </Badge>
+      ),
+    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -122,6 +149,8 @@ export function AdminLayout() {
     if (path.startsWith('/publications/jobs')) return '/publications/jobs'
     if (path.startsWith('/publications/housing')) return '/publications/housing'
     if (path.startsWith('/publications/listings')) return '/publications/listings'
+    if (path.startsWith('/forum/posts')) return '/forum/posts'
+    if (path.startsWith('/forum/videos')) return '/forum/videos'
     if (path.startsWith('/users')) return '/users'
     if (path.startsWith('/advertisements')) return '/advertisements'
     if (path.startsWith('/adcards')) return '/adcards'
@@ -129,6 +158,7 @@ export function AdminLayout() {
     if (path.startsWith('/monitoring')) return '/monitoring'
     if (path.startsWith('/broadcast')) return '/broadcast'
     if (path.startsWith('/feedback')) return '/feedback'
+    if (path.startsWith('/promotions')) return '/promotions'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
@@ -136,6 +166,7 @@ export function AdminLayout() {
   const getOpenKeys = () => {
     const path = location.pathname
     if (path.startsWith('/publications')) return ['publications']
+    if (path.startsWith('/forum')) return ['forum']
     return []
   }
 

@@ -11,11 +11,14 @@ import { AdCardListPage } from '../pages/AdCards/AdCardList'
 import { AdCardFormPage } from '../pages/AdCards/AdCardForm'
 import { PublicationListPage } from '../pages/Publications/PublicationList'
 import { PublicationDetailPage } from '../pages/Publications/PublicationDetail'
+import { ForumListPage } from '../pages/Forum/ForumList'
+import { ForumDetailPage } from '../pages/Forum/ForumDetail'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
 import { BroadcastPage } from '../pages/Broadcast/BroadcastPage'
 import { CurrencyPage } from '../pages/Currency/CurrencyPage'
 import { MonitoringPage } from '../pages/Monitoring/MonitoringPage'
 import { FeedbackPage } from '../pages/Feedback/FeedbackPage'
+import { PromotionsPage } from '../pages/Promotions/PromotionsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -60,10 +63,14 @@ export function AppRouter() {
           <Route path="publications/housing" element={<PublicationListPage type="housing" />} />
           <Route path="publications/listings" element={<PublicationListPage type="listing" />} />
           <Route path="publications/:type/:id" element={<PublicationDetailPage />} />
+          <Route path="forum/posts" element={<ForumListPage kind="post" />} />
+          <Route path="forum/videos" element={<ForumListPage kind="video" />} />
+          <Route path="forum/posts/:id" element={<ForumDetailPage />} />
           <Route path="broadcast" element={<BroadcastPage />} />
           <Route path="currency" element={<CurrencyPage />} />
           <Route path="monitoring" element={<MonitoringPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
+          <Route path="promotions" element={<PromotionsPage />} />
           <Route
             path="admin-log"
             element={

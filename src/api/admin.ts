@@ -15,6 +15,9 @@ import type {
   Listing,
   PublicationStats,
   PublicationType,
+  ForumPost,
+  ForumPostStats,
+  ForumKind,
   AdminActivityLogList,
   BroadcastPayload,
   BroadcastResult,
@@ -156,6 +159,27 @@ export const adminApi = {
 
   rejectPublication: (type: PublicationType, id: string, reason?: string) =>
     apiClient.post(`/admin/publications/${type}/${id}/reject/`, { reason }),
+
+  // ── Forum (posts + videos) ────────────────────────────────────────────────
+  getForumPosts: (params?: {
+    page?: number
+    page_size?: number
+    kind?: ForumKind
+    post_type?: 'text' | 'photo' | 'video'
+    status?: string
+    country?: string
+    category?: string
+    search?: string
+  }) => apiClient.get<{ count: number; results: ForumPost[] }>('/admin/forum/posts/', { params }),
+
+  getForumPostStats: (id: string) =>
+    apiClient.get<ForumPostStats>(`/admin/forum/posts/${id}/stats/`),
+
+  approveForumPost: (id: string) =>
+    apiClient.post(`/admin/forum/posts/${id}/approve/`),
+
+  rejectForumPost: (id: string, reason?: string) =>
+    apiClient.post(`/admin/forum/posts/${id}/reject/`, { reason }),
 
   // ── Activity Log (solo superadmin) ────────────────────────────────────────
   getActivityLog: (params?: {

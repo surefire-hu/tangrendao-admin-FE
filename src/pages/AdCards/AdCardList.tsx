@@ -138,9 +138,9 @@ export function AdCardListPage() {
   return (
     <div>
       <Space style={{ marginBottom: 16, justifyContent: 'space-between', width: '100%' }}>
-        <Title level={4} style={{ margin: 0 }}>广告卡片管理</Title>
+        <Title level={4} style={{ margin: 0 }}>卡片广告管理</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/adcards/create')}>
-          新建广告卡片
+          新建卡片广告
         </Button>
       </Space>
 

@@ -7,7 +7,7 @@ import { UploadOutlined, ArrowLeftOutlined, PlusOutlined } from '@ant-design/ico
 import { useNavigate, useParams } from 'react-router-dom'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { adminApi } from '../../api/admin'
-import type { AdCardCreate, AdCountry, AdProduct } from '../../types'
+import type { AdCardAspectRatio, AdCardCreate, AdCountry, AdProduct } from '../../types'
 import { ProductSelect } from '../../components/ProductSelect'
 
 const { Title, Text } = Typography
@@ -40,17 +40,19 @@ const GOLD_MID   = '#C9981A'
 const GOLD_LIGHT = '#E8C040'
 const GOLD_DARK  = '#A87C10'
 
-function AdCardPreview({ title, subtitle, tags, imageUrl }: {
-  title: string; subtitle: string; tags: string[]; imageUrl: string
+function AdCardPreview({ title, subtitle, tags, imageUrl, aspectRatio }: {
+  title: string; subtitle: string; tags: string[]; imageUrl: string; aspectRatio: AdCardAspectRatio
 }) {
+  // 3:4 → tall portrait (160w × 213h). 4:3 → landscape (160w × 120h).
+  const coverHeight = aspectRatio === '3:4' ? 213 : 120
   return (
     <div style={{
       width: 160, borderRadius: 20, overflow: 'hidden',
       border: `1.5px solid ${GOLD_MID}`,
       flexShrink: 0, display: 'flex', flexDirection: 'column',
     }}>
-      {/* Cover — fixed height matching app */}
-      <div style={{ position: 'relative', width: '100%', height: 120, flexShrink: 0, background: '#c8c8c8' }}>
+      {/* Cover — height driven by aspect ratio */}
+      <div style={{ position: 'relative', width: '100%', height: coverHeight, flexShrink: 0, background: '#c8c8c8' }}>
         {imageUrl
           ? <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#e0d4b8,#c8b88a)' }} />
@@ -123,6 +125,18 @@ export function AdCardFormPage() {
   // resolved preview: manual wins, product is fallback
   const previewImage = manualCover || productCover
 
+  // Auto-detect aspect ratio from the current preview image
+  useEffect(() => {
+    if (!previewImage) return
+    const img = new Image()
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setAspectRatio(img.naturalWidth > img.naturalHeight ? '4:3' : '3:4')
+      }
+    }
+    img.src = previewImage
+  }, [previewImage])
+
   // tags
   const [tagInput, setTagInput] = useState('')
 
@@ -130,6 +144,9 @@ export function AdCardFormPage() {
   const [productType, setProductType]         = useState('listing')
   const [selectedProduct, setSelectedProduct] = useState<AdProduct | null>(null)
   const [country, setCountry]                 = useState<AdCountry>('IT')
+
+  // cover aspect ratio — auto-detected from the image dimensions (portrait → 3:4, landscape → 4:3)
+  const [aspectRatio, setAspectRatio] = useState<AdCardAspectRatio>('3:4')
 
   // load existing
   useEffect(() => {
@@ -146,6 +163,7 @@ export function AdCardFormPage() {
       setPreviewTitle(a.title); setPreviewSub(a.subtitle)
       setPreviewTags(a.tags || []); setPreviewCity(a.city)
       setCountry(a.country)
+      setAspectRatio(a.aspect_ratio || '3:4')
       if (a.linked_content_type) setProductType(a.linked_content_type)
       const img = a.thumbnail_url || a.cover_url || ''
       setManualCover(img)
@@ -211,16 +229,17 @@ export function AdCardFormPage() {
       const payload: AdCardCreate = {
         ...(values as AdCardCreate),
         tags: previewTags,
+        aspect_ratio: aspectRatio,
         // Pass the absolute URL (stored at upload time), not the raw File.
         // Fall back to the selected product's cover if no image was manually uploaded.
         thumbnail_url: uploadedThumbnailUrl || productCover || undefined,
       }
       if (isEdit && id) {
         await adminApi.updateAdCard(id, payload)
-        message.success('广告卡片已更新')
+        message.success('卡片广告已更新')
       } else {
         await adminApi.createAdCard(payload)
-        message.success('广告卡片已创建')
+        message.success('卡片广告已创建')
       }
       navigate('/adcards')
     } catch {
@@ -237,7 +256,7 @@ export function AdCardFormPage() {
       <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/adcards')} style={{ marginBottom: 16 }}>
         返回卡片列表
       </Button>
-      <Title level={4}>{isEdit ? '编辑广告卡片' : '新建广告卡片'}</Title>
+      <Title level={4}>{isEdit ? '编辑卡片广告' : '新建卡片广告'}</Title>
       {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} showIcon />}
 
       <Row gutter={24} align="top">
@@ -256,8 +275,8 @@ export function AdCardFormPage() {
               }}
               initialValues={{ is_active: true, priority: 0, country: 'IT', cta_text: '了解更多' }}
             >
-              {/* Cover upload */}
-              <Form.Item label="封面图片（3:4 竖版）" required={!isEdit}>
+              {/* Cover upload — ratio auto-detected from image dimensions */}
+              <Form.Item label="封面图片" required={!isEdit}>
                 <Upload
                   listType="picture-card"
                   fileList={fileList}
@@ -269,7 +288,12 @@ export function AdCardFormPage() {
                 >
                   {fileList.length === 0 && <div><UploadOutlined /><div style={{ marginTop: 8 }}>{uploading ? '上传中…' : '上传'}</div></div>}
                 </Upload>
-                <Text type="secondary" style={{ fontSize: 12 }}>建议比例 3:4（如 600×800px）</Text>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  竖版（3:4）或横版（4:3），比例根据图片尺寸自动识别
+                  {previewImage && (
+                    <> · 当前：<b>{aspectRatio === '3:4' ? '竖版 3:4' : '横版 4:3'}</b></>
+                  )}
+                </Text>
               </Form.Item>
 
               {/* Product selector */}
@@ -299,12 +323,12 @@ export function AdCardFormPage() {
                 <Row gutter={8} style={{ marginTop: 8 }}>
                   <Col span={12}>
                     <Form.Item name="linked_content_type" label="内容类型" style={{ marginBottom: 0 }}>
-                      <Input placeholder="listing / housing / job_post…" />
+                      <Input placeholder="listing / housing / job_post…" disabled />
                     </Form.Item>
                   </Col>
                   <Col span={12}>
                     <Form.Item name="linked_content_id" label="内容 ID" style={{ marginBottom: 0 }}>
-                      <Input placeholder="UUID" />
+                      <Input placeholder="UUID" disabled />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -340,7 +364,7 @@ export function AdCardFormPage() {
               </Form.Item>
 
               <Form.Item name="city" label="城市">
-                <Input placeholder="如 Prato" maxLength={60} />
+                <Input placeholder="如 Prato" maxLength={60} disabled />
               </Form.Item>
               <Form.Item name="cta_url" label="外部链接（无关联产品时使用）">
                 <Input placeholder="https://..." />
@@ -383,6 +407,7 @@ export function AdCardFormPage() {
                 subtitle={previewSubtitle}
                 tags={previewTags}
                 imageUrl={previewImage}
+                aspectRatio={aspectRatio}
               />
             </div>
           </Card>
