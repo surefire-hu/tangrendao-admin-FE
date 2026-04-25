@@ -19,6 +19,7 @@ import { CurrencyPage } from '../pages/Currency/CurrencyPage'
 import { MonitoringPage } from '../pages/Monitoring/MonitoringPage'
 import { FeedbackPage } from '../pages/Feedback/FeedbackPage'
 import { PromotionsPage } from '../pages/Promotions/PromotionsPage'
+import { SupportInboxPage } from '../pages/Support/SupportInboxPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -71,6 +72,7 @@ export function AppRouter() {
           <Route path="monitoring" element={<MonitoringPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
           <Route path="promotions" element={<PromotionsPage />} />
+          <Route path="support" element={<SupportInboxPage />} />
           <Route
             path="admin-log"
             element={

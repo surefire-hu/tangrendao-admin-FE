@@ -115,6 +115,10 @@ export type AdPosition =
   | 'passport' | 'local_service_detail' | 'housing_detail' | 'market_detail'
   | 'huangli' | 'fiscal_code' | 'vehicle_check' | 'weather'
 
+export type AdCardPosition =
+  | 'any' | 'forum' | 'listing' | 'housing'
+  | 'local_service' | 'market' | 'job'
+
 export type AdCountry = 'ALL' | 'IT' | 'DE' | 'FR' | 'ES' | 'GB' | 'PT' | 'NL' | 'BE' | 'CH' | 'AT'
 
 export interface BannerAd {

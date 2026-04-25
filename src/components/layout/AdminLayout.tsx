@@ -39,6 +39,7 @@ export function AdminLayout() {
   const { token } = theme.useToken()
   const [feedbackUnread, setFeedbackUnread]     = useState(0)
   const [promotionsUnread, setPromotionsUnread] = useState(0)
+  const [supportUnread, setSupportUnread]       = useState(0)
 
   useEffect(() => {
     const fetchUnread = () => {
@@ -48,9 +49,12 @@ export function AdminLayout() {
       apiClient.get<{ count: number }>('/admin/promotions/unread-count/')
         .then(r => setPromotionsUnread(r.data.count))
         .catch(() => {})
+      apiClient.get<{ unread_count: number }>('/support/inbox/unread-count/')
+        .then(r => setSupportUnread(r.data.unread_count))
+        .catch(() => {})
     }
     fetchUnread()
-    const interval = setInterval(fetchUnread, 60_000)
+    const interval = setInterval(fetchUnread, 30_000)
     return () => clearInterval(interval)
   }, [])
 
@@ -121,6 +125,15 @@ export function AdminLayout() {
       ),
     },
     {
+      key: '/support',
+      icon: <CommentOutlined />,
+      label: (
+        <Badge count={supportUnread} size="small" offset={[6, 0]}>
+          客服对话
+        </Badge>
+      ),
+    },
+    {
       key: '/promotions',
       icon: <FireOutlined />,
       label: (
@@ -159,6 +172,7 @@ export function AdminLayout() {
     if (path.startsWith('/broadcast')) return '/broadcast'
     if (path.startsWith('/feedback')) return '/feedback'
     if (path.startsWith('/promotions')) return '/promotions'
+    if (path.startsWith('/support')) return '/support'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
