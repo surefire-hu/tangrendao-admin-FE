@@ -49,7 +49,7 @@ export function AdminLayout() {
       apiClient.get<{ count: number }>('/admin/promotions/unread-count/')
         .then(r => setPromotionsUnread(r.data.count))
         .catch(() => {})
-      apiClient.get<{ unread_count: number }>('/support/inbox/unread-count/')
+      apiClient.get<{ unread_count: number }>('/chat/support/admin/inbox/unread-count/')
         .then(r => setSupportUnread(r.data.unread_count))
         .catch(() => {})
     }

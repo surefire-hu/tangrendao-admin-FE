@@ -37,6 +37,8 @@ export const adminApi = {
     search?: string
     is_active?: boolean
     is_registered?: boolean
+    is_bot?: boolean
+    gender?: 'male' | 'female'
     ordering?: string
   }) => apiClient.get<PaginatedResponse<AdminUser>>('/admin/users/', { params }),
 
@@ -47,6 +49,30 @@ export const adminApi = {
 
   updateUser: (id: string, data: Partial<AdminUser> & { moderator_roles?: string[] }) =>
     apiClient.patch<AdminUser>(`/admin/users/${id}/`, data),
+
+  createUser: (data: {
+    email?: string
+    username?: string
+    password?: string
+    first_name?: string
+    last_name?: string
+    role?: string
+    is_bot?: boolean
+    gender?: 'male' | 'female' | null
+    country?: string
+    avatar?: File | null
+  }) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === '') return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.post<AdminUser>('/admin/users/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 
   // ── Advertisements ────────────────────────────────────────────────────────
   getAds: (params?: { page?: number; is_active?: boolean; position?: string; country?: string }) =>

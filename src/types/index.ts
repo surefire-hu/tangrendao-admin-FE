@@ -64,7 +64,7 @@ export interface MonthlyDataPoint {
 // ── Users ─────────────────────────────────────────────────────────────────────
 
 export type ModeratorContentType =
-  | 'listing' | 'job_post' | 'job_seek' | 'housing' | 'market' | 'local_service'
+  | 'listing' | 'job_post' | 'job_seek' | 'housing' | 'market' | 'local_service' | 'forum'
 
 export const MODERATOR_CONTENT_LABELS: Record<ModeratorContentType, string> = {
   listing:       '商家/餐厅',
@@ -73,7 +73,10 @@ export const MODERATOR_CONTENT_LABELS: Record<ModeratorContentType, string> = {
   housing:       '房源',
   market:        '买卖信息',
   local_service: '本地服务',
+  forum:         '论坛帖子',
 }
+
+export type Gender = 'male' | 'female'
 
 export interface AdminUser {
   id: string
@@ -86,6 +89,8 @@ export interface AdminUser {
   is_registered: boolean
   is_staff: boolean
   is_journalist: boolean
+  is_bot: boolean
+  gender: Gender | null
   moderator_roles: ModeratorContentType[]
   country: string
   created_at: string
