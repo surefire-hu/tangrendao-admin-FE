@@ -63,9 +63,9 @@ export const supportApi = {
   },
 
   async fetchMessages(conversationId: string) {
-    // Detail endpoint already returns the full conversation (with messages array).
+    // Operator-side detail: returns conversation + messages without enforcing user-ownership.
     const res = await apiClient.get<SupportConversation & { messages: SupportMessage[] }>(
-      `/chat/conversations/${conversationId}/`,
+      `/chat/support/admin/conversations/${conversationId}/`,
     )
     const { messages, ...conversation } = res.data
     return { conversation, messages }
