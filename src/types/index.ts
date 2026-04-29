@@ -541,6 +541,22 @@ export interface CurrencyStats {
   recent_topups: CurrencyTopupRecord[]
 }
 
+export type CandyPackagePlatform = 'default' | 'ios'
+
+export interface CandyPackage {
+  id: number
+  currency: string
+  platform: CandyPackagePlatform
+  amount: number
+  candy: number
+  is_popular: boolean
+  popular_label: string
+  display_order: number
+  is_active: boolean
+}
+
+export type CandyPackageInput = Omit<CandyPackage, 'id'>
+
 // ── Broadcast ─────────────────────────────────────────────────────────────────
 
 export interface BroadcastPayload {

@@ -22,6 +22,8 @@ import type {
   BroadcastPayload,
   BroadcastResult,
   CurrencyStats,
+  CandyPackage,
+  CandyPackageInput,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -238,6 +240,19 @@ export const adminApi = {
 
   getCurrencyStats: () =>
     apiClient.get<CurrencyStats>('/admin/currency/stats/'),
+
+  // ── Candy packages (admin CRUD) ───────────────────────────────────────────
+  listCandyPackages: (params?: { currency?: string; platform?: string }) =>
+    apiClient.get<CandyPackage[]>('/admin/payments/packages/', { params }),
+
+  createCandyPackage: (data: CandyPackageInput) =>
+    apiClient.post<CandyPackage>('/admin/payments/packages/', data),
+
+  updateCandyPackage: (id: number, data: Partial<CandyPackageInput>) =>
+    apiClient.patch<CandyPackage>(`/admin/payments/packages/${id}/`, data),
+
+  deleteCandyPackage: (id: number) =>
+    apiClient.delete<void>(`/admin/payments/packages/${id}/`),
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
   sendBroadcast: (data: BroadcastPayload) => {

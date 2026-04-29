@@ -3,6 +3,7 @@ import { ConfigProvider, theme } from 'antd'
 import itIT from 'antd/locale/it_IT'
 import { AppRouter } from './router/AppRouter'
 import 'antd/dist/reset.css'
+import 'flag-icons/css/flag-icons.min.css'
 
 function Root() {
   return (

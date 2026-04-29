@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Tabs, Card, Row, Col, Statistic, Table, Tag, Typography,
   Form, InputNumber, Input, Button, Select, Space, Alert,
-  Tooltip, message, Spin, theme, Divider, Descriptions,
+  Tooltip, message, Spin, theme, Divider, Descriptions, Switch,
 } from 'antd'
 import {
   SearchOutlined, SendOutlined, WarningOutlined,
@@ -13,7 +13,11 @@ import { Modal, Popconfirm } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
 import { apiClient } from '../../api/client'
-import type { AdminUser, CurrencyHolder, CurrencyStats, CurrencyTopupRecord, CandyAnomaly, CandyAnomalyLog } from '../../types'
+import type {
+  AdminUser, CurrencyHolder, CurrencyStats, CurrencyTopupRecord,
+  CandyAnomaly, CandyAnomalyLog,
+  CandyPackage, CandyPackageInput, CandyPackagePlatform,
+} from '../../types'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -748,6 +752,250 @@ function AnomalyTab() {
   )
 }
 
+// ── Packages Tab (admin CRUD per currency × platform) ─────────────────────────
+
+const COMMON_CURRENCIES = ['EUR', 'GBP', 'CHF', 'USD', 'CNY']
+const PLATFORM_OPTIONS: { value: CandyPackagePlatform; label: string }[] = [
+  { value: 'default', label: 'Android / Web' },
+  { value: 'ios',     label: 'iOS' },
+]
+
+function PackagesTab() {
+  const [currency, setCurrency] = useState<string>('EUR')
+  const [platform, setPlatform] = useState<CandyPackagePlatform>('default')
+  const [rows, setRows] = useState<CandyPackage[]>([])
+  const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState<CandyPackage | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [form] = Form.useForm<CandyPackageInput>()
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await adminApi.listCandyPackages({ currency, platform })
+      setRows(res.data)
+    } catch {
+      message.error('加载失败')
+    } finally {
+      setLoading(false)
+    }
+  }, [currency, platform])
+
+  useEffect(() => { load() }, [load])
+
+  const openCreate = () => {
+    setEditing(null)
+    setCreating(true)
+    form.resetFields()
+    form.setFieldsValue({
+      currency, platform,
+      amount: 10, candy: 70,
+      is_popular: false, popular_label: '最受欢迎',
+      display_order: rows.length,
+      is_active: true,
+    })
+  }
+
+  const openEdit = (row: CandyPackage) => {
+    setEditing(row)
+    setCreating(false)
+    form.resetFields()
+    form.setFieldsValue(row)
+  }
+
+  const close = () => {
+    setEditing(null)
+    setCreating(false)
+    form.resetFields()
+  }
+
+  const submit = async () => {
+    try {
+      const values = await form.validateFields()
+      const payload: CandyPackageInput = {
+        ...values,
+        currency: values.currency.toUpperCase(),
+      }
+      if (editing) {
+        await adminApi.updateCandyPackage(editing.id, payload)
+        message.success('已更新')
+      } else {
+        await adminApi.createCandyPackage(payload)
+        message.success('已创建')
+      }
+      close()
+      await load()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: string } } }
+      if (err?.response?.data?.error) message.error(err.response.data.error)
+    }
+  }
+
+  const remove = async (id: number) => {
+    try {
+      await adminApi.deleteCandyPackage(id)
+      message.success('已删除')
+      await load()
+    } catch {
+      message.error('删除失败')
+    }
+  }
+
+  const ratePreview = (row: CandyPackage) =>
+    row.amount > 0 ? `1 ${row.currency} ≈ ${(row.candy / row.amount).toFixed(2)} 🍬` : '—'
+
+  const columns: ColumnsType<CandyPackage> = [
+    {
+      title: '排序', dataIndex: 'display_order', width: 70,
+      sorter: (a, b) => a.display_order - b.display_order,
+      defaultSortOrder: 'ascend',
+    },
+    {
+      title: '价格', dataIndex: 'amount', width: 110,
+      render: (v: number, r) => <Text strong>{v} {r.currency}</Text>,
+    },
+    {
+      title: '糖果数量', dataIndex: 'candy', width: 110,
+      render: (v: number) => <Tag color="gold">{v.toLocaleString()} 🍬</Tag>,
+    },
+    {
+      title: '兑换比例', key: 'rate', width: 140,
+      render: (_, r) => <Text type="secondary" style={{ fontSize: 11 }}>{ratePreview(r)}</Text>,
+    },
+    {
+      title: '热门', dataIndex: 'is_popular', width: 130,
+      render: (v: boolean, r) => v
+        ? <Tag color="orange">⭐ {r.popular_label || '最受欢迎'}</Tag>
+        : <Text type="secondary">—</Text>,
+    },
+    {
+      title: '状态', dataIndex: 'is_active', width: 80,
+      render: (v: boolean) => v
+        ? <Tag color="green">启用</Tag>
+        : <Tag color="red">停用</Tag>,
+    },
+    {
+      title: '操作', key: 'action', width: 160,
+      render: (_, r) => (
+        <Space>
+          <Button size="small" onClick={() => openEdit(r)}>编辑</Button>
+          <Popconfirm title="确认删除该套餐？" onConfirm={() => remove(r.id)} okText="删除" cancelText="取消" okButtonProps={{ danger: true }}>
+            <Button size="small" danger>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ]
+
+  return (
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Card size="small">
+        <Space wrap>
+          <Space>
+            <Text strong>币种：</Text>
+            <Select
+              value={currency}
+              style={{ width: 140 }}
+              onChange={setCurrency}
+              options={COMMON_CURRENCIES.map(c => ({ value: c, label: c }))}
+              showSearch
+            />
+          </Space>
+          <Space>
+            <Text strong>平台：</Text>
+            <Select
+              value={platform}
+              style={{ width: 180 }}
+              onChange={(v) => setPlatform(v as CandyPackagePlatform)}
+              options={PLATFORM_OPTIONS}
+            />
+          </Space>
+          <Button type="primary" onClick={openCreate}>+ 新建套餐</Button>
+          <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
+        </Space>
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginTop: 12 }}
+          message="iOS 与 Android/Web 必须分别配置（Apple 抽成不同）。自定义金额按当前币种最便宜套餐的兑换比例计算。"
+        />
+      </Card>
+
+      <Card size="small" styles={{ body: { padding: 0 } }}>
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={rows}
+          loading={loading}
+          size="small"
+          pagination={false}
+        />
+      </Card>
+
+      <Modal
+        open={creating || !!editing}
+        title={editing ? `编辑套餐 #${editing.id}` : '新建套餐'}
+        okText={editing ? '保存' : '创建'}
+        cancelText="取消"
+        onOk={submit}
+        onCancel={close}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical" preserve={false}>
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="currency" label="币种 (ISO 4217)" rules={[{ required: true, len: 3 }]}>
+                <Input maxLength={3} placeholder="EUR" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="platform" label="平台" rules={[{ required: true }]}>
+                <Select options={PLATFORM_OPTIONS} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="amount" label="价格" rules={[{ required: true, type: 'number', min: 1 }]}>
+                <InputNumber min={1} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="candy" label="糖果数量" rules={[{ required: true, type: 'number', min: 1 }]}>
+                <InputNumber min={1} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="display_order" label="排序" rules={[{ required: true, type: 'number', min: 0 }]}>
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="is_active" label="启用" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="is_popular" label="标记为热门" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="popular_label" label="热门标签">
+                <Input placeholder="最受欢迎" maxLength={40} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+    </Space>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function CurrencyPage() {
@@ -757,8 +1005,9 @@ export function CurrencyPage() {
       <Tabs
         defaultActiveKey="topup"
         items={[
-          { key: 'topup',   label: '充值管理',   children: <TopupTab /> },
-          { key: 'monitor', label: '流通监控',   children: <MonitorTab /> },
+          { key: 'topup',    label: '充值管理',   children: <TopupTab /> },
+          { key: 'packages', label: '套餐价格',   children: <PackagesTab /> },
+          { key: 'monitor',  label: '流通监控',   children: <MonitorTab /> },
           {
             key: 'anomaly',
             label: (

@@ -23,6 +23,7 @@ import {
   VideoCameraOutlined,
   ReadOutlined,
   FireOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -142,6 +143,11 @@ export function AdminLayout() {
         </Badge>
       ),
     },
+    {
+      key: '/geography',
+      icon: <GlobalOutlined />,
+      label: '国家管理',
+    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -173,6 +179,7 @@ export function AdminLayout() {
     if (path.startsWith('/feedback')) return '/feedback'
     if (path.startsWith('/promotions')) return '/promotions'
     if (path.startsWith('/support')) return '/support'
+    if (path.startsWith('/geography')) return '/geography'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
