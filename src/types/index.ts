@@ -491,6 +491,39 @@ export interface CurrencyTopupRecord {
   created_at: string
 }
 
+export type CurrencyMovementSource =
+  | 'admin_topup'
+  | 'stripe_purchase'
+  | 'promotion_spend'
+  | 'promotion_refund'
+  | 'mission_spend'
+  | 'mission_refund'
+  | 'mission_reward'
+  | 'specialist_spend'
+  | 'specialist_refund'
+
+export type CurrencyMovementsRange = '50' | 'month' | 'year' | 'all'
+
+export interface CurrencyMovement {
+  id: string
+  source: CurrencyMovementSource
+  kind: 'in' | 'out'
+  admin_email: string
+  target_email: string
+  target_username: string
+  candy_amount: number
+  coin_amount: number
+  note: string
+  created_at: string
+}
+
+export interface CurrencyMovementsResponse {
+  count: number
+  page: number
+  page_size: number
+  results: CurrencyMovement[]
+}
+
 export interface CandyAnomalyLog {
   id: string
   status: 'cleared' | 'deducted'

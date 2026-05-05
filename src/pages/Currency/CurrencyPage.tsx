@@ -3,6 +3,7 @@ import {
   Tabs, Card, Row, Col, Statistic, Table, Tag, Typography,
   Form, InputNumber, Input, Button, Select, Space, Alert,
   Tooltip, message, Spin, theme, Divider, Descriptions, Switch,
+  Radio,
 } from 'antd'
 import {
   SearchOutlined, SendOutlined, WarningOutlined,
@@ -15,6 +16,7 @@ import { adminApi } from '../../api/admin'
 import { apiClient } from '../../api/client'
 import type {
   AdminUser, CurrencyHolder, CurrencyStats, CurrencyTopupRecord,
+  CurrencyMovement, CurrencyMovementSource, CurrencyMovementsRange,
   CandyAnomaly, CandyAnomalyLog,
   CandyPackage, CandyPackageInput, CandyPackagePlatform,
 } from '../../types'
@@ -205,6 +207,13 @@ function MonitorTab() {
   const [stats, setStats]     = useState<CurrencyStats | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [movements, setMovements]       = useState<CurrencyMovement[]>([])
+  const [movementsTotal, setMovementsTotal] = useState(0)
+  const [movementsLoading, setMovementsLoading] = useState(false)
+  const [range, setRange]               = useState<CurrencyMovementsRange>('50')
+  const [page, setPage]                 = useState(1)
+  const [pageSize, setPageSize]         = useState(50)
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -217,7 +226,21 @@ function MonitorTab() {
     }
   }, [])
 
+  const loadMovements = useCallback(async () => {
+    setMovementsLoading(true)
+    try {
+      const res = await adminApi.getCurrencyMovements({ range, page, page_size: pageSize })
+      setMovements(res.data.results)
+      setMovementsTotal(res.data.count)
+    } catch {
+      message.error('movement 加载失败')
+    } finally {
+      setMovementsLoading(false)
+    }
+  }, [range, page, pageSize])
+
   useEffect(() => { load() }, [load])
+  useEffect(() => { loadMovements() }, [loadMovements])
 
   const holderColumns = (type: 'candy' | 'coin'): ColumnsType<CurrencyHolder> => [
     {
@@ -248,6 +271,74 @@ function MonitorTab() {
         <Text type="secondary" style={{ fontSize: 11 }}>
           {type === 'candy' ? `🪙${r.coin.toLocaleString()}` : `🍬${r.candy.toLocaleString()}`}
         </Text>
+      ),
+    },
+  ]
+
+  const movementColumns: ColumnsType<CurrencyMovement> = [
+    {
+      title: '时间',
+      dataIndex: 'created_at',
+      width: 110,
+      render: (d: string) => (
+        <Tooltip title={dayjs(d).format('YYYY-MM-DD HH:mm')}>
+          <Text type="secondary" style={{ fontSize: 11 }}>{dayjs(d).fromNow()}</Text>
+        </Tooltip>
+      ),
+    },
+    {
+      title: '来源',
+      dataIndex: 'source',
+      width: 110,
+      render: (v: CurrencyMovementSource) => SOURCE_TAG[v] ?? <Tag>{v}</Tag>,
+    },
+    {
+      title: '方向',
+      dataIndex: 'kind',
+      width: 70,
+      render: (v: 'in' | 'out') => v === 'in'
+        ? <Tag color="green">入账</Tag>
+        : <Tag color="red">出账</Tag>,
+    },
+    {
+      title: '用户',
+      key: 'target',
+      render: (_, r) => (
+        <Space direction="vertical" size={0}>
+          <Text style={{ fontSize: 12 }}>{r.target_email}</Text>
+          {r.target_username !== '—' && (
+            <Text type="secondary" style={{ fontSize: 11 }}>{r.target_username}</Text>
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: '糖果',
+      dataIndex: 'candy_amount',
+      width: 80,
+      render: (v: number) => v !== 0 ? (
+        <Tag color={v > 0 ? 'gold' : 'red'}>{v > 0 ? `+${v}` : v}🍬</Tag>
+      ) : <Text type="secondary">—</Text>,
+    },
+    {
+      title: '金币',
+      dataIndex: 'coin_amount',
+      width: 80,
+      render: (v: number) => v !== 0 ? (
+        <Tag color={v > 0 ? 'blue' : 'red'}>{v > 0 ? `+${v}` : v}🪙</Tag>
+      ) : <Text type="secondary">—</Text>,
+    },
+    {
+      title: '备注',
+      dataIndex: 'note',
+      render: (v: string) => <Text type="secondary" style={{ fontSize: 11 }}>{v || '—'}</Text>,
+    },
+    {
+      title: '操作方',
+      dataIndex: 'admin_email',
+      width: 150,
+      render: (v: string) => (
+        <Text type="secondary" style={{ fontSize: 11 }}>{v || '—'}</Text>
       ),
     },
   ]
@@ -377,18 +468,69 @@ function MonitorTab() {
 
       <Divider style={{ margin: '4px 0' }} />
 
-      <Card title="管理员充值记录（最新50条）" size="small" styles={{ body: { padding: 0 } }}>
+      <Card
+        title="货币流水"
+        size="small"
+        styles={{ body: { padding: 0 } }}
+        extra={
+          <Space>
+            <Radio.Group
+              size="small"
+              value={range}
+              onChange={(e) => { setRange(e.target.value); setPage(1) }}
+              optionType="button"
+              buttonStyle="solid"
+            >
+              <Radio.Button value="50">最新 50</Radio.Button>
+              <Radio.Button value="month">最近一月</Radio.Button>
+              <Radio.Button value="year">最近一年</Radio.Button>
+              <Radio.Button value="all">全部</Radio.Button>
+            </Radio.Group>
+            <Button
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={loadMovements}
+              loading={movementsLoading}
+            />
+          </Space>
+        }
+      >
         <Table
           rowKey="id"
-          columns={historyColumns}
-          dataSource={stats.recent_topups}
-          pagination={false}
+          columns={movementColumns}
+          dataSource={movements}
+          loading={movementsLoading}
           size="small"
-          scroll={{ y: 320 }}
+          scroll={{ y: 420 }}
+          pagination={
+            range === '50'
+              ? false
+              : {
+                  current: page,
+                  pageSize,
+                  total: movementsTotal,
+                  showSizeChanger: true,
+                  pageSizeOptions: [25, 50, 100, 200],
+                  onChange: (p, ps) => { setPage(p); setPageSize(ps) },
+                  showTotal: (t) => `共 ${t} 条`,
+                }
+          }
         />
       </Card>
     </Space>
   )
+}
+
+const SOURCE_TAG: Record<CurrencyMovementSource, JSX.Element> = {
+  admin_topup:       <Tag color="purple">管理员</Tag>,
+  stripe_purchase:   <Tag color="green">Stripe</Tag>,
+  promotion_spend:   <Tag color="magenta">推广</Tag>,
+  promotion_refund:  <Tag color="lime">推广退款</Tag>,
+  mission_spend:     <Tag color="geekblue">任务发布</Tag>,
+  mission_refund:    <Tag color="lime">任务退款</Tag>,
+  mission_reward:    <Tag color="cyan">任务奖励</Tag>,
+  specialist_spend:  <Tag color="volcano">专家咨询</Tag>,
+  specialist_refund: <Tag color="lime">咨询退款</Tag>,
 }
 
 // ── Anomaly Detection Tab ─────────────────────────────────────────────────────

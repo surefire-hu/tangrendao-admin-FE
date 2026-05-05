@@ -22,6 +22,9 @@ import type {
   BroadcastPayload,
   BroadcastResult,
   CurrencyStats,
+  CurrencyMovement,
+  CurrencyMovementsResponse,
+  CurrencyMovementsRange,
   CandyPackage,
   CandyPackageInput,
 } from '../types'
@@ -240,6 +243,9 @@ export const adminApi = {
 
   getCurrencyStats: () =>
     apiClient.get<CurrencyStats>('/admin/currency/stats/'),
+
+  getCurrencyMovements: (params: { range: CurrencyMovementsRange; page?: number; page_size?: number }) =>
+    apiClient.get<CurrencyMovementsResponse>('/admin/currency/movements/', { params }),
 
   // ── Candy packages (admin CRUD) ───────────────────────────────────────────
   listCandyPackages: (params?: { currency?: string; platform?: string }) =>
