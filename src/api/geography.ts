@@ -31,6 +31,12 @@ export interface ImportResponse {
   results: Record<string, ImportResult>
 }
 
+export interface TranslateResponse {
+  ok: boolean
+  error?: string
+  log?: string
+}
+
 export const geographyApi = {
   list: () =>
     apiClient.get<AdminCountry[]>('/geo/admin/countries/'),
@@ -46,4 +52,7 @@ export const geographyApi = {
 
   importGeoNames: (countries: string[]) =>
     apiClient.post<ImportResponse>('/geo/admin/import-geonames/', { countries }),
+
+  translateProvinces: (country: string, force = false) =>
+    apiClient.post<TranslateResponse>('/geo/admin/translate-provinces/', { country, force }),
 }

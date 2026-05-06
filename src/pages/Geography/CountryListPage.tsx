@@ -5,11 +5,14 @@ import {
 } from 'antd'
 import {
   CloudDownloadOutlined, EditOutlined, EnvironmentOutlined,
-  PlusOutlined, ReloadOutlined,
+  PlusOutlined, ReloadOutlined, TranslationOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 
-import { geographyApi, type AdminCountry, type CountryPayload, type ImportResult } from '../../api/geography'
+import {
+  geographyApi, type AdminCountry, type CountryPayload,
+  type ImportResult, type TranslateResponse,
+} from '../../api/geography'
 
 const { Title, Text } = Typography
 
@@ -27,6 +30,8 @@ export function CountryListPage() {
   const [creating, setCreating] = useState(false)
   const [importing, setImporting] = useState<string | null>(null)
   const [importLog, setImportLog] = useState<{ code: string; result: ImportResult } | null>(null)
+  const [translating, setTranslating] = useState<string | null>(null)
+  const [translateLog, setTranslateLog] = useState<{ code: string; result: TranslateResponse } | null>(null)
   const [provinceTarget, setProvinceTarget] = useState<AdminCountry | null>(null)
   const [provinceDraft, setProvinceDraft] = useState<string[]>([])
   const [provinceInput, setProvinceInput] = useState('')
@@ -154,6 +159,23 @@ export function CountryListPage() {
     }
   }
 
+  const runTranslate = async (row: AdminCountry, force = false) => {
+    setTranslating(row.code)
+    try {
+      const r = await geographyApi.translateProvinces(row.code, force)
+      setTranslateLog({ code: row.code, result: r.data })
+      if (r.data.ok) {
+        message.success(`${row.code}: 省份中文翻译完成`)
+      } else {
+        message.error(`${row.code}: ${r.data.error ?? '翻译失败'}`)
+      }
+    } catch {
+      message.error('翻译失败 — 请检查后台日志')
+    } finally {
+      setTranslating(null)
+    }
+  }
+
   const runImport = async (row: AdminCountry) => {
     setImporting(row.code)
     try {
@@ -259,7 +281,7 @@ export function CountryListPage() {
       },
     },
     {
-      title: '操作', key: 'actions', width: 380, fixed: 'right' as const,
+      title: '操作', key: 'actions', width: 480, fixed: 'right' as const,
       render: (_, row) => (
         <Space>
           <Tooltip title="从 GeoNames 下载并替换该国全部邮编">
@@ -271,6 +293,24 @@ export function CountryListPage() {
             >
               导入邮编
             </Button>
+          </Tooltip>
+          <Tooltip title="通过 ChatGPT 把省份名翻译成中文，保存到 province_zh（城市数量过多，不翻译）">
+            <Popconfirm
+              title="翻译该国省份为中文？"
+              description="将调用 OpenAI 翻译尚未翻译的省份。通常只需几秒。"
+              okText="开始翻译"
+              cancelText="取消"
+              onConfirm={() => runTranslate(row)}
+            >
+              <Button
+                size="small"
+                icon={<TranslationOutlined />}
+                loading={translating === row.code}
+                disabled={row.postal_count === 0}
+              >
+                翻译省份
+              </Button>
+            </Popconfirm>
           </Tooltip>
           <Button size="small" icon={<EnvironmentOutlined />} onClick={() => openProvinces(row)}>
             默认省份
@@ -403,6 +443,30 @@ export function CountryListPage() {
               <pre style={{ marginTop: 12, padding: 12, background: '#f5f5f5',
                             borderRadius: 4, fontSize: 12, whiteSpace: 'pre-wrap' }}>
                 {importLog.result.log}
+              </pre>
+            )}
+          </>
+        )}
+      </Modal>
+
+      <Modal
+        title={`翻译日志 — ${translateLog?.code}`}
+        open={!!translateLog}
+        onCancel={() => setTranslateLog(null)}
+        footer={<Button onClick={() => setTranslateLog(null)}>关闭</Button>}
+        width={600}
+      >
+        {translateLog && (
+          <>
+            {translateLog.result.ok ? (
+              <Alert type="success" showIcon message="翻译完成" />
+            ) : (
+              <Alert type="error" showIcon message={translateLog.result.error ?? '失败'} />
+            )}
+            {translateLog.result.log && (
+              <pre style={{ marginTop: 12, padding: 12, background: '#f5f5f5',
+                            borderRadius: 4, fontSize: 12, whiteSpace: 'pre-wrap' }}>
+                {translateLog.result.log}
               </pre>
             )}
           </>
