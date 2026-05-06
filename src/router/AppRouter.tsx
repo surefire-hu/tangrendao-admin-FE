@@ -13,6 +13,7 @@ import { PublicationListPage } from '../pages/Publications/PublicationList'
 import { PublicationDetailPage } from '../pages/Publications/PublicationDetail'
 import { ForumListPage } from '../pages/Forum/ForumList'
 import { ForumDetailPage } from '../pages/Forum/ForumDetail'
+import { HotKeywordsPage } from '../pages/Forum/HotKeywordsPage'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
 import { BroadcastPage } from '../pages/Broadcast/BroadcastPage'
 import { CurrencyPage } from '../pages/Currency/CurrencyPage'
@@ -68,6 +69,7 @@ export function AppRouter() {
           <Route path="publications/:type/:id" element={<PublicationDetailPage />} />
           <Route path="forum/posts" element={<ForumListPage kind="post" />} />
           <Route path="forum/videos" element={<ForumListPage kind="video" />} />
+          <Route path="forum/hot-keywords" element={<HotKeywordsPage />} />
           <Route path="forum/posts/:id" element={<ForumDetailPage />} />
           <Route path="broadcast" element={<BroadcastPage />} />
           <Route path="currency" element={<CurrencyPage />} />

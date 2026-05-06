@@ -90,6 +90,7 @@ export function AdminLayout() {
       children: [
         { key: '/forum/posts', icon: <ReadOutlined />, label: '帖子' },
         { key: '/forum/videos', icon: <VideoCameraOutlined />, label: '视频' },
+        { key: '/forum/hot-keywords', icon: <FireOutlined />, label: '买热搜' },
       ],
     },
     {
@@ -176,6 +177,7 @@ export function AdminLayout() {
     if (path.startsWith('/publications/listings')) return '/publications/listings'
     if (path.startsWith('/forum/posts')) return '/forum/posts'
     if (path.startsWith('/forum/videos')) return '/forum/videos'
+    if (path.startsWith('/forum/hot-keywords')) return '/forum/hot-keywords'
     if (path.startsWith('/users')) return '/users'
     if (path.startsWith('/advertisements')) return '/advertisements'
     if (path.startsWith('/adcards')) return '/adcards'

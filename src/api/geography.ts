@@ -11,6 +11,7 @@ export interface AdminCountry {
   flag_emoji: string
   is_active: boolean
   is_hot: boolean
+  default_provinces: string[]
   postal_count: number
   created_at: string
   updated_at: string
