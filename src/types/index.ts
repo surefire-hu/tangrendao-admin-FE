@@ -118,7 +118,7 @@ export type AdPosition =
   | 'any' | 'services' | 'job_detail' | 'restaurant_detail'
   | 'exchange' | 'permesso' | 'forum' | 'forum_detail'
   | 'passport' | 'local_service_detail' | 'housing_detail' | 'market_detail'
-  | 'huangli' | 'fiscal_code' | 'vehicle_check' | 'weather'
+  | 'huangli' | 'fiscal_code' | 'vehicle_check'
 
 export type AdCardPosition =
   | 'any' | 'forum' | 'listing' | 'housing'

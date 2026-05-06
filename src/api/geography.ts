@@ -55,4 +55,13 @@ export const geographyApi = {
 
   translateProvinces: (country: string, force = false) =>
     apiClient.post<TranslateResponse>('/geo/admin/translate-provinces/', { country, force }),
+
+  searchProvinces: (country: string, q: string) =>
+    apiClient.get<ProvinceOption[]>('/geo/provinces/', { params: { country, q } }),
+}
+
+export interface ProvinceOption {
+  name: string
+  name_zh: string
+  region: string
 }

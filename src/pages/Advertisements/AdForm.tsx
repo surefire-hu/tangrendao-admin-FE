@@ -24,7 +24,6 @@ const positions: { value: AdPosition; label: string }[] = [
   { value: 'huangli', label: '黄历页' },
   { value: 'fiscal_code', label: '税号计算页' },
   { value: 'vehicle_check', label: '车况查询页' },
-  { value: 'weather', label: '天气页' },
   { value: 'forum', label: '论坛' },
   { value: 'forum_detail', label: '帖子详情' },
   { value: 'local_service_detail', label: '本地服务详情' },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Alert, Button, Card, Form, Input, Modal, Popconfirm,
+  Alert, AutoComplete, Button, Card, Form, Input, Modal, Popconfirm,
   Space, Switch, Table, Tag, Tooltip, Typography, message,
 } from 'antd'
 import {
@@ -11,7 +11,7 @@ import type { ColumnsType } from 'antd/es/table'
 
 import {
   geographyApi, type AdminCountry, type CountryPayload,
-  type ImportResult, type TranslateResponse,
+  type ImportResult, type ProvinceOption, type TranslateResponse,
 } from '../../api/geography'
 
 const { Title, Text } = Typography
@@ -36,6 +36,8 @@ export function CountryListPage() {
   const [provinceDraft, setProvinceDraft] = useState<string[]>([])
   const [provinceInput, setProvinceInput] = useState('')
   const [provinceSaving, setProvinceSaving] = useState(false)
+  const [provinceCatalog, setProvinceCatalog] = useState<ProvinceOption[]>([])
+  const [catalogLoading, setCatalogLoading] = useState(false)
   const [form] = Form.useForm<CountryPayload>()
 
   const load = useCallback(async () => {
@@ -109,26 +111,71 @@ export function CountryListPage() {
     }
   }
 
-  const openProvinces = (row: AdminCountry) => {
+  const openProvinces = async (row: AdminCountry) => {
     setProvinceTarget(row)
     setProvinceDraft([...(row.default_provinces ?? [])])
     setProvinceInput('')
+    setCatalogLoading(true)
+    try {
+      const r = await geographyApi.searchProvinces(row.code, '')
+      setProvinceCatalog(r.data)
+    } catch {
+      setProvinceCatalog([])
+      message.warning('无法加载省份列表 — 请先导入邮编')
+    } finally {
+      setCatalogLoading(false)
+    }
   }
 
   const closeProvinces = () => {
     setProvinceTarget(null)
     setProvinceDraft([])
     setProvinceInput('')
+    setProvinceCatalog([])
   }
 
-  const addProvinceToDraft = () => {
-    const v = provinceInput.trim()
+  const provinceLatinToZh = useCallback((name: string): string => {
+    const hit = provinceCatalog.find(p => p.name === name)
+    return hit?.name_zh || ''
+  }, [provinceCatalog])
+
+  const autocompleteOptions = (() => {
+    const q = provinceInput.trim().toLowerCase()
+    const taken = new Set(provinceDraft)
+    const pool = provinceCatalog.filter(p => !taken.has(p.name))
+    const matches = q
+      ? pool.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          (p.name_zh ?? '').toLowerCase().includes(q),
+        )
+      : pool
+    return matches.slice(0, 50).map(p => ({
+      value: p.name,
+      label: (
+        <Space>
+          <span>{p.name}</span>
+          {p.name_zh && <Text type="secondary">· {p.name_zh}</Text>}
+          {p.region && <Text type="secondary" style={{ fontSize: 11 }}>· {p.region}</Text>}
+        </Space>
+      ),
+    }))
+  })()
+
+  const addProvinceToDraft = (raw?: string) => {
+    const v = (raw ?? provinceInput).trim()
     if (!v) return
-    if (provinceDraft.includes(v)) {
+    // Normalize to canonical Latin name if user typed Chinese / partial match
+    const match =
+      provinceCatalog.find(p => p.name === v) ??
+      provinceCatalog.find(p => p.name.toLowerCase() === v.toLowerCase()) ??
+      provinceCatalog.find(p => (p.name_zh ?? '') === v)
+    const canonical = match?.name ?? v
+    if (provinceDraft.includes(canonical)) {
       message.warning('已在列表中')
+      setProvinceInput('')
       return
     }
-    setProvinceDraft([...provinceDraft, v])
+    setProvinceDraft([...provinceDraft, canonical])
     setProvinceInput('')
   }
 
@@ -490,32 +537,57 @@ export function CountryListPage() {
           message="客户端在省份搜索页底部展示这些默认省份。顺序即为展示顺序。"
         />
         <Space.Compact style={{ width: '100%' }}>
-          <Input
-            placeholder="输入省份名称，例如 Milano"
+          <AutoComplete
+            style={{ flex: 1 }}
             value={provinceInput}
-            onChange={e => setProvinceInput(e.target.value)}
-            onPressEnter={addProvinceToDraft}
-          />
-          <Button type="primary" onClick={addProvinceToDraft}>添加</Button>
+            onChange={(v) => setProvinceInput(v)}
+            onSelect={(v) => addProvinceToDraft(v)}
+            options={autocompleteOptions}
+            placeholder={
+              catalogLoading
+                ? '加载省份中…'
+                : provinceCatalog.length === 0
+                  ? '尚无省份数据 — 请先导入邮编'
+                  : '输入省份名（中文或拉丁）例如 Milano / 米兰'
+            }
+            disabled={catalogLoading || provinceCatalog.length === 0}
+            filterOption={false}
+            allowClear
+          >
+            <Input onPressEnter={() => addProvinceToDraft()} />
+          </AutoComplete>
+          <Button
+            type="primary"
+            onClick={() => addProvinceToDraft()}
+            disabled={!provinceInput.trim()}
+          >
+            添加
+          </Button>
         </Space.Compact>
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {provinceDraft.length === 0 && (
             <Text type="secondary" style={{ fontSize: 12 }}>暂无默认省份</Text>
           )}
-          {provinceDraft.map((name, idx) => (
-            <div
-              key={name}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '6px 10px', background: '#fafafa', borderRadius: 4,
-              }}
-            >
-              <Text strong style={{ flex: 1 }}>{idx + 1}. {name}</Text>
-              <Button size="small" disabled={idx === 0} onClick={() => moveProvince(idx, -1)}>↑</Button>
-              <Button size="small" disabled={idx === provinceDraft.length - 1} onClick={() => moveProvince(idx, 1)}>↓</Button>
-              <Button size="small" danger onClick={() => removeProvinceFromDraft(name)}>删除</Button>
-            </div>
-          ))}
+          {provinceDraft.map((name, idx) => {
+            const zh = provinceLatinToZh(name)
+            return (
+              <div
+                key={name}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '6px 10px', background: '#fafafa', borderRadius: 4,
+                }}
+              >
+                <Text strong style={{ flex: 1 }}>
+                  {idx + 1}. {name}
+                  {zh && <Text type="secondary" style={{ marginLeft: 8 }}>· {zh}</Text>}
+                </Text>
+                <Button size="small" disabled={idx === 0} onClick={() => moveProvince(idx, -1)}>↑</Button>
+                <Button size="small" disabled={idx === provinceDraft.length - 1} onClick={() => moveProvince(idx, 1)}>↓</Button>
+                <Button size="small" danger onClick={() => removeProvinceFromDraft(name)}>删除</Button>
+              </div>
+            )
+          })}
         </div>
       </Modal>
     </Space>
