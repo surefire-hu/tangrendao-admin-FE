@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   Alert, AutoComplete, Button, Card, Form, Input, Modal, Popconfirm,
-  Space, Switch, Table, Tag, Tooltip, Typography, message,
+  Select, Space, Switch, Table, Tag, Tooltip, Typography, message,
 } from 'antd'
 import {
   CloudDownloadOutlined, EditOutlined, EnvironmentOutlined,
@@ -20,8 +20,14 @@ const EMPTY_FORM: CountryPayload = {
   code: '', name: '', name_zh: '', phone_prefix: '',
   postal_regex: '', postal_example: '', currency: 'EUR',
   flag_emoji: '', is_active: true, is_hot: false,
-  default_provinces: [],
+  default_provinces: [], province_admin_level: 2,
 }
+
+const ADMIN_LEVEL_OPTIONS = [
+  { value: 1, label: 'admin1 — 一级（大区/州/省）例: NL Provincie, CH Kanton' },
+  { value: 2, label: 'admin2 — 二级（省/县）例: IT Provincia, FR Département (默认)' },
+  { value: 3, label: 'admin3 — 三级（地区/Kreis）例: DE Kreis' },
+]
 
 export function CountryListPage() {
   const [rows, setRows]       = useState<AdminCountry[]>([])
@@ -319,6 +325,30 @@ export function CountryListPage() {
       ),
     },
     {
+      title: '省份级别', key: 'province_admin_level', width: 130,
+      render: (_, row) => (
+        <Select
+          size="small"
+          value={row.province_admin_level}
+          style={{ width: '100%' }}
+          options={[
+            { value: 1, label: 'admin1' },
+            { value: 2, label: 'admin2' },
+            { value: 3, label: 'admin3' },
+          ]}
+          onChange={async (v) => {
+            try {
+              await geographyApi.update(row.code, { province_admin_level: v })
+              message.success(`${row.code}: 改为 admin${v}（重新导入邮编生效）`)
+              await load()
+            } catch {
+              message.error('修改失败')
+            }
+          }}
+        />
+      ),
+    },
+    {
       title: '默认省份', key: 'default_provinces', width: 110,
       render: (_, row) => {
         const n = row.default_provinces?.length ?? 0
@@ -401,7 +431,7 @@ export function CountryListPage() {
           columns={columns}
           pagination={false}
           size="small"
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1300 }}
         />
       </Card>
 
@@ -458,6 +488,15 @@ export function CountryListPage() {
 
           <Form.Item label="CAP 示例" name="postal_example">
             <Input placeholder="20121" />
+          </Form.Item>
+
+          <Form.Item
+            label="省份对应的 GeoNames 级别"
+            name="province_admin_level"
+            tooltip="GeoNames 文件含 admin1/admin2/admin3 三级行政区。不同国家「省」对应的级别不同：意大利/法国是 admin2，德国是 admin3 (Kreis)，荷兰/瑞士是 admin1。修改后需重新点「导入邮编」生效。"
+            rules={[{ required: true }]}
+          >
+            <Select options={ADMIN_LEVEL_OPTIONS} />
           </Form.Item>
 
           <Space style={{ width: '100%' }} size="middle">

@@ -12,6 +12,7 @@ export interface AdminCountry {
   is_active: boolean
   is_hot: boolean
   default_provinces: string[]
+  province_admin_level: 1 | 2 | 3
   postal_count: number
   created_at: string
   updated_at: string
