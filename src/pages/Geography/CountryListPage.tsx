@@ -4,8 +4,9 @@ import {
   Select, Space, Switch, Table, Tag, Tooltip, Typography, message,
 } from 'antd'
 import {
-  CloudDownloadOutlined, EditOutlined, EnvironmentOutlined,
-  PlusOutlined, ReloadOutlined, TranslationOutlined,
+  EditOutlined, EnvironmentOutlined,
+  PlusOutlined, ReloadOutlined, RobotOutlined, ThunderboltOutlined,
+  TranslationOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 
@@ -229,14 +230,17 @@ export function CountryListPage() {
     }
   }
 
-  const runImport = async (row: AdminCountry) => {
+  const runImport = async (row: AdminCountry, autoDetect = false) => {
     setImporting(row.code)
     try {
-      const r = await geographyApi.importGeoNames([row.code])
+      const r = await geographyApi.importGeoNames([row.code], autoDetect)
       const result = r.data.results[row.code]
       setImportLog({ code: row.code, result })
       if (result.ok) {
-        message.success(`${row.code}: 已导入 ${result.inserted} 条邮编`)
+        const detect = result.detected_level
+          ? ` (auto-level: admin${result.detected_level})`
+          : ''
+        message.success(`${row.code}: 已导入 ${result.inserted} 条邮编${detect}`)
       } else {
         message.error(`${row.code}: ${result.error ?? '导入失败'}`)
       }
@@ -325,7 +329,12 @@ export function CountryListPage() {
       ),
     },
     {
-      title: '省份级别', key: 'province_admin_level', width: 130,
+      title: (
+        <Tooltip title="智能导入会自动设置此级别。手动修改后请重新导入邮编生效。">
+          <span>省份级别 <RobotOutlined style={{ fontSize: 11, opacity: 0.6 }} /></span>
+        </Tooltip>
+      ),
+      key: 'province_admin_level', width: 130,
       render: (_, row) => (
         <Select
           size="small"
@@ -358,23 +367,32 @@ export function CountryListPage() {
       },
     },
     {
-      title: '操作', key: 'actions', width: 480, fixed: 'right' as const,
+      title: '操作', key: 'actions', width: 500, fixed: 'right' as const,
       render: (_, row) => (
-        <Space>
-          <Tooltip title="从 GeoNames 下载并替换该国全部邮编">
-            <Button
-              size="small"
-              icon={<CloudDownloadOutlined />}
-              loading={importing === row.code}
-              onClick={() => runImport(row)}
-            >
-              导入邮编
-            </Button>
-          </Tooltip>
-          <Tooltip title="通过 ChatGPT 把省份名翻译成中文，保存到 province_zh（城市数量过多，不翻译）">
+        <Space wrap>
+          <Tooltip title="一键完成：AI 自动识别省份级别 → 下载邮编 → 翻译省份（中文）。重复的省份名只翻译一次以节省 token。">
             <Popconfirm
-              title="翻译该国省份为中文？"
-              description="将调用 OpenAI 翻译尚未翻译的省份。通常只需几秒。"
+              title="智能导入？"
+              description="将下载 GeoNames、AI 选择 admin 级别、导入邮编、翻译省份。约 30–60 秒。"
+              okText="开始"
+              cancelText="取消"
+              onConfirm={() => runImport(row, true)}
+            >
+              <Button
+                size="small"
+                type="primary"
+                ghost
+                icon={<ThunderboltOutlined />}
+                loading={importing === row.code}
+              >
+                智能导入
+              </Button>
+            </Popconfirm>
+          </Tooltip>
+          <Tooltip title="只重新翻译省份（如果之前翻译失败或不满意）">
+            <Popconfirm
+              title="重新翻译省份为中文？"
+              description="将调用 OpenAI 翻译尚未翻译的省份。重复名称去重，仅几秒。"
               okText="开始翻译"
               cancelText="取消"
               onConfirm={() => runTranslate(row)}
@@ -385,7 +403,7 @@ export function CountryListPage() {
                 loading={translating === row.code}
                 disabled={row.postal_count === 0}
               >
-                翻译省份
+                重译省份
               </Button>
             </Popconfirm>
           </Tooltip>
@@ -524,6 +542,28 @@ export function CountryListPage() {
                      message={`已导入 ${importLog.result.inserted} 条 (替换 ${importLog.result.deleted} 条旧数据)`} />
             ) : (
               <Alert type="error" showIcon message={importLog.result.error ?? '失败'} />
+            )}
+            {importLog.result.detected_level && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginTop: 8 }}
+                message={
+                  <span>
+                    AI 自动识别：<Tag color="blue">admin{importLog.result.detected_level}</Tag>
+                    置信度：{((importLog.result.detect_confidence ?? 0) * 100).toFixed(0)}%
+                  </span>
+                }
+                description={importLog.result.detect_reason}
+              />
+            )}
+            {importLog.result.translated_rows !== undefined && (
+              <Alert
+                type="success"
+                showIcon
+                style={{ marginTop: 8 }}
+                message={`省份翻译完成 — 更新 ${importLog.result.translated_rows} 条邮编（重复省份名自动去重）`}
+              />
             )}
             {importLog.result.log && (
               <pre style={{ marginTop: 12, padding: 12, background: '#f5f5f5',

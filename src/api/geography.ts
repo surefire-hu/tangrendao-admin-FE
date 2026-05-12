@@ -26,10 +26,24 @@ export interface ImportResult {
   inserted?: number
   error?: string
   log?: string
+  detected_level?: 1 | 2 | 3
+  detect_reason?: string
+  detect_confidence?: number
+  translated_rows?: number
 }
 
 export interface ImportResponse {
   results: Record<string, ImportResult>
+}
+
+export interface DetectResult {
+  ok: boolean
+  level?: 1 | 2 | 3
+  confidence?: number
+  reason?: string
+  samples?: Record<'1' | '2' | '3', string[]>
+  applied?: boolean
+  error?: string
 }
 
 export interface TranslateResponse {
@@ -51,8 +65,13 @@ export const geographyApi = {
   remove: (code: string) =>
     apiClient.delete(`/geo/admin/countries/${code}/`),
 
-  importGeoNames: (countries: string[]) =>
-    apiClient.post<ImportResponse>('/geo/admin/import-geonames/', { countries }),
+  importGeoNames: (countries: string[], autoDetect = false) =>
+    apiClient.post<ImportResponse>('/geo/admin/import-geonames/', {
+      countries, auto_detect: autoDetect,
+    }),
+
+  detectAdminLevel: (country: string, apply = false) =>
+    apiClient.post<DetectResult>('/geo/admin/detect-admin-level/', { country, apply }),
 
   translateProvinces: (country: string, force = false) =>
     apiClient.post<TranslateResponse>('/geo/admin/translate-provinces/', { country, force }),
