@@ -27,6 +27,10 @@ import type {
   CurrencyMovementsRange,
   CandyPackage,
   CandyPackageInput,
+  NavCategory,
+  NavCategoryInput,
+  NavSectionInput,
+  NavItemInput,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -259,6 +263,31 @@ export const adminApi = {
 
   deleteCandyPackage: (id: number) =>
     apiClient.delete<void>(`/admin/payments/packages/${id}/`),
+
+  // ── Service Navigation (admin CRUD) ───────────────────────────────────────
+  getNavigation: () =>
+    apiClient.get<NavCategory[]>('/admin/services/navigation/'),
+
+  createNavCategory: (data: NavCategoryInput) =>
+    apiClient.post<NavCategory>('/admin/services/categories/', data),
+  updateNavCategory: (id: number, data: Partial<NavCategoryInput>) =>
+    apiClient.patch<NavCategory>(`/admin/services/categories/${id}/`, data),
+  deleteNavCategory: (id: number) =>
+    apiClient.delete<void>(`/admin/services/categories/${id}/`),
+
+  createNavSection: (data: NavSectionInput) =>
+    apiClient.post(`/admin/services/sections/`, data),
+  updateNavSection: (id: number, data: Partial<Omit<NavSectionInput, 'category'>>) =>
+    apiClient.patch(`/admin/services/sections/${id}/`, data),
+  deleteNavSection: (id: number) =>
+    apiClient.delete<void>(`/admin/services/sections/${id}/`),
+
+  createNavItem: (data: NavItemInput) =>
+    apiClient.post(`/admin/services/items/`, data),
+  updateNavItem: (id: number, data: Partial<Omit<NavItemInput, 'section'>>) =>
+    apiClient.patch(`/admin/services/items/${id}/`, data),
+  deleteNavItem: (id: number) =>
+    apiClient.delete<void>(`/admin/services/items/${id}/`),
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
   sendBroadcast: (data: BroadcastPayload) => {

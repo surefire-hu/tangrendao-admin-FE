@@ -590,6 +590,51 @@ export interface CandyPackage {
 
 export type CandyPackageInput = Omit<CandyPackage, 'id'>
 
+// ── Service Navigation ────────────────────────────────────────────────────────
+
+export interface NavItem {
+  id: number
+  slug: string
+  label: string
+  icon_name: string
+  display_order: number
+}
+
+export interface NavSection {
+  id: number
+  title: string
+  display_order: number
+  items: NavItem[]
+}
+
+export interface NavCategory {
+  id: number
+  slug: string
+  label: string
+  display_order: number
+  sections: NavSection[]
+}
+
+export interface NavCategoryInput {
+  slug: string
+  label: string
+  display_order: number
+}
+
+export interface NavSectionInput {
+  category: number
+  title: string
+  display_order: number
+}
+
+export interface NavItemInput {
+  section: number
+  slug: string
+  label: string
+  icon_name: string
+  display_order: number
+}
+
 // ── Broadcast ─────────────────────────────────────────────────────────────────
 
 export interface BroadcastPayload {

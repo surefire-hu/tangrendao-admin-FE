@@ -25,6 +25,7 @@ import {
   FireOutlined,
   GlobalOutlined,
   MedicineBoxOutlined,
+  PartitionOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -155,6 +156,11 @@ export function AdminLayout() {
       icon: <MedicineBoxOutlined />,
       label: '专家咨询',
     },
+    {
+      key: '/navigation',
+      icon: <PartitionOutlined />,
+      label: '服务导航',
+    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -189,6 +195,7 @@ export function AdminLayout() {
     if (path.startsWith('/support')) return '/support'
     if (path.startsWith('/geography')) return '/geography'
     if (path.startsWith('/specialists')) return '/specialists'
+    if (path.startsWith('/navigation')) return '/navigation'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
