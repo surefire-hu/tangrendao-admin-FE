@@ -89,6 +89,7 @@ export interface AdminUser {
   is_registered: boolean
   is_staff: boolean
   is_journalist: boolean
+  is_content_creator: boolean
   is_bot: boolean
   gender: Gender | null
   moderator_roles: ModeratorContentType[]

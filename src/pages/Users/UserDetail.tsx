@@ -44,6 +44,7 @@ export function UserDetailPage() {
   const [savingRoles, setSavingRoles] = useState(false)
   const [localRoles, setLocalRoles] = useState<ModeratorContentType[]>([])
   const [localJournalist, setLocalJournalist] = useState(false)
+  const [localContentCreator, setLocalContentCreator] = useState(false)
   const [localBot, setLocalBot] = useState(false)
   const [localGender, setLocalGender] = useState<Gender | null>(null)
 
@@ -56,6 +57,7 @@ export function UserDetailPage() {
         setUser(r.data)
         setLocalRoles((r.data.moderator_roles ?? []) as ModeratorContentType[])
         setLocalJournalist(r.data.is_journalist ?? false)
+        setLocalContentCreator(r.data.is_content_creator ?? false)
         setLocalBot(r.data.is_bot ?? false)
         setLocalGender((r.data.gender ?? null) as Gender | null)
       }),
@@ -71,6 +73,7 @@ export function UserDetailPage() {
     try {
       const res = await adminApi.updateUser(id, {
         is_journalist: localJournalist,
+        is_content_creator: localContentCreator,
         is_bot: localBot,
         gender: localGender,
         moderator_roles: localRoles,
@@ -160,6 +163,19 @@ export function UserDetailPage() {
                 size="small"
                 checked={localJournalist}
                 onChange={setLocalJournalist}
+              />
+            </div>
+
+            {/* 内容创作者 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+              <Space>
+                <span style={{ fontSize: 13 }}>🎬 内容创作者</span>
+                <Text type="secondary" style={{ fontSize: 11 }}>可上传超过60秒的视频</Text>
+              </Space>
+              <Switch
+                size="small"
+                checked={localContentCreator}
+                onChange={setLocalContentCreator}
               />
             </div>
 
