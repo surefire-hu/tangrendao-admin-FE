@@ -25,7 +25,6 @@ import {
   GlobalOutlined,
   MedicineBoxOutlined,
   PartitionOutlined,
-  EnvironmentOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -156,11 +155,6 @@ export function AdminLayout() {
       icon: <PartitionOutlined />,
       label: '服务导航',
     },
-    {
-      key: '/popular-cities',
-      icon: <EnvironmentOutlined />,
-      label: '热门城市',
-    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -195,7 +189,6 @@ export function AdminLayout() {
     if (path.startsWith('/geography')) return '/geography'
     if (path.startsWith('/specialists')) return '/specialists'
     if (path.startsWith('/navigation')) return '/navigation'
-    if (path.startsWith('/popular-cities')) return '/popular-cities'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
