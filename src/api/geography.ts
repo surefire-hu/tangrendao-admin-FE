@@ -78,7 +78,30 @@ export const geographyApi = {
 
   searchProvinces: (country: string, q: string) =>
     apiClient.get<ProvinceOption[]>('/geo/provinces/', { params: { country, q } }),
+
+  // ── Popular cities (heat list on every search page) ────────────────────
+  listPopularCities: (country?: string) =>
+    apiClient.get<PopularCity[]>('/geo/admin/popular-cities/', { params: country ? { country } : {} }),
+  createPopularCity: (data: PopularCityInput) =>
+    apiClient.post<PopularCity>('/geo/admin/popular-cities/', data),
+  updatePopularCity: (id: number, data: Partial<PopularCityInput>) =>
+    apiClient.patch<PopularCity>(`/geo/admin/popular-cities/${id}/`, data),
+  deletePopularCity: (id: number) =>
+    apiClient.delete(`/geo/admin/popular-cities/${id}/`),
 }
+
+export interface PopularCity {
+  id: number
+  country: string
+  name: string
+  click_count: number
+  display_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type PopularCityInput = Omit<PopularCity, 'id' | 'created_at' | 'updated_at'>
 
 export interface ProvinceOption {
   name: string
