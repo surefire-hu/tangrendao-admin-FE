@@ -17,7 +17,6 @@ import { HotKeywordsPage } from '../pages/Forum/HotKeywordsPage'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
 import { BroadcastPage } from '../pages/Broadcast/BroadcastPage'
 import { CurrencyPage } from '../pages/Currency/CurrencyPage'
-import { MonitoringPage } from '../pages/Monitoring/MonitoringPage'
 import { FeedbackPage } from '../pages/Feedback/FeedbackPage'
 import { PromotionsPage } from '../pages/Promotions/PromotionsPage'
 import { SupportInboxPage } from '../pages/Support/SupportInboxPage'
@@ -75,7 +74,6 @@ export function AppRouter() {
           <Route path="forum/posts/:id" element={<ForumDetailPage />} />
           <Route path="broadcast" element={<BroadcastPage />} />
           <Route path="currency" element={<CurrencyPage />} />
-          <Route path="monitoring" element={<MonitoringPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
           <Route path="promotions" element={<PromotionsPage />} />
           <Route path="support" element={<SupportInboxPage />} />

@@ -17,7 +17,6 @@ import {
   AuditOutlined,
   IdcardOutlined,
   GiftOutlined,
-  MonitorOutlined,
   MessageOutlined,
   CommentOutlined,
   VideoCameraOutlined,
@@ -111,11 +110,6 @@ export function AdminLayout() {
       label: '糖果/金币',
     },
     {
-      key: '/monitoring',
-      icon: <MonitorOutlined />,
-      label: '监控分析',
-    },
-    {
       key: '/broadcast',
       icon: <SendOutlined />,
       label: '广播通知',
@@ -194,7 +188,6 @@ export function AdminLayout() {
     if (path.startsWith('/advertisements')) return '/advertisements'
     if (path.startsWith('/adcards')) return '/adcards'
     if (path.startsWith('/currency')) return '/currency'
-    if (path.startsWith('/monitoring')) return '/monitoring'
     if (path.startsWith('/broadcast')) return '/broadcast'
     if (path.startsWith('/feedback')) return '/feedback'
     if (path.startsWith('/promotions')) return '/promotions'
