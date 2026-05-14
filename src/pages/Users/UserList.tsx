@@ -2,15 +2,16 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Table, Input, Select, Tag, Avatar, Space, Typography,
   Button, Tooltip, Card, Row, Col, Statistic, theme,
-  Modal, Form, Switch, Upload, message,
+  Modal, Form, Switch, Upload, message, Slider, InputNumber, Alert,
 } from 'antd'
 import {
   UserOutlined, SearchOutlined, EyeOutlined, PlusOutlined,
-  CheckCircleOutlined, StopOutlined, UploadOutlined,
+  CheckCircleOutlined, StopOutlined, UploadOutlined, RobotOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
+import { mediaUrl } from '../../api/client'
 import type { AdminUser } from '../../types'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -50,6 +51,37 @@ export function UserListPage() {
   const [createForm] = Form.useForm()
   const avatarRef = useRef<File | null>(null)
   const PAGE_SIZE = 20
+
+  // ── Bulk-create-bots Modal ────────────────────────────────────────────────
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkRunning, setBulkRunning] = useState(false)
+  const [bulkResult, setBulkResult] = useState<{ created: number; skipped: number } | null>(null)
+  const [bulkCount, setBulkCount] = useState(20)
+  const [bulkFemalePct, setBulkFemalePct] = useState(50)
+  const [bulkWeights, setBulkWeights] = useState({ anime: 2, wangtu: 4, animals: 2, environments: 1 })
+  const [bulkCountry, setBulkCountry] = useState('IT')
+
+  async function runBulk() {
+    setBulkRunning(true)
+    setBulkResult(null)
+    try {
+      const res = await adminApi.bulkCreateBots({
+        count:          bulkCount,
+        female_ratio:   bulkFemalePct / 100,
+        source_weights: bulkWeights,
+        country:        bulkCountry,
+      })
+      setBulkResult({ created: res.data.created, skipped: res.data.skipped })
+      message.success(`创建 ${res.data.created} 个机器人，跳过 ${res.data.skipped}`)
+      setBotFilter('bot')
+      setPage(1)
+      fetchUsers()
+    } catch (e: any) {
+      message.error(e?.response?.data?.detail ?? '批量创建失败')
+    } finally {
+      setBulkRunning(false)
+    }
+  }
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -113,13 +145,35 @@ export function UserListPage() {
     {} as Record<string, number>,
   )
 
+  async function toggleBan(u: AdminUser) {
+    const next = !u.is_active
+    Modal.confirm({
+      title: next ? '解封用户' : '封禁用户',
+      content: next
+        ? `确认解封 ${u.first_name || u.username || u.email}？`
+        : `确认封禁 ${u.first_name || u.username || u.email}？该用户将无法登录。`,
+      okText: next ? '解封' : '封禁',
+      okButtonProps: { danger: !next },
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await adminApi.updateUser(u.id, { is_active: next })
+          message.success(next ? '已解封' : '已封禁')
+          fetchUsers()
+        } catch (e: any) {
+          message.error(e?.response?.data?.detail ?? '操作失败')
+        }
+      },
+    })
+  }
+
   const columns: ColumnsType<AdminUser> = [
     {
       title: '用户',
       key: 'user',
       render: (_, u) => (
         <Space>
-          <Avatar src={u.avatar} icon={<UserOutlined />} size="small" />
+          <Avatar src={mediaUrl(u.avatar)} icon={<UserOutlined />} size={40} />
           <div>
             <div>
               <Text strong style={{ fontSize: 13 }}>
@@ -183,13 +237,25 @@ export function UserListPage() {
     {
       title: '',
       key: 'actions',
-      width: 60,
+      width: 110,
       render: (_, u) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => navigate(`/users/${u.id}`)}
-        />
+        <Space size={2} onClick={(e) => e.stopPropagation()}>
+          <Tooltip title="详情">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/users/${u.id}`)}
+            />
+          </Tooltip>
+          <Tooltip title={u.is_active ? '封禁' : '解封'}>
+            <Button
+              type="text"
+              danger={u.is_active}
+              icon={u.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
+              onClick={() => toggleBan(u)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ]
@@ -198,9 +264,14 @@ export function UserListPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <Typography.Title level={4} style={{ margin: 0 }}>用户管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-          新建用户
-        </Button>
+        <Space>
+          <Button icon={<RobotOutlined />} onClick={() => { setBulkResult(null); setBulkOpen(true) }}>
+            批量创建机器人
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+            新建用户
+          </Button>
+        </Space>
       </div>
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
@@ -360,6 +431,90 @@ export function UserListPage() {
             </Upload>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="🤖 批量创建机器人"
+        open={bulkOpen}
+        onCancel={() => !bulkRunning && setBulkOpen(false)}
+        onOk={runBulk}
+        okText={bulkRunning ? '生成中…' : `生成 ${bulkCount} 个`}
+        cancelText="关闭"
+        confirmLoading={bulkRunning}
+        maskClosable={!bulkRunning}
+        keyboard={!bulkRunning}
+        destroyOnHidden
+        width={560}
+      >
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="网名由 AI 生成 (OpenAI/Groq/Claude)，头像随机抓取公开 API。每个机器人约 1–2 秒，最多 1000 个/次。"
+        />
+
+        <Form layout="vertical">
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item label="数量">
+                <InputNumber
+                  min={1}
+                  max={1000}
+                  value={bulkCount}
+                  onChange={(v) => setBulkCount(Number(v) || 1)}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="国家 (ISO-2)">
+                <Input
+                  maxLength={2}
+                  value={bulkCountry}
+                  onChange={(e) => setBulkCountry(e.target.value.toUpperCase())}
+                  style={{ textTransform: 'uppercase' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item label={`女性比例：${bulkFemalePct}%`}>
+            <Slider
+              min={0}
+              max={100}
+              value={bulkFemalePct}
+              onChange={setBulkFemalePct}
+              marks={{ 0: '全男', 50: '一半', 100: '全女' }}
+            />
+          </Form.Item>
+
+          <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+            头像来源权重
+          </Typography.Text>
+          {([
+            { key: 'wangtu',       label: '🇨🇳 真人网图 (按性别匹配)' },
+            { key: 'anime',        label: '🐱 二次元 (waifu/neko)' },
+            { key: 'animals',      label: '🐶 动物 (猫狗)' },
+            { key: 'environments', label: '🌄 风景照' },
+          ] as const).map(({ key, label }) => (
+            <Form.Item key={key} label={`${label}：${bulkWeights[key]}`} style={{ marginBottom: 8 }}>
+              <Slider
+                min={0}
+                max={10}
+                value={bulkWeights[key]}
+                onChange={(v) => setBulkWeights({ ...bulkWeights, [key]: v as number })}
+              />
+            </Form.Item>
+          ))}
+        </Form>
+
+        {bulkResult && (
+          <Alert
+            type={bulkResult.skipped > 0 ? 'warning' : 'success'}
+            style={{ marginTop: 8 }}
+            message={`已创建 ${bulkResult.created} 个，跳过 ${bulkResult.skipped} 个`}
+          />
+        )}
       </Modal>
     </div>
   )

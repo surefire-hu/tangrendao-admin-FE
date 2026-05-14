@@ -83,6 +83,18 @@ export const adminApi = {
     })
   },
 
+  bulkCreateBots: (data: {
+    count: number
+    female_ratio: number
+    source_weights: { anime: number; wangtu: number; animals: number; environments: number }
+    country?: string
+  }) =>
+    apiClient.post<{ created: number; skipped: number; sample: AdminUser[] }>(
+      '/admin/users/bulk-create-bots/',
+      data,
+      { timeout: 600_000 },
+    ),
+
   // ── Advertisements ────────────────────────────────────────────────────────
   getAds: (params?: { page?: number; is_active?: boolean; position?: string; country?: string }) =>
     apiClient.get<PaginatedResponse<BannerAd>>('/ads/banners/admin/', { params }),

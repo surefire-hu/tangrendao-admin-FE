@@ -3,6 +3,20 @@ import axios from 'axios'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://127.0.0.1:8000/api'
 
+// Origin used to absolute-ify backend `/media/...` URLs (no /api suffix).
+const MEDIA_ORIGIN = API_URL.replace(/\/api\/?$/, '')
+
+/**
+ * Resolve a possibly-relative media path (e.g. `/media/avatars/x.jpg`)
+ * against the backend origin. Returns absolute URLs unchanged, null inputs
+ * as null. Use for `<img src>` of anything served from MEDIA_ROOT or S3.
+ */
+export function mediaUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined
+  if (/^https?:\/\//i.test(path)) return path
+  return `${MEDIA_ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`
+}
+
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
