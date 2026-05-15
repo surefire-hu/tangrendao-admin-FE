@@ -23,6 +23,7 @@ import { SupportInboxPage } from '../pages/Support/SupportInboxPage'
 import { CountryListPage } from '../pages/Geography/CountryListPage'
 import { SpecialistsPage } from '../pages/Specialists/SpecialistsPage'
 import { NavigationPage } from '../pages/Navigation/NavigationPage'
+import { ClaimListPage } from '../pages/Claims/ClaimList'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -79,6 +80,7 @@ export function AppRouter() {
           <Route path="geography" element={<CountryListPage />} />
           <Route path="specialists" element={<SpecialistsPage />} />
           <Route path="navigation" element={<NavigationPage />} />
+          <Route path="claims" element={<ClaimListPage />} />
           <Route
             path="admin-log"
             element={

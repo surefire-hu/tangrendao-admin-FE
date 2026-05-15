@@ -13,7 +13,7 @@ import { ProductSelect } from '../../components/ProductSelect'
 const { Title, Text } = Typography
 
 const countries: { value: AdCountry; label: string }[] = [
-  { value: 'ALL', label: '🌍 所有国家' },
+  { value: 'ALL', label: '所有国家' },
   { value: 'IT', label: '🇮🇹 意大利' },
   { value: 'DE', label: '🇩🇪 德国' },
   { value: 'FR', label: '🇫🇷 法国' },

@@ -31,6 +31,8 @@ import type {
   NavCategoryInput,
   NavSectionInput,
   NavItemInput,
+  ListingClaim,
+  ListingClaimStatus,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -300,6 +302,19 @@ export const adminApi = {
     apiClient.patch(`/admin/services/items/${id}/`, data),
   deleteNavItem: (id: number) =>
     apiClient.delete<void>(`/admin/services/items/${id}/`),
+
+  // ── Listing Claims ────────────────────────────────────────────────────────
+  getListingClaims: (params?: { page?: number; page_size?: number; status?: ListingClaimStatus }) =>
+    apiClient.get<PaginatedResponse<ListingClaim>>('/admin/listing-claims/', { params }),
+
+  getListingClaimsUnreadCount: () =>
+    apiClient.get<{ count: number }>('/admin/listing-claims/unread-count/'),
+
+  matchListingClaim: (id: string) =>
+    apiClient.post<ListingClaim>(`/admin/listing-claims/${id}/match/`),
+
+  rejectListingClaim: (id: string, reason?: string) =>
+    apiClient.post<ListingClaim>(`/admin/listing-claims/${id}/reject/`, { reason }),
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
   sendBroadcast: (data: BroadcastPayload) => {

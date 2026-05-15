@@ -192,9 +192,9 @@ export function UserListPage() {
       render: (r: string, u) => (
         <Space size={4}>
           <Tag color={roleColors[r]}>{roleLabels[r]}</Tag>
-          {u.is_bot && <Tag color="purple">🤖</Tag>}
-          {u.gender === 'male' && <Tag color="blue">♂</Tag>}
-          {u.gender === 'female' && <Tag color="pink">♀</Tag>}
+          {u.is_bot && <Tag color="purple">BOT</Tag>}
+          {u.gender === 'male' && <Tag color="blue">男</Tag>}
+          {u.gender === 'female' && <Tag color="pink">女</Tag>}
         </Space>
       ),
     },
@@ -313,7 +313,7 @@ export function UserListPage() {
             options={[
               { value: 'all',  label: '全部账号' },
               { value: 'real', label: '真实用户' },
-              { value: 'bot',  label: '🤖 机器人' },
+              { value: 'bot',  label: '机器人 (BOT)' },
             ]}
           />
         </Space>
@@ -351,7 +351,7 @@ export function UserListPage() {
           layout="vertical"
           initialValues={{ role: 'user', country: 'IT', is_bot: false }}
         >
-          <Form.Item name="is_bot" label="🤖 机器人账号" valuePropName="checked">
+          <Form.Item name="is_bot" label="机器人账号 (BOT)" valuePropName="checked">
             <Switch />
           </Form.Item>
 
@@ -434,7 +434,7 @@ export function UserListPage() {
       </Modal>
 
       <Modal
-        title="🤖 批量创建机器人"
+        title="批量创建机器人"
         open={bulkOpen}
         onCancel={() => !bulkRunning && setBulkOpen(false)}
         onOk={runBulk}
@@ -492,10 +492,10 @@ export function UserListPage() {
             头像来源权重
           </Typography.Text>
           {([
-            { key: 'wangtu',       label: '🇨🇳 真人网图 (按性别匹配)' },
-            { key: 'anime',        label: '🐱 二次元 (waifu/neko)' },
-            { key: 'animals',      label: '🐶 动物 (猫狗)' },
-            { key: 'environments', label: '🌄 风景照' },
+            { key: 'wangtu',       label: '真人网图 (按性别匹配)' },
+            { key: 'anime',        label: '二次元 (waifu/neko)' },
+            { key: 'animals',      label: '动物 (猫狗)' },
+            { key: 'environments', label: '风景照' },
           ] as const).map(({ key, label }) => (
             <Form.Item key={key} label={`${label}：${bulkWeights[key]}`} style={{ marginBottom: 8 }}>
               <Slider

@@ -59,7 +59,7 @@ export function AdCardListPage() {
         <Space direction="vertical" size={2}>
           <span style={{ fontWeight: 600 }}>{r.title || '—'}</span>
           {r.subtitle && <span style={{ fontSize: 12, color: '#888' }}>{r.subtitle}</span>}
-          {r.city && <span style={{ fontSize: 11, color: '#aaa' }}>📍 {r.city}</span>}
+          {r.city && <span style={{ fontSize: 11, color: '#aaa' }}>{r.city}</span>}
         </Space>
       ),
     },

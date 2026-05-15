@@ -25,12 +25,25 @@ const WEEKDAY_LABELS: Record<string, string> = {
   friday: '周五', saturday: '周六', sunday: '周日',
 }
 
-function formatOpeningHours(oh: Record<string, string | string[]> | undefined) {
+type OpeningHourValue = string | string[] | { open?: string; close?: string; closed?: boolean } | null
+
+function formatOpeningHours(oh: Record<string, OpeningHourValue> | undefined) {
   if (!oh || Object.keys(oh).length === 0) return null
   const rows: { day: string; value: string }[] = []
   for (const [k, v] of Object.entries(oh)) {
     const label = WEEKDAY_LABELS[k.toLowerCase()] ?? k
-    const value = Array.isArray(v) ? v.join(' / ') : String(v)
+    let value = ''
+    if (v == null) {
+      value = '休息'
+    } else if (Array.isArray(v)) {
+      value = v.join(' / ')
+    } else if (typeof v === 'string') {
+      value = v
+    } else if (typeof v === 'object') {
+      // OpeningHoursEditor shape: { open, close, closed }
+      if (v.closed) value = '休息'
+      else if (v.open && v.close) value = `${v.open} – ${v.close}`
+    }
     rows.push({ day: label, value: value || '休息' })
   }
   return rows

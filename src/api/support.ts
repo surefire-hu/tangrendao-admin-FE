@@ -12,6 +12,12 @@ export interface SupportMessage {
   created_at: string
 }
 
+export interface OperatorDisplay {
+  id: string
+  name: string
+  avatar_url: string | null
+}
+
 export interface SupportConversation {
   id: string
   title: string
@@ -27,9 +33,23 @@ export interface SupportConversation {
     created_at: string
   } | null
   user_display?: { id: string; name: string; avatar_url: string | null }
+  claimed_by?: OperatorDisplay | null
+  is_claim_active?: boolean
+  is_claimed_by_me?: boolean
   created_at: string
   updated_at: string
   closed_at: string | null
+}
+
+export interface PresenceResponse {
+  online: boolean
+  online_count: number
+}
+
+export interface ClaimResponse {
+  claimed_by: OperatorDisplay | null
+  is_claim_active: boolean
+  is_claimed_by_me: boolean
 }
 
 function getAccessToken(): string {
@@ -81,6 +101,30 @@ export const supportApi = {
 
   async markRead(conversationId: string) {
     await apiClient.post(`/chat/support/admin/conversations/${conversationId}/mark-read/`, {})
+  },
+
+  async getPresence() {
+    const res = await apiClient.get<PresenceResponse>('/chat/support/admin/presence/')
+    return res.data
+  },
+
+  async setPresence(online: boolean) {
+    const res = await apiClient.post<PresenceResponse>('/chat/support/admin/presence/', { online })
+    return res.data
+  },
+
+  async claim(conversationId: string) {
+    const res = await apiClient.post<ClaimResponse>(
+      `/chat/support/admin/conversations/${conversationId}/claim/`,
+    )
+    return res.data
+  },
+
+  async release(conversationId: string) {
+    const res = await apiClient.delete<ClaimResponse>(
+      `/chat/support/admin/conversations/${conversationId}/claim/`,
+    )
+    return res.data
   },
 
   async close(conversationId: string) {

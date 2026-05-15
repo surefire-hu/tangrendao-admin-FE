@@ -96,7 +96,7 @@ function CategoriesTab() {
     { title: '名称', dataIndex: 'name_zh', width: 130 },
     {
       title: '价格', dataIndex: 'price_candy', width: 110,
-      render: (v: number) => <Tag color="gold">{v} 🍬</Tag>,
+      render: (v: number) => <Tag color="gold">{v} 糖果</Tag>,
     },
     {
       title: '说明', dataIndex: 'description', ellipsis: true,
@@ -144,7 +144,7 @@ function CategoriesTab() {
             <Input maxLength={40} />
           </Form.Item>
           <Form.Item name="icon" label="图标 (emoji)">
-            <Input maxLength={4} placeholder="⚖️" />
+            <Input maxLength={4} placeholder="图标" />
           </Form.Item>
           <Form.Item name="price_candy" label="价格 (糖果)" rules={[{ required: true, type: 'number', min: 0 }]}>
             <InputNumber min={0} style={{ width: '100%' }} />
@@ -395,7 +395,7 @@ function SpecialistDetailDrawer({ userId, onClose }: { userId: string | null; on
     },
     {
       title: '糖果', dataIndex: 'candy_spent', width: 80,
-      render: (v: number) => <Tag color="gold">{v} 🍬</Tag>,
+      render: (v: number) => <Tag color="gold">{v} 糖果</Tag>,
     },
     {
       title: '评分', dataIndex: 'rating', width: 80,
@@ -445,7 +445,7 @@ function SpecialistDetailDrawer({ userId, onClose }: { userId: string | null; on
                     <Col xs={12} md={6}><Card size="small"><Statistic title="完成率" value={detail.stats.completion_rate} suffix="%" /></Card></Col>
                     <Col xs={12} md={6}><Card size="small"><Statistic title="平均评分" value={detail.stats.avg_rating ?? '—'} prefix="⭐" /></Card></Col>
                     <Col xs={12} md={6}><Card size="small"><Statistic title="评价数" value={detail.stats.rated_count} /></Card></Col>
-                    <Col xs={12} md={6}><Card size="small"><Statistic title="糖果收入" value={detail.stats.candy_revenue} suffix="🍬" /></Card></Col>
+                    <Col xs={12} md={6}><Card size="small"><Statistic title="糖果收入" value={detail.stats.candy_revenue} suffix="糖果" /></Card></Col>
                     <Col xs={12} md={6}><Card size="small"><Statistic title="进行中" value={detail.stats.confirmed} valueStyle={{ color: '#1890ff' }} /></Card></Col>
                   </Row>
 
@@ -550,7 +550,7 @@ function RequestChatDrawer({ requestId, onClose }: { requestId: string | null; o
             <Descriptions column={2} size="small">
               <Descriptions.Item label="状态"><Tag color={STATUS_LABEL[data.request.status].color}>{STATUS_LABEL[data.request.status].text}</Tag></Descriptions.Item>
               <Descriptions.Item label="分类">{data.request.category.name_zh}</Descriptions.Item>
-              <Descriptions.Item label="糖果">{data.request.candy_spent} 🍬 {data.request.refunded ? <Tag color="green">已退</Tag> : null}</Descriptions.Item>
+              <Descriptions.Item label="糖果">{data.request.candy_spent} 糖果 {data.request.refunded ? <Tag color="green">已退</Tag> : null}</Descriptions.Item>
               <Descriptions.Item label="评分">{data.request.rating ? `⭐ ${data.request.rating}` : '—'}</Descriptions.Item>
             </Descriptions>
           </Card>
@@ -655,7 +655,7 @@ function RequestsTab() {
       title: '糖果', dataIndex: 'candy_spent', width: 90,
       render: (v: number, r) => (
         <Space size={4}>
-          <Tag color="gold">{v} 🍬</Tag>
+          <Tag color="gold">{v} 糖果</Tag>
           {r.refunded && <Tag color="green">已退</Tag>}
         </Space>
       ),
@@ -736,7 +736,7 @@ function RequestsTab() {
 export function SpecialistsPage() {
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 20 }}>🩺 专家咨询管理</Title>
+      <Title level={4} style={{ marginBottom: 20 }}>专家咨询管理</Title>
       <Tabs
         defaultActiveKey="categories"
         items={[

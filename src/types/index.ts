@@ -354,7 +354,7 @@ export interface PublicationDetails {
   longitude?: number | null
   phone?: string
   website?: string
-  opening_hours?: Record<string, string | string[]>
+  opening_hours?: Record<string, string | string[] | { open?: string; close?: string; closed?: boolean } | null>
   thumbnail?: string | null
   cover_image?: string | null
   merchant?: { id: string; business_name: string } | null
@@ -648,4 +648,32 @@ export interface BroadcastPayload {
 
 export interface BroadcastResult {
   sent_to: number
+}
+
+// ── Listing Claims ────────────────────────────────────────────────────────────
+
+export type ListingClaimStatus = 'pending' | 'matched' | 'rejected'
+
+export interface ListingClaim {
+  id: string
+  status: ListingClaimStatus
+  phone: string
+  note: string
+  rejection_reason: string
+  created_at: string
+  handled_at: string | null
+  listing: {
+    id: string
+    name: string
+    city: string
+    cover: string | null
+    status: string
+  }
+  requester: {
+    id: string
+    display: string
+    username: string
+    avatar: string | null
+    phone: string
+  }
 }

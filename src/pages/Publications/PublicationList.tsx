@@ -41,18 +41,18 @@ const typeConfig: Record<
   PublicationType,
   { title: string; tabs?: { key: string; label: string; subtype: PublicationType }[] }
 > = {
-  market: { title: '🛒 买卖市场' },
-  local_service: { title: '🔧 本地服务' },
-  housing: { title: '🏠 房屋租售' },
+  market: { title: '买卖市场' },
+  local_service: { title: '本地服务' },
+  housing: { title: '房屋租售' },
   job_post: {
-    title: '💼 招聘求职',
+    title: '招聘求职',
     tabs: [
       { key: 'job_post', label: '招聘信息', subtype: 'job_post' },
       { key: 'job_seek', label: '求职信息', subtype: 'job_seek' },
     ],
   },
-  job_seek: { title: '💼 求职信息' },
-  listing: { title: '🏢 Listing' },
+  job_seek: { title: '求职信息' },
+  listing: { title: '商家列表' },
 }
 
 export function PublicationList({ type }: { type: PublicationType; items: AnyItem[]; total: number; loading: boolean; page: number; onPageChange: (p: number) => void; onApprove: (id: string) => void; onReject: (id: string) => void; onView: (id: string) => void }) {

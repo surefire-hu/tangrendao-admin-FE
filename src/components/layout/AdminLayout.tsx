@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Layout, Menu, Avatar, Dropdown, Typography, Space, theme, Badge } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Typography, Space, theme, Badge, Switch, Tooltip, message } from 'antd'
+import { supportApi } from '../../api/support'
 import {
   DashboardOutlined,
   UserOutlined,
@@ -42,6 +43,9 @@ export function AdminLayout() {
   const [feedbackUnread, setFeedbackUnread]     = useState(0)
   const [promotionsUnread, setPromotionsUnread] = useState(0)
   const [supportUnread, setSupportUnread]       = useState(0)
+  const [claimsUnread, setClaimsUnread]         = useState(0)
+  const [supportOnline, setSupportOnline]       = useState(false)
+  const [supportOnlineLoading, setSupportOnlineLoading] = useState(false)
 
   useEffect(() => {
     const fetchUnread = () => {
@@ -54,11 +58,33 @@ export function AdminLayout() {
       apiClient.get<{ unread_count: number }>('/chat/support/admin/inbox/unread-count/')
         .then(r => setSupportUnread(r.data.unread_count))
         .catch(() => {})
+      apiClient.get<{ count: number }>('/admin/listing-claims/unread-count/')
+        .then(r => setClaimsUnread(r.data.count))
+        .catch(() => {})
     }
     fetchUnread()
     const interval = setInterval(fetchUnread, 30_000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    supportApi.getPresence()
+      .then(r => setSupportOnline(r.online))
+      .catch(() => {})
+  }, [])
+
+  const toggleSupportOnline = async (next: boolean) => {
+    setSupportOnlineLoading(true)
+    try {
+      const res = await supportApi.setPresence(next)
+      setSupportOnline(res.online)
+      message.success(res.online ? '已上线，可接受客服咨询' : '已下线')
+    } catch {
+      message.error('切换失败')
+    } finally {
+      setSupportOnlineLoading(false)
+    }
+  }
 
   const menuItems = [
     {
@@ -141,6 +167,15 @@ export function AdminLayout() {
       ),
     },
     {
+      key: '/claims',
+      icon: <IdcardOutlined />,
+      label: (
+        <Badge count={claimsUnread} size="small" offset={[6, 0]}>
+          商家认领
+        </Badge>
+      ),
+    },
+    {
       key: '/geography',
       icon: <GlobalOutlined />,
       label: '国家管理',
@@ -189,6 +224,7 @@ export function AdminLayout() {
     if (path.startsWith('/geography')) return '/geography'
     if (path.startsWith('/specialists')) return '/specialists'
     if (path.startsWith('/navigation')) return '/navigation'
+    if (path.startsWith('/claims')) return '/claims'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
@@ -281,17 +317,34 @@ export function AdminLayout() {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </span>
 
-          <Dropdown menu={userMenu} trigger={['click']}>
-            <Space style={{ cursor: 'pointer' }}>
-              <Avatar
-                size="small"
-                icon={<UserOutlined />}
-                src={user?.avatar}
-                style={{ background: token.colorPrimary }}
-              />
-              <Text>{user?.email ?? user?.username ?? '管理员'}</Text>
-            </Space>
-          </Dropdown>
+          <Space size={16}>
+            <Tooltip title={supportOnline ? '当前对客服上线 — 用户可见“客服在线”' : '当前离线 — 用户看到“客服不在线”'}>
+              <Space size={6}>
+                <Badge status={supportOnline ? 'success' : 'default'} />
+                <Text style={{ fontSize: 13, color: supportOnline ? '#52c41a' : token.colorTextSecondary }}>
+                  {supportOnline ? '客服在线' : '客服离线'}
+                </Text>
+                <Switch
+                  size="small"
+                  checked={supportOnline}
+                  loading={supportOnlineLoading}
+                  onChange={toggleSupportOnline}
+                />
+              </Space>
+            </Tooltip>
+
+            <Dropdown menu={userMenu} trigger={['click']}>
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar
+                  size="small"
+                  icon={<UserOutlined />}
+                  src={user?.avatar}
+                  style={{ background: token.colorPrimary }}
+                />
+                <Text>{user?.email ?? user?.username ?? '管理员'}</Text>
+              </Space>
+            </Dropdown>
+          </Space>
         </Header>
 
         <Content style={{ padding: 24, background: token.colorBgLayout }}>

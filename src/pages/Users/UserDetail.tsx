@@ -131,7 +131,7 @@ export function UserDetailPage() {
                 {user.is_active
                   ? <Tag color="success">正常</Tag>
                   : <Tag color="error">封禁</Tag>}
-                {user.is_bot && <Tag color="purple">🤖 BOT</Tag>}
+                {user.is_bot && <Tag color="purple">BOT</Tag>}
               </div>
             </div>
 
@@ -156,7 +156,7 @@ export function UserDetailPage() {
             {/* 记者 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
               <Space>
-                <span style={{ fontSize: 13 }}>📰 记者</span>
+                <span style={{ fontSize: 13 }}>记者</span>
                 <Text type="secondary" style={{ fontSize: 11 }}>可发布新闻</Text>
               </Space>
               <Switch
@@ -169,7 +169,7 @@ export function UserDetailPage() {
             {/* 内容创作者 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
               <Space>
-                <span style={{ fontSize: 13 }}>🎬 内容创作者</span>
+                <span style={{ fontSize: 13 }}>内容创作者</span>
                 <Text type="secondary" style={{ fontSize: 11 }}>可上传超过60秒的视频</Text>
               </Space>
               <Switch
@@ -182,7 +182,7 @@ export function UserDetailPage() {
             {/* 机器人 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
               <Space>
-                <span style={{ fontSize: 13 }}>🤖 机器人</span>
+                <span style={{ fontSize: 13 }}>机器人 (BOT)</span>
                 <Text type="secondary" style={{ fontSize: 11 }}>论坛代发账号</Text>
               </Space>
               <Switch
@@ -195,7 +195,7 @@ export function UserDetailPage() {
             {/* 性别 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
               <Space>
-                <span style={{ fontSize: 13 }}>⚧ 性别</span>
+                <span style={{ fontSize: 13 }}>性别</span>
               </Space>
               <Select
                 size="small"
@@ -212,7 +212,7 @@ export function UserDetailPage() {
 
             {/* 板主版块 */}
             <div style={{ marginTop: 14 }}>
-              <Text style={{ fontSize: 13 }}>🛡️ 板主版块</Text>
+              <Text style={{ fontSize: 13 }}>板主版块</Text>
               <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {ALL_CONTENT_TYPES.map(ct => (
                   <Checkbox

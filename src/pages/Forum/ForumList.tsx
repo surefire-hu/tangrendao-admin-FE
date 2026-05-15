@@ -5,7 +5,7 @@ import {
 } from 'antd'
 import {
   SearchOutlined, EyeOutlined, CheckOutlined, CloseOutlined,
-  PlayCircleOutlined,
+  PlayCircleOutlined, HeartOutlined, MessageOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import type { ColumnsType } from 'antd/es/table'
@@ -154,9 +154,9 @@ export function ForumListPage({ kind }: Props) {
       width: 160,
       render: (_, item) => (
         <Space size="small" wrap>
-          <Text type="secondary" style={{ fontSize: 11 }}>👁 {item.view_count}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>❤ {item.like_count}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>💬 {item.comment_count}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}><EyeOutlined /> {item.view_count}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}><HeartOutlined /> {item.like_count}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}><MessageOutlined /> {item.comment_count}</Text>
           <Text type="secondary" style={{ fontSize: 11 }}>⭐ {item.saved_count}</Text>
         </Space>
       ),
@@ -211,7 +211,7 @@ export function ForumListPage({ kind }: Props) {
     },
   ]
 
-  const title = kind === 'video' ? '🎬 论坛视频' : '💬 论坛帖子'
+  const title = kind === 'video' ? '论坛视频' : '论坛帖子'
 
   return (
     <div>

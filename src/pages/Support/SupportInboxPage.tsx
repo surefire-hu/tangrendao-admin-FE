@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Layout, List, Avatar, Typography, Badge, Button, Input, Empty,
-  Popconfirm, Tabs, Tag, Space, message,
+  Popconfirm, Tabs, Tag, Space, Tooltip, message,
 } from 'antd'
-import { UserOutlined, LockOutlined, SendOutlined, ReloadOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, SendOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons'
 import {
   supportApi,
   type SupportConversation,
   type SupportMessage,
+  type ClaimResponse,
 } from '../../api/support'
+
+const CLAIM_HEARTBEAT_MS = 60_000   // refresh < 2min TTL
 
 const { Sider, Content } = Layout
 const { Text, Paragraph } = Typography
@@ -40,9 +43,11 @@ export function SupportInboxPage() {
   const [sending, setSending]           = useState(false)
   const [closing, setClosing]           = useState(false)
   const [currentConv, setCurrentConv]   = useState<SupportConversation | null>(null)
+  const [claimInfo, setClaimInfo]       = useState<ClaimResponse | null>(null)
 
   const socketRef = useRef<WebSocket | null>(null)
   const listEndRef = useRef<HTMLDivElement | null>(null)
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const selected = useMemo(
     () => items.find(x => x.id === selectedId) ?? currentConv,
@@ -75,7 +80,7 @@ export function SupportInboxPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
 
-  // When a conversation is selected: fetch messages, open WS
+  // When a conversation is selected: fetch messages, open WS, try claim + heartbeat
   useEffect(() => {
     if (!selectedId) return
     let cancelled = false
@@ -93,6 +98,27 @@ export function SupportInboxPage() {
         message.error('加载消息失败')
       }
     })()
+
+    // Try to claim (or refresh) the conversation
+    const tryClaim = async () => {
+      try {
+        const res = await supportApi.claim(selectedId)
+        if (!cancelled) setClaimInfo(res)
+      } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = (err as any)?.response?.data
+        if (!cancelled && data) {
+          setClaimInfo({
+            claimed_by:        data.claimed_by ?? null,
+            is_claim_active:   true,
+            is_claimed_by_me:  false,
+          })
+        }
+      }
+    }
+    tryClaim()
+    if (heartbeatRef.current) clearInterval(heartbeatRef.current)
+    heartbeatRef.current = setInterval(tryClaim, CLAIM_HEARTBEAT_MS)
 
     const ws = supportApi.openSocket(selectedId, {
       onMessage: (m) => {
@@ -113,6 +139,10 @@ export function SupportInboxPage() {
       cancelled = true
       try { ws.close() } catch { /* ignore */ }
       socketRef.current = null
+      if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null }
+      // Backend release is a no-op if we don't own the claim.
+      supportApi.release(selectedId).catch(() => {})
+      setClaimInfo(null)
     }
   }, [selectedId])
 
@@ -153,6 +183,7 @@ export function SupportInboxPage() {
   }
 
   const isClosed = currentConv?.is_closed === true
+  const claimedByOther = !!claimInfo && claimInfo.is_claim_active && !claimInfo.is_claimed_by_me
 
   return (
     <Layout style={{ height: 'calc(100vh - 112px)', background: '#fff', borderRadius: 8 }}>
@@ -197,10 +228,15 @@ export function SupportInboxPage() {
                   }
                   title={
                     <Space size={6}>
-                      <Text strong ellipsis style={{ maxWidth: 160 }}>
+                      <Text strong ellipsis style={{ maxWidth: 140 }}>
                         {item.user_display?.name ?? '用户'}
                       </Text>
                       {item.is_closed && <Tag color="default">已关闭</Tag>}
+                      {item.is_claim_active && !item.is_claimed_by_me && item.claimed_by && (
+                        <Tooltip title={`${item.claimed_by.name} 已接管`}>
+                          <Tag color="orange" style={{ marginInlineEnd: 0 }}>{item.claimed_by.name}</Tag>
+                        </Tooltip>
+                      )}
                     </Space>
                   }
                   description={
@@ -249,6 +285,14 @@ export function SupportInboxPage() {
                     </Text>
                   </div>
                 </div>
+                {claimedByOther && claimInfo?.claimed_by && (
+                  <Tag icon={<TeamOutlined />} color="orange" style={{ marginLeft: 8 }}>
+                    已被 {claimInfo.claimed_by.name} 接管
+                  </Tag>
+                )}
+                {!claimedByOther && claimInfo?.is_claimed_by_me && (
+                  <Tag color="blue" style={{ marginLeft: 8 }}>我已接管</Tag>
+                )}
               </Space>
 
               {!isClosed && (
@@ -320,6 +364,10 @@ export function SupportInboxPage() {
             {isClosed ? (
               <div style={{ padding: 16, borderTop: '1px solid #f0f0f0', textAlign: 'center', color: '#999' }}>
                 <LockOutlined /> 此对话已关闭
+              </div>
+            ) : claimedByOther ? (
+              <div style={{ padding: 16, borderTop: '1px solid #f0f0f0', textAlign: 'center', color: '#fa8c16' }}>
+                <TeamOutlined /> 此对话已被 {claimInfo?.claimed_by?.name} 接管，无法回复
               </div>
             ) : (
               <div style={{ padding: 12, borderTop: '1px solid #f0f0f0', display: 'flex', gap: 8 }}>
