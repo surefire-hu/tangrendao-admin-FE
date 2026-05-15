@@ -26,6 +26,8 @@ import {
   GlobalOutlined,
   MedicineBoxOutlined,
   PartitionOutlined,
+  StopOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -44,6 +46,7 @@ export function AdminLayout() {
   const [promotionsUnread, setPromotionsUnread] = useState(0)
   const [supportUnread, setSupportUnread]       = useState(0)
   const [claimsUnread, setClaimsUnread]         = useState(0)
+  const [unbanPending, setUnbanPending]         = useState(0)
   const [supportOnline, setSupportOnline]       = useState(false)
   const [supportOnlineLoading, setSupportOnlineLoading] = useState(false)
 
@@ -60,6 +63,9 @@ export function AdminLayout() {
         .catch(() => {})
       apiClient.get<{ count: number }>('/admin/listing-claims/unread-count/')
         .then(r => setClaimsUnread(r.data.count))
+        .catch(() => {})
+      apiClient.get<{ count: number }>('/admin/unban-requests/?status=pending&page_size=1')
+        .then(r => setUnbanPending(r.data.count ?? 0))
         .catch(() => {})
     }
     fetchUnread()
@@ -176,6 +182,20 @@ export function AdminLayout() {
       ),
     },
     {
+      key: '/unban-requests',
+      icon: <StopOutlined />,
+      label: (
+        <Badge count={unbanPending} size="small" offset={[6, 0]}>
+          解封申诉
+        </Badge>
+      ),
+    },
+    {
+      key: '/news',
+      icon: <FileTextOutlined />,
+      label: '新闻管理',
+    },
+    {
       key: '/geography',
       icon: <GlobalOutlined />,
       label: '国家管理',
@@ -225,6 +245,8 @@ export function AdminLayout() {
     if (path.startsWith('/specialists')) return '/specialists'
     if (path.startsWith('/navigation')) return '/navigation'
     if (path.startsWith('/claims')) return '/claims'
+    if (path.startsWith('/unban-requests')) return '/unban-requests'
+    if (path.startsWith('/news')) return '/news'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }

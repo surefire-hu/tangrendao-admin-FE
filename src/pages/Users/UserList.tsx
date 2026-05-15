@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
+import { geographyApi, type AdminCountry } from '../../api/geography'
 import { mediaUrl } from '../../api/client'
 import type { AdminUser } from '../../types'
 import dayjs from 'dayjs'
@@ -44,7 +45,10 @@ export function UserListPage() {
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState<string | undefined>()
-  const [botFilter, setBotFilter] = useState<'all' | 'bot' | 'real'>('all')
+  const [botFilter, setBotFilter] = useState<'all' | 'bot' | 'real' | 'guest'>('all')
+  const [countryFilter, setCountryFilter] = useState<string | undefined>()
+  const [countries, setCountries] = useState<AdminCountry[]>([])
+  const [counts, setCounts] = useState<{ real: number; bot: number; guest: number }>({ real: 0, bot: 0, guest: 0 })
   const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -76,6 +80,7 @@ export function UserListPage() {
       setBotFilter('bot')
       setPage(1)
       fetchUsers()
+      fetchCounts()
     } catch (e: any) {
       message.error(e?.response?.data?.detail ?? '批量创建失败')
     } finally {
@@ -86,29 +91,55 @@ export function UserListPage() {
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
+      // Translate the bot/registered toolbar into backend flags. 'all' shows
+      // everything (real + bot + guest); the other modes pick a single bucket.
+      let is_registered: boolean | undefined
+      let is_bot: boolean | undefined
+      if (botFilter === 'bot')        { is_bot = true }
+      else if (botFilter === 'real')  { is_bot = false; is_registered = true }
+      else if (botFilter === 'guest') { is_bot = false; is_registered = false }
+
       const res = await adminApi.getUsers({
         page,
         page_size: PAGE_SIZE,
         search: search || undefined,
         role: role || undefined,
+        country: countryFilter || undefined,
         ordering: '-created_at',
-        is_registered: botFilter === 'bot' ? undefined : true,
-        is_bot: botFilter === 'bot' ? true : botFilter === 'real' ? false : undefined,
+        is_registered,
+        is_bot,
       })
-      setUsers(
-        botFilter === 'bot'
-          ? res.data.results
-          : res.data.results.filter(u => u.is_registered)
-      )
+      setUsers(res.data.results)
       setTotal(res.data.count)
     } catch {
       // handled by global interceptor
     } finally {
       setLoading(false)
     }
-  }, [page, search, role, botFilter])
+  }, [page, search, role, botFilter, countryFilter])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  const fetchCounts = useCallback(async () => {
+    try {
+      const res = await adminApi.getUserCounts({
+        search:  search || undefined,
+        role:    role || undefined,
+        country: countryFilter || undefined,
+      })
+      setCounts(res.data)
+    } catch {
+      // non-blocking
+    }
+  }, [search, role, countryFilter])
+
+  useEffect(() => { fetchCounts() }, [fetchCounts])
+
+  useEffect(() => {
+    geographyApi.list()
+      .then((res) => setCountries(res.data.filter(c => c.is_active)))
+      .catch(() => {})
+  }, [])
 
   async function submitCreate() {
     try {
@@ -132,6 +163,7 @@ export function UserListPage() {
       avatarRef.current = null
       setPage(1)
       fetchUsers()
+      fetchCounts()
     } catch (e: any) {
       if (e?.errorFields) return  // antd validation
       message.error(e?.response?.data?.detail ?? '创建失败')
@@ -139,11 +171,6 @@ export function UserListPage() {
       setCreating(false)
     }
   }
-
-  const roleStats = users.reduce(
-    (acc, u) => { acc[u.role] = (acc[u.role] || 0) + 1; return acc },
-    {} as Record<string, number>,
-  )
 
   async function toggleBan(u: AdminUser) {
     const next = !u.is_active
@@ -275,13 +302,17 @@ export function UserListPage() {
       </div>
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
-        {Object.entries(roleLabels).map(([r, label]) => (
-          <Col key={r} xs={12} sm={6}>
+        {([
+          { key: 'real',  label: '真实用户',   color: token.colorSuccess },
+          { key: 'bot',   label: '机器人 (BOT)', color: token.colorPrimary },
+          { key: 'guest', label: '游客',       color: token.colorWarning },
+        ] as const).map(({ key, label, color }) => (
+          <Col key={key} xs={24} sm={8}>
             <Card size="small" styles={{ body: { padding: '12px 16px' } }}>
               <Statistic
                 title={<Text type="secondary" style={{ fontSize: 11 }}>{label}</Text>}
-                value={roleStats[r] ?? 0}
-                valueStyle={{ fontSize: 20, color: roleColors[r] === 'default' ? token.colorText : undefined }}
+                value={counts[key]}
+                valueStyle={{ fontSize: 20, color }}
               />
             </Card>
           </Col>
@@ -307,14 +338,28 @@ export function UserListPage() {
             options={Object.entries(roleLabels).map(([v, l]) => ({ value: v, label: l }))}
           />
           <Select
-            style={{ width: 140 }}
+            style={{ width: 160 }}
             value={botFilter}
             onChange={(v) => { setBotFilter(v); setPage(1) }}
             options={[
-              { value: 'all',  label: '全部账号' },
-              { value: 'real', label: '真实用户' },
-              { value: 'bot',  label: '机器人 (BOT)' },
+              { value: 'all',   label: '全部账号' },
+              { value: 'real',  label: '真实用户' },
+              { value: 'bot',   label: '机器人 (BOT)' },
+              { value: 'guest', label: '游客' },
             ]}
+          />
+          <Select
+            placeholder="筛选国家"
+            allowClear
+            showSearch
+            style={{ width: 200 }}
+            value={countryFilter}
+            onChange={(v) => { setCountryFilter(v); setPage(1) }}
+            optionFilterProp="label"
+            options={countries.map(c => ({
+              value: c.code,
+              label: `${c.flag_emoji ? c.flag_emoji + ' ' : ''}${c.name_zh || c.name} (${c.code})`,
+            }))}
           />
         </Space>
 
@@ -415,8 +460,16 @@ export function UserListPage() {
             </Col>
           </Row>
 
-          <Form.Item name="country" label="国家 (ISO-2)">
-            <Input maxLength={2} style={{ width: 100, textTransform: 'uppercase' }} />
+          <Form.Item name="country" label="国家" rules={[{ required: true, message: '请选择国家' }]}>
+            <Select
+              showSearch
+              placeholder="选择国家"
+              optionFilterProp="label"
+              options={countries.map(c => ({
+                value: c.code,
+                label: `${c.flag_emoji ? c.flag_emoji + ' ' : ''}${c.name_zh || c.name} (${c.code})`,
+              }))}
+            />
           </Form.Item>
 
           <Form.Item label="头像">
@@ -467,12 +520,16 @@ export function UserListPage() {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="国家 (ISO-2)">
-                <Input
-                  maxLength={2}
+              <Form.Item label="国家">
+                <Select
+                  showSearch
                   value={bulkCountry}
-                  onChange={(e) => setBulkCountry(e.target.value.toUpperCase())}
-                  style={{ textTransform: 'uppercase' }}
+                  onChange={setBulkCountry}
+                  optionFilterProp="label"
+                  options={countries.map(c => ({
+                    value: c.code,
+                    label: `${c.flag_emoji ? c.flag_emoji + ' ' : ''}${c.name_zh || c.name} (${c.code})`,
+                  }))}
                 />
               </Form.Item>
             </Col>

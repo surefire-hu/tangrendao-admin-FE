@@ -1,16 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Card, Row, Col, Avatar, Tag, Typography, Spin, Button,
   Descriptions, Statistic, Space, Tabs, Alert, Divider, theme,
-  Switch, Checkbox, message, Select,
+  Switch, Checkbox, message, Select, Modal, Input, Empty, Image, Popconfirm,
 } from 'antd'
 import {
   UserOutlined, ArrowLeftOutlined, CalendarOutlined,
   PhoneOutlined, EyeOutlined, HeartOutlined,
+  StopOutlined, CheckCircleOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
-import type { AdminUser, UserOperationStats, ModeratorContentType, Gender } from '../../types'
+import type {
+  AdminUser, UserOperationStats, ModeratorContentType, Gender,
+  AdminContentType, AdminUserContentItem,
+} from '../../types'
 import { MODERATOR_CONTENT_LABELS } from '../../types'
 import { DailyChart } from '../../components/charts/DailyChart'
 import { MonthlyChart } from '../../components/charts/MonthlyChart'
@@ -42,6 +46,12 @@ export function UserDetailPage() {
   const [loadingStats, setLoadingStats] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [savingRoles, setSavingRoles] = useState(false)
+  const [banModalOpen, setBanModalOpen] = useState(false)
+  const [banReason, setBanReason] = useState('')
+  const [banSaving, setBanSaving] = useState(false)
+  const [contentType, setContentType] = useState<AdminContentType>('forum_post')
+  const [contentItems, setContentItems] = useState<AdminUserContentItem[]>([])
+  const [contentLoading, setContentLoading] = useState(false)
   const [localRoles, setLocalRoles] = useState<ModeratorContentType[]>([])
   const [localJournalist, setLocalJournalist] = useState(false)
   const [localContentCreator, setLocalContentCreator] = useState(false)
@@ -93,6 +103,62 @@ export function UserDetailPage() {
     )
   }
 
+  async function confirmBan() {
+    if (!id) return
+    if (!banReason.trim()) {
+      message.warning('请填写封禁原因')
+      return
+    }
+    setBanSaving(true)
+    try {
+      const res = await adminApi.banUser(id, banReason.trim())
+      setUser(res.data)
+      setBanModalOpen(false)
+      setBanReason('')
+      message.success('已封禁')
+    } catch {
+      message.error('操作失败')
+    } finally {
+      setBanSaving(false)
+    }
+  }
+
+  async function unban() {
+    if (!id) return
+    try {
+      const res = await adminApi.unbanUser(id)
+      setUser(res.data)
+      message.success('已解除封禁')
+    } catch {
+      message.error('操作失败')
+    }
+  }
+
+  const loadContent = useCallback(async (type: AdminContentType) => {
+    if (!id) return
+    setContentLoading(true)
+    try {
+      const res = await adminApi.getUserContent(id, type, { page_size: 50 })
+      setContentItems(res.data.results ?? [])
+    } catch {
+      setContentItems([])
+    } finally {
+      setContentLoading(false)
+    }
+  }, [id])
+
+  async function toggleHidden(item: AdminUserContentItem) {
+    try {
+      await adminApi.setContentHidden(item.type, item.id, item.visible)
+      setContentItems(prev =>
+        prev.map(p => p.id === item.id ? { ...p, visible: !item.visible } : p)
+      )
+      message.success(item.visible ? '已下架' : '已恢复')
+    } catch {
+      message.error('操作失败')
+    }
+  }
+
   if (loadingUser) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
   if (error) return <Alert type="error" message={error} showIcon />
   if (!user) return null
@@ -132,6 +198,31 @@ export function UserDetailPage() {
                   ? <Tag color="success">正常</Tag>
                   : <Tag color="error">封禁</Tag>}
                 {user.is_bot && <Tag color="purple">BOT</Tag>}
+              </div>
+              {!user.is_active && user.ban_reason && (
+                <Alert
+                  type="error"
+                  showIcon
+                  style={{ marginTop: 12, textAlign: 'left' }}
+                  message="封禁原因"
+                  description={user.ban_reason}
+                />
+              )}
+              <div style={{ marginTop: 12 }}>
+                {user.is_active ? (
+                  <Button
+                    danger
+                    size="small"
+                    icon={<StopOutlined />}
+                    onClick={() => setBanModalOpen(true)}
+                  >封禁用户</Button>
+                ) : (
+                  <Popconfirm title="确定解除封禁?" onConfirm={unban} okText="确定" cancelText="取消">
+                    <Button type="primary" size="small" icon={<CheckCircleOutlined />}>
+                      解除封禁
+                    </Button>
+                  </Popconfirm>
+                )}
               </div>
             </div>
 
@@ -285,6 +376,7 @@ export function UserDetailPage() {
               <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
             ) : (
               <Tabs
+                onChange={(k) => { if (k === 'content') loadContent(contentType) }}
                 items={[
                   {
                     key: 'daily',
@@ -318,12 +410,119 @@ export function UserDetailPage() {
                       </div>
                     ),
                   },
+                  {
+                    key: 'content',
+                    label: '他的发布',
+                    children: (
+                      <div>
+                        <Space style={{ marginBottom: 12 }}>
+                          <Select
+                            size="small"
+                            value={contentType}
+                            style={{ width: 160 }}
+                            onChange={(v) => { setContentType(v); loadContent(v) }}
+                            options={[
+                              { value: 'forum_post',    label: '论坛帖子' },
+                              { value: 'forum_video',   label: '视频' },
+                              { value: 'news',          label: '新闻' },
+                              { value: 'job_post',      label: '招聘' },
+                              { value: 'job_seek',      label: '求职' },
+                              { value: 'market',        label: '买卖' },
+                              { value: 'housing',       label: '房源' },
+                              { value: 'local_service', label: '本地服务' },
+                              { value: 'listing',       label: '商家' },
+                            ]}
+                          />
+                          <Button size="small" onClick={() => loadContent(contentType)}>刷新</Button>
+                        </Space>
+                        {contentLoading ? (
+                          <div style={{ textAlign: 'center', padding: 32 }}><Spin /></div>
+                        ) : contentItems.length === 0 ? (
+                          <Empty description="暂无内容" />
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {contentItems.map(item => (
+                              <div
+                                key={item.id}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 12,
+                                  padding: 8, border: `1px solid ${token.colorBorderSecondary}`,
+                                  borderRadius: 6, opacity: item.visible ? 1 : 0.55,
+                                }}
+                              >
+                                {item.cover ? (
+                                  <Image
+                                    src={item.cover}
+                                    width={56}
+                                    height={56}
+                                    style={{ objectFit: 'cover', borderRadius: 4 }}
+                                    preview={false}
+                                  />
+                                ) : (
+                                  <div style={{
+                                    width: 56, height: 56, borderRadius: 4,
+                                    background: token.colorFillTertiary,
+                                  }} />
+                                )}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {item.title || '(无标题)'}
+                                  </div>
+                                  <Space size={6} style={{ marginTop: 4 }}>
+                                    <Text type="secondary" style={{ fontSize: 11 }}>
+                                      {item.created_at ? dayjs(item.created_at).format('YYYY-MM-DD') : '—'}
+                                    </Text>
+                                    {!item.visible && <Tag color="default">已下架</Tag>}
+                                    {item.status === 'rejected' && <Tag color="red">驳回</Tag>}
+                                  </Space>
+                                </div>
+                                <Popconfirm
+                                  title={item.visible ? '确定下架?' : '确定恢复?'}
+                                  onConfirm={() => toggleHidden(item)}
+                                  okText="确定" cancelText="取消"
+                                >
+                                  <Button danger={item.visible} size="small">
+                                    {item.visible ? '下架' : '恢复'}
+                                  </Button>
+                                </Popconfirm>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ),
+                  },
                 ]}
               />
             )}
           </Card>
         </Col>
       </Row>
+
+      <Modal
+        open={banModalOpen}
+        title="封禁用户"
+        okText="确认封禁"
+        cancelText="取消"
+        okButtonProps={{ danger: true, loading: banSaving }}
+        onOk={confirmBan}
+        onCancel={() => { setBanModalOpen(false); setBanReason('') }}
+      >
+        <Alert
+          type="warning"
+          showIcon
+          message="封禁后该用户的所有公开内容将立即对所有人隐藏。用户登录后会看到此原因，可提交申诉。"
+          style={{ marginBottom: 12 }}
+        />
+        <Input.TextArea
+          rows={4}
+          maxLength={500}
+          showCount
+          placeholder="请填写封禁原因，将展示给该用户"
+          value={banReason}
+          onChange={(e) => setBanReason(e.target.value)}
+        />
+      </Modal>
     </div>
   )
 }

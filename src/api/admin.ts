@@ -33,6 +33,12 @@ import type {
   NavItemInput,
   ListingClaim,
   ListingClaimStatus,
+  UnbanRequest,
+  UnbanRequestStatus,
+  AdminContentType,
+  AdminUserContentItem,
+  AdminNewsArticle,
+  AdminNewsArticleInput,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -46,12 +52,16 @@ export const adminApi = {
     page_size?: number
     role?: string
     search?: string
+    country?: string
     is_active?: boolean
     is_registered?: boolean
     is_bot?: boolean
     gender?: 'male' | 'female'
     ordering?: string
   }) => apiClient.get<PaginatedResponse<AdminUser>>('/admin/users/', { params }),
+
+  getUserCounts: (params?: { search?: string; country?: string; role?: string }) =>
+    apiClient.get<{ real: number; bot: number; guest: number }>('/admin/users/counts/', { params }),
 
   getUser: (id: string) => apiClient.get<AdminUser>(`/admin/users/${id}/`),
 
@@ -317,6 +327,74 @@ export const adminApi = {
     apiClient.post<ListingClaim>(`/admin/listing-claims/${id}/reject/`, { reason }),
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
+  // ── Ban / Unban appeals ──────────────────────────────────────────────────
+  banUser: (id: string, ban_reason: string) =>
+    apiClient.patch<AdminUser>(`/admin/users/${id}/`, { is_active: false, ban_reason }),
+
+  unbanUser: (id: string) =>
+    apiClient.patch<AdminUser>(`/admin/users/${id}/`, { is_active: true }),
+
+  getUnbanRequests: (params?: {
+    status?: UnbanRequestStatus | 'all'
+    page?: number
+    page_size?: number
+  }) => apiClient.get<PaginatedResponse<UnbanRequest>>('/admin/unban-requests/', { params }),
+
+  resolveUnbanRequest: (id: string, action: 'approve' | 'reject', admin_response: string) =>
+    apiClient.post<UnbanRequest>(`/admin/unban-requests/${id}/${action}/`, { admin_response }),
+
+  // ── Per-user content moderation ──────────────────────────────────────────
+  getUserContent: (userId: string, type: AdminContentType, params?: { page?: number; page_size?: number }) =>
+    apiClient.get<PaginatedResponse<AdminUserContentItem>>(
+      `/admin/users/${userId}/content/`,
+      { params: { ...params, type } },
+    ),
+
+  setContentHidden: (type: AdminContentType, id: string, hide: boolean) =>
+    apiClient.post<{ hidden: boolean }>(`/admin/content/${type}/${id}/hide/`, { hide }),
+
+  // ── News (admin CRUD) ────────────────────────────────────────────────────
+  getNewsArticles: (params?: {
+    country?: string
+    is_published?: boolean
+    author?: string
+    search?: string
+    page?: number
+    page_size?: number
+  }) => apiClient.get<PaginatedResponse<AdminNewsArticle>>('/admin/news/', { params }),
+
+  getNewsArticle: (id: string) =>
+    apiClient.get<AdminNewsArticle>(`/admin/news/${id}/`),
+
+  createNewsArticle: (data: AdminNewsArticleInput) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.post<AdminNewsArticle>('/admin/news/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  updateNewsArticle: (id: string, data: Partial<AdminNewsArticleInput>) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.patch<AdminNewsArticle>(`/admin/news/${id}/`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteNewsArticle: (id: string) =>
+    apiClient.delete<void>(`/admin/news/${id}/`),
+
   sendBroadcast: (data: BroadcastPayload) => {
     const form = new FormData()
     form.append('title', data.title)

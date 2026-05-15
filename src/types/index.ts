@@ -104,6 +104,81 @@ export interface AdminUser {
   events_count?: number
   events_today?: number
   events_this_month?: number
+  // Ban metadata
+  ban_reason?: string
+  banned_at?: string | null
+}
+
+// ── Unban appeals ────────────────────────────────────────────────────────────
+
+export type UnbanRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export interface UnbanRequest {
+  id: string
+  status: UnbanRequestStatus
+  message: string
+  contact_email: string
+  admin_response: string
+  created_at: string
+  reviewed_at: string | null
+  reviewed_by: { id: string; username: string } | null
+  user: {
+    id: string
+    email: string | null
+    username: string | null
+    avatar: string | null
+    is_active: boolean
+    ban_reason: string
+    banned_at: string | null
+  }
+}
+
+// ── Per-user content listing (admin moderation) ──────────────────────────────
+
+export type AdminContentType =
+  | 'forum_post' | 'forum_video' | 'news'
+  | 'market' | 'housing' | 'local_service'
+  | 'job_post' | 'job_seek' | 'listing'
+
+export interface AdminUserContentItem {
+  id: string
+  title: string
+  created_at: string | null
+  cover: string
+  visible: boolean
+  status: string | null
+  type: AdminContentType
+}
+
+// ── News admin ───────────────────────────────────────────────────────────────
+
+export interface AdminNewsArticle {
+  id: string
+  slug: string
+  title: string
+  summary: string
+  content_html: string
+  cover_image: string
+  country: string
+  is_original: boolean
+  source: string
+  is_published: boolean
+  published_at: string | null
+  view_count: number
+  comment_count: number
+  created_at: string | null
+  author: { id: string; username: string; avatar: string | null } | null
+}
+
+export interface AdminNewsArticleInput {
+  title: string
+  summary?: string
+  content_html?: string
+  country?: string
+  is_original?: boolean
+  source?: string
+  is_published?: boolean
+  cover_image?: File | null
 }
 
 export interface UserOperationStats {
