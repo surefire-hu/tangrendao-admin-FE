@@ -210,6 +210,11 @@ export function AdminLayout() {
       icon: <PartitionOutlined />,
       label: '服务导航',
     },
+    {
+      key: '/classifieds-taxonomy',
+      icon: <PartitionOutlined />,
+      label: '分类管理',
+    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -244,6 +249,7 @@ export function AdminLayout() {
     if (path.startsWith('/geography')) return '/geography'
     if (path.startsWith('/specialists')) return '/specialists'
     if (path.startsWith('/navigation')) return '/navigation'
+    if (path.startsWith('/classifieds-taxonomy')) return '/classifieds-taxonomy'
     if (path.startsWith('/claims')) return '/claims'
     if (path.startsWith('/unban-requests')) return '/unban-requests'
     if (path.startsWith('/news')) return '/news'

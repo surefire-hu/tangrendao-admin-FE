@@ -711,6 +711,41 @@ export interface NavItemInput {
   display_order: number
 }
 
+// ── Classifieds taxonomy (housing / market / local_service) ──────────────────
+
+export type ClassifiedCategoryRoot = 'housing' | 'market' | 'local_service'
+
+export interface ClassifiedSubType {
+  id: number
+  subcategory_id: number
+  name: string
+  sort_order: number
+  is_active: boolean
+}
+
+export interface ClassifiedSubcategory {
+  id: number
+  category: ClassifiedCategoryRoot
+  name: string
+  sort_order: number
+  is_active: boolean
+  sub_types: ClassifiedSubType[]
+}
+
+export interface ClassifiedSubcategoryInput {
+  category: ClassifiedCategoryRoot
+  name: string
+  sort_order?: number
+  is_active?: boolean
+}
+
+export interface ClassifiedSubTypeInput {
+  subcategory: number
+  name: string
+  sort_order?: number
+  is_active?: boolean
+}
+
 // ── Broadcast ─────────────────────────────────────────────────────────────────
 
 export interface BroadcastPayload {

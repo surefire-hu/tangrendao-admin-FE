@@ -31,6 +31,11 @@ import type {
   NavCategoryInput,
   NavSectionInput,
   NavItemInput,
+  ClassifiedSubcategory,
+  ClassifiedSubcategoryInput,
+  ClassifiedSubType,
+  ClassifiedSubTypeInput,
+  ClassifiedCategoryRoot,
   ListingClaim,
   ListingClaimStatus,
   UnbanRequest,
@@ -312,6 +317,23 @@ export const adminApi = {
     apiClient.patch(`/admin/services/items/${id}/`, data),
   deleteNavItem: (id: number) =>
     apiClient.delete<void>(`/admin/services/items/${id}/`),
+
+  // ── Classifieds taxonomy (housing / market / local_service) ──────────────
+  getClassifiedSubcategories: (params?: { category?: ClassifiedCategoryRoot }) =>
+    apiClient.get<ClassifiedSubcategory[]>('/admin/classifieds/subcategories/', { params }),
+  createClassifiedSubcategory: (data: ClassifiedSubcategoryInput) =>
+    apiClient.post<ClassifiedSubcategory>('/admin/classifieds/subcategories/', data),
+  updateClassifiedSubcategory: (id: number, data: Partial<Omit<ClassifiedSubcategoryInput, 'category'>>) =>
+    apiClient.patch<ClassifiedSubcategory>(`/admin/classifieds/subcategories/${id}/`, data),
+  deleteClassifiedSubcategory: (id: number) =>
+    apiClient.delete<void>(`/admin/classifieds/subcategories/${id}/`),
+
+  createClassifiedSubType: (data: ClassifiedSubTypeInput) =>
+    apiClient.post<ClassifiedSubType>('/admin/classifieds/sub-types/', data),
+  updateClassifiedSubType: (id: number, data: Partial<Omit<ClassifiedSubTypeInput, 'subcategory'>>) =>
+    apiClient.patch<ClassifiedSubType>(`/admin/classifieds/sub-types/${id}/`, data),
+  deleteClassifiedSubType: (id: number) =>
+    apiClient.delete<void>(`/admin/classifieds/sub-types/${id}/`),
 
   // ── Listing Claims ────────────────────────────────────────────────────────
   getListingClaims: (params?: { page?: number; page_size?: number; status?: ListingClaimStatus }) =>
