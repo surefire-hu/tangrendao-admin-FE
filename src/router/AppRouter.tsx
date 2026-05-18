@@ -23,6 +23,7 @@ import { SupportInboxPage } from '../pages/Support/SupportInboxPage'
 import { CountryListPage } from '../pages/Geography/CountryListPage'
 import { SpecialistsPage } from '../pages/Specialists/SpecialistsPage'
 import { NavigationPage } from '../pages/Navigation/NavigationPage'
+import { JobsTaxonomyPage } from '../pages/JobsTaxonomy/JobsTaxonomyPage'
 import { ClaimListPage } from '../pages/Claims/ClaimList'
 import { UnbanRequestListPage } from '../pages/UnbanRequests/UnbanRequestList'
 import { NewsListPage } from '../pages/News/NewsList'
@@ -83,6 +84,7 @@ export function AppRouter() {
           <Route path="geography" element={<CountryListPage />} />
           <Route path="specialists" element={<SpecialistsPage />} />
           <Route path="navigation" element={<NavigationPage />} />
+          <Route path="jobs-taxonomy" element={<JobsTaxonomyPage />} />
           <Route path="claims" element={<ClaimListPage />} />
           <Route path="unban-requests" element={<UnbanRequestListPage />} />
           <Route path="news" element={<NewsListPage />} />

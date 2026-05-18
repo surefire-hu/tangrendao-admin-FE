@@ -31,6 +31,10 @@ import type {
   NavCategoryInput,
   NavSectionInput,
   NavItemInput,
+  JobIndustryAdmin,
+  JobIndustryInput,
+  JobTypeAdmin,
+  JobTypeInput,
   ListingClaim,
   ListingClaimStatus,
   UnbanRequest,
@@ -312,6 +316,23 @@ export const adminApi = {
     apiClient.patch(`/admin/services/items/${id}/`, data),
   deleteNavItem: (id: number) =>
     apiClient.delete<void>(`/admin/services/items/${id}/`),
+
+  // ── Jobs taxonomy (industries + job types) ───────────────────────────────
+  getJobIndustries: () =>
+    apiClient.get<JobIndustryAdmin[]>('/admin/jobs/industries/'),
+  createJobIndustry: (data: JobIndustryInput) =>
+    apiClient.post<JobIndustryAdmin>('/admin/jobs/industries/', data),
+  updateJobIndustry: (id: string, data: Partial<JobIndustryInput>) =>
+    apiClient.patch<JobIndustryAdmin>(`/admin/jobs/industries/${id}/`, data),
+  deleteJobIndustry: (id: string) =>
+    apiClient.delete<void>(`/admin/jobs/industries/${id}/`),
+
+  createJobType: (data: JobTypeInput) =>
+    apiClient.post<JobTypeAdmin>('/admin/jobs/job-types/', data),
+  updateJobType: (id: string, data: Partial<Omit<JobTypeInput, 'industry'>>) =>
+    apiClient.patch<JobTypeAdmin>(`/admin/jobs/job-types/${id}/`, data),
+  deleteJobType: (id: string) =>
+    apiClient.delete<void>(`/admin/jobs/job-types/${id}/`),
 
   // ── Listing Claims ────────────────────────────────────────────────────────
   getListingClaims: (params?: { page?: number; page_size?: number; status?: ListingClaimStatus }) =>
