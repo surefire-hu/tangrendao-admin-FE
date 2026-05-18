@@ -711,39 +711,6 @@ export interface NavItemInput {
   display_order: number
 }
 
-// ── Jobs taxonomy (industries + types) ────────────────────────────────────────
-
-export interface JobTypeAdmin {
-  id: string
-  industry_id: string
-  name: string
-  sort_order: number
-  is_active: boolean
-}
-
-export interface JobIndustryAdmin {
-  id: string
-  name: string
-  icon: string
-  sort_order: number
-  is_active: boolean
-  job_types: JobTypeAdmin[]
-}
-
-export interface JobIndustryInput {
-  name: string
-  icon?: string
-  sort_order?: number
-  is_active?: boolean
-}
-
-export interface JobTypeInput {
-  industry: string
-  name: string
-  sort_order?: number
-  is_active?: boolean
-}
-
 // ── Broadcast ─────────────────────────────────────────────────────────────────
 
 export interface BroadcastPayload {
