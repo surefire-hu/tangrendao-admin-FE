@@ -29,6 +29,7 @@ import type {
   CandyPackageInput,
   NavCategory,
   NavCategoryInput,
+  NavGroupInput,
   NavSectionInput,
   NavItemInput,
   ClassifiedSubcategory,
@@ -303,6 +304,13 @@ export const adminApi = {
     apiClient.patch<NavCategory>(`/admin/services/categories/${id}/`, data),
   deleteNavCategory: (id: number) =>
     apiClient.delete<void>(`/admin/services/categories/${id}/`),
+
+  createNavGroup: (data: NavGroupInput) =>
+    apiClient.post(`/admin/services/groups/`, data),
+  updateNavGroup: (id: number, data: Partial<Omit<NavGroupInput, 'category'>>) =>
+    apiClient.patch(`/admin/services/groups/${id}/`, data),
+  deleteNavGroup: (id: number) =>
+    apiClient.delete<void>(`/admin/services/groups/${id}/`),
 
   createNavSection: (data: NavSectionInput) =>
     apiClient.post(`/admin/services/sections/`, data),
