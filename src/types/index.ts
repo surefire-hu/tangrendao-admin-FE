@@ -679,9 +679,18 @@ export interface NavItem {
 export interface NavSection {
   id: number
   title: string
+  icon_name: string
+  group: number | null
+  group_title: string | null
   display_order: number
   facets: string[]
   items: NavItem[]
+}
+
+export interface NavGroup {
+  id: number
+  title: string
+  display_order: number
 }
 
 export interface NavCategory {
@@ -689,6 +698,7 @@ export interface NavCategory {
   slug: string
   label: string
   display_order: number
+  groups: NavGroup[]
   sections: NavSection[]
 }
 
@@ -698,9 +708,17 @@ export interface NavCategoryInput {
   display_order: number
 }
 
-export interface NavSectionInput {
+export interface NavGroupInput {
   category: number
   title: string
+  display_order: number
+}
+
+export interface NavSectionInput {
+  category: number
+  group?: number | null
+  title: string
+  icon_name?: string
   display_order: number
   facets?: string[]
 }
