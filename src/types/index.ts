@@ -680,6 +680,7 @@ export interface NavSection {
   id: number
   title: string
   display_order: number
+  facets: string[]
   items: NavItem[]
 }
 
@@ -701,6 +702,7 @@ export interface NavSectionInput {
   category: number
   title: string
   display_order: number
+  facets?: string[]
 }
 
 export interface NavItemInput {

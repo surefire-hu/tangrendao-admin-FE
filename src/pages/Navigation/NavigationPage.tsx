@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Card, Button, Space, Modal, Form, Input, InputNumber, Tooltip,
+  Card, Button, Space, Modal, Form, Input, InputNumber, Tooltip, Select,
   Typography, Empty, Spin, Popconfirm, message, Tag, Row, Col, List, Avatar,
 } from 'antd'
 import {
@@ -28,7 +28,13 @@ const SYSTEM_SLUGS: Record<string, { label: string; color: string }> = {
   local_service: { label: '本地服务 类型', color: 'geekblue' },
   jobs:          { label: '招聘 行业/工种', color: 'volcano' },
   reviews:       { label: '大众点评 导航', color: 'green' },
+  signal:        { label: '心动信号', color: 'magenta' },
 }
+
+// Extra facets the FE renders alongside the section's items. Items already
+// act as the "分类" picker; these are the additional dimensions defined in
+// 服务.xmind (e.g. 装修 → 类型 + 工价).
+const FACET_OPTIONS = ['类型', '工价', '岗位'] as const
 
 type EditTarget =
   | { kind: 'category'; mode: 'create' } | { kind: 'category'; mode: 'edit'; data: NavCategory }
@@ -108,15 +114,19 @@ export function NavigationPage() {
         if (target.mode === 'create') await adminApi.createNavCategory(payload)
         else                          await adminApi.updateNavCategory(target.data.id, payload)
       } else if (target.kind === 'section') {
+        const facets: string[] = Array.isArray(values.facets) ? values.facets : []
         if (target.mode === 'create') {
           const payload: NavSectionInput = {
             category: target.categoryId, title: values.title,
             display_order: Number(values.display_order) || 0,
+            facets,
           }
           await adminApi.createNavSection(payload)
         } else {
           await adminApi.updateNavSection(target.data.id, {
-            title: values.title, display_order: Number(values.display_order) || 0,
+            title: values.title,
+            display_order: Number(values.display_order) || 0,
+            facets,
           })
         }
       } else {
@@ -304,7 +314,14 @@ export function NavigationPage() {
                       >
                         <List.Item.Meta
                           avatar={<Avatar size={24} icon={<AppstoreOutlined />} style={{ background: '#52c41a' }} />}
-                          title={<Text strong>{sec.title}</Text>}
+                          title={
+                            <Space>
+                              <Text strong>{sec.title}</Text>
+                              {(sec.facets ?? []).map(f => (
+                                <Tag key={f} color="purple" style={{ margin: 0 }}>{f}</Tag>
+                              ))}
+                            </Space>
+                          }
                           description={
                             <Space size={6}>
                               <Tag style={{ margin: 0 }}>排序 {sec.display_order}</Tag>
@@ -402,9 +419,23 @@ export function NavigationPage() {
             </>
           )}
           {target?.kind === 'section' && (
-            <Form.Item name="title" label="标题" rules={[{ required: true, max: 50 }]}>
-              <Input placeholder="分区标题" />
-            </Form.Item>
+            <>
+              <Form.Item name="title" label="标题" rules={[{ required: true, max: 50 }]}>
+                <Input placeholder="分区标题" />
+              </Form.Item>
+              <Form.Item
+                name="facets"
+                label="额外筛选维度 (可选)"
+                tooltip="客户端在该分区下渲染的额外 chip 选择器，分类(items) / 所在地区 / 供求 已默认启用"
+              >
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="选择需要的维度"
+                  options={FACET_OPTIONS.map(f => ({ value: f, label: f }))}
+                />
+              </Form.Item>
+            </>
           )}
           {target?.kind === 'item' && (
             <>
