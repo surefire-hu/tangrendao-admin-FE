@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
-  Card, Button, Space, Table, Modal, Form, Input, InputNumber,
-  Typography, Empty, Spin, Popconfirm, message, Tag, Collapse, Tooltip,
+  Card, Button, Space, Modal, Form, Input, InputNumber, Tooltip,
+  Typography, Empty, Spin, Popconfirm, message, Tag, Row, Col, List, Avatar,
 } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
-  FolderOpenOutlined, AppstoreOutlined,
+  FolderOutlined, AppstoreOutlined, TagsOutlined, ArrowRightOutlined,
 } from '@ant-design/icons'
-import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
 import type {
   NavCategory, NavSection, NavItem,
@@ -15,6 +14,10 @@ import type {
 } from '../../types'
 
 const { Title, Text } = Typography
+
+// 3-column master-detail. Pick a category → see its sections. Pick a section
+// → see its items. Every column owns its own create / edit / delete affordance
+// so we never bury actions inside nested panels.
 
 type EditTarget =
   | { kind: 'category'; mode: 'create' } | { kind: 'category'; mode: 'edit'; data: NavCategory }
@@ -29,12 +32,20 @@ export function NavigationPage() {
   const [form] = Form.useForm()
   const [saving, setSaving] = useState(false)
 
+  const [activeCatId, setActiveCatId] = useState<number | null>(null)
+  const [activeSecId, setActiveSecId] = useState<number | null>(null)
+
   const load = async () => {
     setLoading(true)
     try {
       const res = await adminApi.getNavigation()
       setData(res.data)
-    } catch (e) {
+      // Keep selection sticky when possible; otherwise fall back to first row.
+      setActiveCatId(prev => {
+        if (prev != null && res.data.some(c => c.id === prev)) return prev
+        return res.data[0]?.id ?? null
+      })
+    } catch {
       message.error('加载失败')
     } finally {
       setLoading(false)
@@ -42,6 +53,26 @@ export function NavigationPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  const activeCat = useMemo(
+    () => data.find(c => c.id === activeCatId) ?? null,
+    [data, activeCatId],
+  )
+
+  // When the active category changes, pick its first section by default so the
+  // right pane is never empty if there's something to show.
+  useEffect(() => {
+    if (!activeCat) { setActiveSecId(null); return }
+    setActiveSecId(prev => {
+      if (prev != null && activeCat.sections.some(s => s.id === prev)) return prev
+      return activeCat.sections[0]?.id ?? null
+    })
+  }, [activeCat])
+
+  const activeSec = useMemo(
+    () => activeCat?.sections.find(s => s.id === activeSecId) ?? null,
+    [activeCat, activeSecId],
+  )
 
   useEffect(() => {
     if (!target) return
@@ -52,13 +83,6 @@ export function NavigationPage() {
       form.setFieldsValue({ display_order: 0 })
     }
   }, [target, form])
-
-  const openCreateCategory = () => setTarget({ kind: 'category', mode: 'create' })
-  const openEditCategory = (data: NavCategory) => setTarget({ kind: 'category', mode: 'edit', data })
-  const openCreateSection = (categoryId: number) => setTarget({ kind: 'section', mode: 'create', categoryId })
-  const openEditSection = (data: NavSection, categoryId: number) => setTarget({ kind: 'section', mode: 'edit', data, categoryId })
-  const openCreateItem = (sectionId: number) => setTarget({ kind: 'item', mode: 'create', sectionId })
-  const openEditItem = (data: NavItem, sectionId: number) => setTarget({ kind: 'item', mode: 'edit', data, sectionId })
 
   const handleSubmit = async () => {
     if (!target) return
@@ -71,11 +95,12 @@ export function NavigationPage() {
           slug: values.slug, label: values.label, display_order: Number(values.display_order) || 0,
         }
         if (target.mode === 'create') await adminApi.createNavCategory(payload)
-        else await adminApi.updateNavCategory(target.data.id, payload)
+        else                          await adminApi.updateNavCategory(target.data.id, payload)
       } else if (target.kind === 'section') {
         if (target.mode === 'create') {
           const payload: NavSectionInput = {
-            category: target.categoryId, title: values.title, display_order: Number(values.display_order) || 0,
+            category: target.categoryId, title: values.title,
+            display_order: Number(values.display_order) || 0,
           }
           await adminApi.createNavSection(payload)
         } else {
@@ -83,7 +108,7 @@ export function NavigationPage() {
             title: values.title, display_order: Number(values.display_order) || 0,
           })
         }
-      } else if (target.kind === 'item') {
+      } else {
         if (target.mode === 'create') {
           const payload: NavItemInput = {
             section: target.sectionId,
@@ -112,111 +137,228 @@ export function NavigationPage() {
 
   const handleDelete = async (kind: 'category' | 'section' | 'item', id: number) => {
     try {
-      if (kind === 'category') await adminApi.deleteNavCategory(id)
-      else if (kind === 'section') await adminApi.deleteNavSection(id)
-      else await adminApi.deleteNavItem(id)
+      if (kind === 'category')      await adminApi.deleteNavCategory(id)
+      else if (kind === 'section')  await adminApi.deleteNavSection(id)
+      else                          await adminApi.deleteNavItem(id)
       message.success('已删除')
+      // Reset selection downstream if we just removed what was selected.
+      if (kind === 'category' && id === activeCatId) setActiveCatId(null)
+      if (kind === 'section'  && id === activeSecId) setActiveSecId(null)
       load()
     } catch (e: any) {
       message.error(e?.response?.data?.error || '删除失败')
     }
   }
 
-  const itemColumns = (section: NavSection): ColumnsType<NavItem> => [
-    { title: '排序', dataIndex: 'display_order', width: 60 },
-    { title: 'Slug', dataIndex: 'slug', width: 160, render: v => <Text code>{v}</Text> },
-    { title: '名称', dataIndex: 'label', width: 160 },
-    { title: '图标', dataIndex: 'icon_name', width: 160, render: v => v ? <Tag>{v}</Tag> : <Text type="secondary">—</Text> },
-    {
-      title: '操作', width: 140, fixed: 'right',
-      render: (_, row) => (
-        <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => openEditItem(row, section.id)}>编辑</Button>
-          <Popconfirm title="删除该项？" onConfirm={() => handleDelete('item', row.id)}>
-            <Button size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ]
+  // ── Render ───────────────────────────────────────────────────────────────
+
+  const colHeader = (icon: React.ReactNode, label: string, count: number, onCreate?: () => void, createLabel = '新建') => (
+    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+      <Space>
+        {icon}
+        <Text strong>{label}</Text>
+        <Tag>{count}</Tag>
+      </Space>
+      {onCreate && (
+        <Button size="small" type="primary" icon={<PlusOutlined />} onClick={onCreate}>
+          {createLabel}
+        </Button>
+      )}
+    </Space>
+  )
+
+  const rowActions = (onEdit: () => void, onDelete: () => void, confirmText: string) => (
+    <Space size={4} onClick={e => e.stopPropagation()}>
+      <Tooltip title="编辑">
+        <Button size="small" type="text" icon={<EditOutlined />} onClick={onEdit} />
+      </Tooltip>
+      <Popconfirm title={confirmText} okText="删除" cancelText="取消" onConfirm={onDelete}>
+        <Tooltip title="删除"><Button size="small" type="text" danger icon={<DeleteOutlined />} /></Tooltip>
+      </Popconfirm>
+    </Space>
+  )
 
   return (
-    <div style={{ padding: 24 }}>
-      <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+    <div style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Space style={{ marginBottom: 4, width: '100%', justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>服务导航管理</Title>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateCategory}>新建分类</Button>
         </Space>
       </Space>
-      <Text type="secondary">编辑 /api/services/navigation/ 的分类 / 分区 / 项。保存后会自动清除缓存。</Text>
+      <Text type="secondary">
+        编辑 /api/services/navigation/ 返回的分类 / 分区 / 项。点选左列查看分区，再点选分区查看项。
+      </Text>
 
       <Spin spinning={loading}>
-        {data.length === 0 && !loading ? (
-          <Empty style={{ marginTop: 48 }} description="暂无分类，点击右上方“新建分类”创建" />
-        ) : (
-          <Collapse style={{ marginTop: 16 }} defaultActiveKey={data.map(c => String(c.id))}>
-            {data.map(cat => (
-              <Collapse.Panel
-                key={String(cat.id)}
-                header={
-                  <Space>
-                    <FolderOpenOutlined />
-                    <Text strong>{cat.label}</Text>
-                    <Text code>{cat.slug}</Text>
-                    <Tag>排序 {cat.display_order}</Tag>
-                  </Space>
-                }
-                extra={
-                  <Space onClick={e => e.stopPropagation()}>
-                    <Tooltip title="新建分区">
-                      <Button size="small" icon={<PlusOutlined />} onClick={() => openCreateSection(cat.id)}>分区</Button>
-                    </Tooltip>
-                    <Button size="small" icon={<EditOutlined />} onClick={() => openEditCategory(cat)}>编辑</Button>
-                    <Popconfirm title="删除该分类及其所有分区/项？" onConfirm={() => handleDelete('category', cat.id)}>
-                      <Button size="small" danger icon={<DeleteOutlined />} />
-                    </Popconfirm>
-                  </Space>
-                }
-              >
-                {cat.sections.length === 0 ? (
-                  <Empty description="无分区" />
-                ) : cat.sections.map(sec => (
-                  <Card
-                    key={sec.id}
-                    size="small"
-                    style={{ marginBottom: 12 }}
-                    title={
-                      <Space>
-                        <AppstoreOutlined />
-                        <Text strong>{sec.title}</Text>
-                        <Tag>排序 {sec.display_order}</Tag>
-                      </Space>
-                    }
-                    extra={
-                      <Space>
-                        <Button size="small" icon={<PlusOutlined />} onClick={() => openCreateItem(sec.id)}>新建项</Button>
-                        <Button size="small" icon={<EditOutlined />} onClick={() => openEditSection(sec, cat.id)}>编辑</Button>
-                        <Popconfirm title="删除该分区及其所有项？" onConfirm={() => handleDelete('section', sec.id)}>
-                          <Button size="small" danger icon={<DeleteOutlined />} />
-                        </Popconfirm>
-                      </Space>
-                    }
-                  >
-                    <Table
-                      rowKey="id"
-                      size="small"
-                      pagination={false}
-                      dataSource={sec.items}
-                      columns={itemColumns(sec)}
-                      locale={{ emptyText: '无项' }}
-                    />
-                  </Card>
-                ))}
-              </Collapse.Panel>
-            ))}
-          </Collapse>
-        )}
+        <Row gutter={16} style={{ marginTop: 16 }}>
+          {/* ── Categories ── */}
+          <Col xs={24} md={7}>
+            <Card
+              size="small"
+              title={colHeader(<FolderOutlined />, '分类', data.length,
+                              () => setTarget({ kind: 'category', mode: 'create' }), '新建分类')}
+              bodyStyle={{ padding: 0, maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}
+            >
+              {data.length === 0 ? (
+                <Empty style={{ padding: 32 }} description="暂无分类" />
+              ) : (
+                <List
+                  dataSource={data}
+                  rowKey="id"
+                  renderItem={cat => {
+                    const selected = cat.id === activeCatId
+                    return (
+                      <List.Item
+                        onClick={() => setActiveCatId(cat.id)}
+                        style={{
+                          padding: '10px 16px',
+                          cursor: 'pointer',
+                          background: selected ? 'rgba(22,119,255,0.08)' : undefined,
+                          borderLeft: selected ? '3px solid #1677ff' : '3px solid transparent',
+                        }}
+                        actions={[rowActions(
+                          () => setTarget({ kind: 'category', mode: 'edit', data: cat }),
+                          () => handleDelete('category', cat.id),
+                          '删除该分类及其所有分区/项？',
+                        )]}
+                      >
+                        <List.Item.Meta
+                          avatar={<Avatar size={24} icon={<FolderOutlined />} style={{ background: '#1677ff' }} />}
+                          title={
+                            <Space>
+                              <Text strong>{cat.label}</Text>
+                              <Text code style={{ fontSize: 11 }}>{cat.slug}</Text>
+                            </Space>
+                          }
+                          description={
+                            <Space size={6}>
+                              <Tag style={{ margin: 0 }}>排序 {cat.display_order}</Tag>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {cat.sections.length} 分区
+                              </Text>
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )
+                  }}
+                />
+              )}
+            </Card>
+          </Col>
+
+          {/* ── Sections ── */}
+          <Col xs={24} md={8}>
+            <Card
+              size="small"
+              title={colHeader(
+                <AppstoreOutlined />,
+                activeCat ? `${activeCat.label} 的分区` : '分区',
+                activeCat?.sections.length ?? 0,
+                activeCat ? () => setTarget({ kind: 'section', mode: 'create', categoryId: activeCat.id }) : undefined,
+                '新建分区',
+              )}
+              bodyStyle={{ padding: 0, maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}
+            >
+              {!activeCat ? (
+                <Empty style={{ padding: 32 }} description="请选择左侧分类" />
+              ) : activeCat.sections.length === 0 ? (
+                <Empty style={{ padding: 32 }} description="该分类暂无分区" />
+              ) : (
+                <List
+                  dataSource={activeCat.sections}
+                  rowKey="id"
+                  renderItem={sec => {
+                    const selected = sec.id === activeSecId
+                    return (
+                      <List.Item
+                        onClick={() => setActiveSecId(sec.id)}
+                        style={{
+                          padding: '10px 16px',
+                          cursor: 'pointer',
+                          background: selected ? 'rgba(22,119,255,0.08)' : undefined,
+                          borderLeft: selected ? '3px solid #1677ff' : '3px solid transparent',
+                        }}
+                        actions={[rowActions(
+                          () => setTarget({ kind: 'section', mode: 'edit', data: sec, categoryId: activeCat.id }),
+                          () => handleDelete('section', sec.id),
+                          '删除该分区及其所有项？',
+                        )]}
+                      >
+                        <List.Item.Meta
+                          avatar={<Avatar size={24} icon={<AppstoreOutlined />} style={{ background: '#52c41a' }} />}
+                          title={<Text strong>{sec.title}</Text>}
+                          description={
+                            <Space size={6}>
+                              <Tag style={{ margin: 0 }}>排序 {sec.display_order}</Tag>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {sec.items.length} 项
+                              </Text>
+                              <ArrowRightOutlined style={{ color: '#999' }} />
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )
+                  }}
+                />
+              )}
+            </Card>
+          </Col>
+
+          {/* ── Items ── */}
+          <Col xs={24} md={9}>
+            <Card
+              size="small"
+              title={colHeader(
+                <TagsOutlined />,
+                activeSec ? `${activeSec.title} 的项` : '项',
+                activeSec?.items.length ?? 0,
+                activeSec ? () => setTarget({ kind: 'item', mode: 'create', sectionId: activeSec.id }) : undefined,
+                '新建项',
+              )}
+              bodyStyle={{ padding: 0, maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}
+            >
+              {!activeSec ? (
+                <Empty style={{ padding: 32 }} description="请选择中间分区" />
+              ) : activeSec.items.length === 0 ? (
+                <Empty style={{ padding: 32 }} description="该分区暂无项" />
+              ) : (
+                <List
+                  dataSource={activeSec.items}
+                  rowKey="id"
+                  renderItem={item => (
+                    <List.Item
+                      style={{ padding: '10px 16px' }}
+                      actions={[rowActions(
+                        () => setTarget({ kind: 'item', mode: 'edit', data: item, sectionId: activeSec.id }),
+                        () => handleDelete('item', item.id),
+                        '删除该项？',
+                      )]}
+                    >
+                      <List.Item.Meta
+                        avatar={<Avatar size={24} icon={<TagsOutlined />} style={{ background: '#fa8c16' }} />}
+                        title={
+                          <Space>
+                            <Text strong>{item.label}</Text>
+                            <Text code style={{ fontSize: 11 }}>{item.slug}</Text>
+                          </Space>
+                        }
+                        description={
+                          <Space size={6}>
+                            <Tag style={{ margin: 0 }}>排序 {item.display_order}</Tag>
+                            {item.icon_name && <Tag color="blue" style={{ margin: 0 }}>{item.icon_name}</Tag>}
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              )}
+            </Card>
+          </Col>
+        </Row>
       </Spin>
 
       <Modal
