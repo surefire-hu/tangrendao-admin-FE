@@ -449,13 +449,13 @@ export function NavigationPage() {
             </Card>
           </Col>
 
-          {/* ── Col 3: Sections ── */}
+          {/* ── Col 3: Sections (header banner shows active cat label) ── */}
           <Col xs={24} md={7}>
             <Card
               size="small"
               title={colHeader(
                 <AppstoreOutlined />,
-                activeCat ? '分区' : '分区',
+                activeCat ? `${activeCat.label} · 分区` : '分区',
                 visibleSections.length,
                 activeCat ? () => setTarget({
                   kind: 'section', mode: 'create', categoryId: activeCat.id,
