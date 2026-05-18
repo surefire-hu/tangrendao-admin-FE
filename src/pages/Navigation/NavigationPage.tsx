@@ -19,6 +19,17 @@ const { Title, Text } = Typography
 // → see its items. Every column owns its own create / edit / delete affordance
 // so we never bury actions inside nested panels.
 
+// System-reserved category slugs that drive features outside the navigation
+// menu itself. The labels are shown as small badges in the left column so a
+// moderator knows what they're editing affects.
+const SYSTEM_SLUGS: Record<string, { label: string; color: string }> = {
+  housing:       { label: '房源 类型', color: 'geekblue' },
+  market:        { label: '买卖 类型', color: 'geekblue' },
+  local_service: { label: '本地服务 类型', color: 'geekblue' },
+  jobs:          { label: '招聘 行业/工种', color: 'volcano' },
+  reviews:       { label: '大众点评 导航', color: 'green' },
+}
+
 type EditTarget =
   | { kind: 'category'; mode: 'create' } | { kind: 'category'; mode: 'edit'; data: NavCategory }
   | { kind: 'section';  mode: 'create'; categoryId: number } | { kind: 'section'; mode: 'edit'; data: NavSection; categoryId: number }
@@ -229,6 +240,11 @@ export function NavigationPage() {
                             <Space>
                               <Text strong>{cat.label}</Text>
                               <Text code style={{ fontSize: 11 }}>{cat.slug}</Text>
+                              {SYSTEM_SLUGS[cat.slug] && (
+                                <Tag color={SYSTEM_SLUGS[cat.slug].color} style={{ margin: 0 }}>
+                                  {SYSTEM_SLUGS[cat.slug].label}
+                                </Tag>
+                              )}
                             </Space>
                           }
                           description={
