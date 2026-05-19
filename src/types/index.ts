@@ -432,6 +432,22 @@ export interface PublicationDetails {
   opening_hours?: Record<string, string | string[] | { open?: string; close?: string; closed?: boolean } | null>
   thumbnail?: string | null
   cover_image?: string | null
+
+  // Raw FK ids for the admin classification editor (populated by the
+  // stats endpoint). Shape varies by publication type.
+  classification?: {
+    // listing
+    category_id?: string | null
+    business_type_ids?: string[]
+    cuisine_types?: string[]
+    // jobs
+    industry_id?: string | null
+    job_type_ids?: string[]
+    // classifieds
+    category?: string
+    subcategory?: string
+    sub_type?: string
+  }
 }
 
 export interface PublicationStats {
