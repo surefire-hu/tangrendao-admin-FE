@@ -432,7 +432,6 @@ export interface PublicationDetails {
   opening_hours?: Record<string, string | string[] | { open?: string; close?: string; closed?: boolean } | null>
   thumbnail?: string | null
   cover_image?: string | null
-  merchant?: { id: string; business_name: string } | null
 }
 
 export interface PublicationStats {
