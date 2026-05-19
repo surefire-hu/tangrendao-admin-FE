@@ -285,15 +285,27 @@ function ClassificationEditor({ type, pubId, initial, onSaved }: ClassificationP
     setSubType(initial.sub_type ?? '')
   }, [initial])
 
-  // Load options per type
+  // Load options per type. Defensive unwrap — some endpoints are paginated
+  // ({results: [...]}) and some return a bare array.
+  const toArray = <T,>(v: unknown): T[] => {
+    if (Array.isArray(v)) return v as T[]
+    if (v && typeof v === 'object' && 'results' in v && Array.isArray((v as { results: T[] }).results)) {
+      return (v as { results: T[] }).results
+    }
+    return []
+  }
   useEffect(() => {
     if (type === 'listing') {
-      adminApi.getMerchantCategories().then((r) => setMerchantCats(r.data)).catch(() => {})
+      adminApi.getMerchantCategories()
+        .then((r) => setMerchantCats(toArray(r.data)))
+        .catch(() => {})
     } else if (type === 'job_post' || type === 'job_seek') {
-      adminApi.getJobIndustries().then((r) => setIndustries(r.data)).catch(() => {})
+      adminApi.getJobIndustries()
+        .then((r) => setIndustries(toArray(r.data)))
+        .catch(() => {})
     } else if (type === 'market' || type === 'housing' || type === 'local_service') {
       adminApi.getClassifiedTaxonomy()
-        .then((r) => setSubs(r.data[type] ?? []))
+        .then((r) => setSubs(toArray(r.data?.[type])))
         .catch(() => {})
     }
   }, [type])
@@ -301,7 +313,9 @@ function ClassificationEditor({ type, pubId, initial, onSaved }: ClassificationP
   // Load job types when industry changes
   useEffect(() => {
     if ((type === 'job_post' || type === 'job_seek') && industryId) {
-      adminApi.getJobTypesForIndustry(industryId).then((r) => setJobTypes(r.data)).catch(() => setJobTypes([]))
+      adminApi.getJobTypesForIndustry(industryId)
+        .then((r) => setJobTypes(toArray(r.data)))
+        .catch(() => setJobTypes([]))
     } else {
       setJobTypes([])
     }

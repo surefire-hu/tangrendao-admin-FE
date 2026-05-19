@@ -246,8 +246,15 @@ export const adminApi = {
       '/merchants/categories/',
     ),
 
-  getJobIndustries: () =>
-    apiClient.get<Array<{ id: string; name: string }>>('/jobs/industries/'),
+  // /jobs/industries/ is paginated by DRF default; unwrap to plain array.
+  getJobIndustries: async () => {
+    const r = await apiClient.get<
+      | Array<{ id: string; name: string }>
+      | { results: Array<{ id: string; name: string }> }
+    >('/jobs/industries/', { params: { page_size: 1000 } })
+    const data = Array.isArray(r.data) ? r.data : (r.data?.results ?? [])
+    return { ...r, data }
+  },
 
   getJobTypesForIndustry: (industryId: string) =>
     apiClient.get<Array<{ id: string; name: string }>>(`/jobs/industries/${industryId}/job_types/`),
