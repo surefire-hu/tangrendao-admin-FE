@@ -88,6 +88,7 @@ export interface AdminUser {
   is_active: boolean
   is_registered: boolean
   is_staff: boolean
+  is_superuser: boolean
   is_journalist: boolean
   is_content_creator: boolean
   is_bot: boolean
