@@ -216,14 +216,21 @@ export function UserListPage() {
       title: '角色',
       dataIndex: 'role',
       width: 110,
-      render: (r: string, u) => (
-        <Space size={4}>
-          <Tag color={roleColors[r]}>{roleLabels[r]}</Tag>
-          {u.is_bot && <Tag color="purple">BOT</Tag>}
-          {u.gender === 'male' && <Tag color="blue">男</Tag>}
-          {u.gender === 'female' && <Tag color="pink">女</Tag>}
-        </Space>
-      ),
+      render: (r: string, u) => {
+        // Promote display role: staff/superuser → admin, ModeratorRole rows → moderator.
+        // Keeps badge in sync with the broadened backend role filter.
+        let effective = r
+        if (u.is_staff || u.is_superuser) effective = 'admin'
+        else if (u.moderator_roles && u.moderator_roles.length > 0) effective = 'moderator'
+        return (
+          <Space size={4}>
+            <Tag color={roleColors[effective]}>{roleLabels[effective]}</Tag>
+            {u.is_bot && <Tag color="purple">BOT</Tag>}
+            {u.gender === 'male' && <Tag color="blue">男</Tag>}
+            {u.gender === 'female' && <Tag color="pink">女</Tag>}
+          </Space>
+        )
+      },
     },
     {
       title: '国家',
