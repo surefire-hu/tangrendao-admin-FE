@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Card, Row, Col, Typography, Spin, Button, Statistic,
-  Tag, Tabs, Alert, Space, Descriptions, Image, theme,
+  Tag, Tabs, Alert, Space, Descriptions, Image, Select, message, theme,
 } from 'antd'
 import {
   ArrowLeftOutlined, EyeOutlined, PhoneOutlined,
@@ -242,6 +242,211 @@ function DetailsCard({ type, details }: { type: string; details: PublicationDeta
   )
 }
 
+type ClassificationProps = {
+  type: PublicationType
+  pubId: string
+  initial: PublicationDetails['classification'] | undefined
+  onSaved: () => void
+}
+
+function ClassificationEditor({ type, pubId, initial, onSaved }: ClassificationProps) {
+  const [saving, setSaving] = useState(false)
+
+  // Listing options
+  const [merchantCats, setMerchantCats] = useState<
+    Array<{ id: string; name: string; types: Array<{ id: string; name: string }> }>
+  >([])
+  const [listingCategoryId, setListingCategoryId] = useState<string | null>(null)
+  const [listingBusinessTypeIds, setListingBusinessTypeIds] = useState<string[]>([])
+  const [cuisineTypes, setCuisineTypes] = useState<string[]>([])
+
+  // Job options
+  const [industries, setIndustries] = useState<Array<{ id: string; name: string }>>([])
+  const [jobTypes, setJobTypes] = useState<Array<{ id: string; name: string }>>([])
+  const [industryId, setIndustryId] = useState<string | null>(null)
+  const [jobTypeIds, setJobTypeIds] = useState<string[]>([])
+
+  // Classifieds options
+  const [subs, setSubs] = useState<
+    Array<{ id: number; name: string; sub_types?: Array<{ id: number; name: string }> }>
+  >([])
+  const [subcategory, setSubcategory] = useState<string>('')
+  const [subType, setSubType] = useState<string>('')
+
+  // Init from initial
+  useEffect(() => {
+    if (!initial) return
+    setListingCategoryId(initial.category_id ?? null)
+    setListingBusinessTypeIds(initial.business_type_ids ?? [])
+    setCuisineTypes(initial.cuisine_types ?? [])
+    setIndustryId(initial.industry_id ?? null)
+    setJobTypeIds(initial.job_type_ids ?? [])
+    setSubcategory(initial.subcategory ?? '')
+    setSubType(initial.sub_type ?? '')
+  }, [initial])
+
+  // Load options per type
+  useEffect(() => {
+    if (type === 'listing') {
+      adminApi.getMerchantCategories().then((r) => setMerchantCats(r.data)).catch(() => {})
+    } else if (type === 'job_post' || type === 'job_seek') {
+      adminApi.getJobIndustries().then((r) => setIndustries(r.data)).catch(() => {})
+    } else if (type === 'market' || type === 'housing' || type === 'local_service') {
+      adminApi.getClassifiedTaxonomy()
+        .then((r) => setSubs(r.data[type] ?? []))
+        .catch(() => {})
+    }
+  }, [type])
+
+  // Load job types when industry changes
+  useEffect(() => {
+    if ((type === 'job_post' || type === 'job_seek') && industryId) {
+      adminApi.getJobTypesForIndustry(industryId).then((r) => setJobTypes(r.data)).catch(() => setJobTypes([]))
+    } else {
+      setJobTypes([])
+    }
+  }, [type, industryId])
+
+  const businessTypesForCategory = useCallback(() => {
+    const cat = merchantCats.find((c) => c.id === listingCategoryId)
+    return cat?.types ?? []
+  }, [merchantCats, listingCategoryId])
+
+  const subTypesForSubcategory = useCallback(() => {
+    const sub = subs.find((s) => s.name === subcategory)
+    return sub?.sub_types ?? []
+  }, [subs, subcategory])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      let payload: Parameters<typeof adminApi.updatePublicationClassification>[2] = {}
+      if (type === 'listing') {
+        payload = {
+          category_id: listingCategoryId,
+          business_type_ids: listingBusinessTypeIds,
+          cuisine_types: cuisineTypes,
+        }
+      } else if (type === 'job_post' || type === 'job_seek') {
+        payload = { industry_id: industryId, job_type_ids: jobTypeIds }
+      } else {
+        payload = { subcategory, sub_type: subType }
+      }
+      await adminApi.updatePublicationClassification(type, pubId, payload)
+      message.success('已更新分类')
+      onSaved()
+    } catch {
+      message.error('更新失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card title="重新分类 (Reabbinare classificazione)" style={{ marginBottom: 16 }}>
+      {type === 'listing' && (
+        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>分类 (MerchantCategory)</Text>
+            <Select
+              style={{ width: '100%' }}
+              allowClear
+              value={listingCategoryId ?? undefined}
+              onChange={(v) => { setListingCategoryId(v ?? null); setListingBusinessTypeIds([]) }}
+              options={merchantCats.map((c) => ({ value: c.id, label: c.name }))}
+              placeholder="选择分类"
+            />
+          </div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>业务类型 (MerchantBusinessType)</Text>
+            <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              value={listingBusinessTypeIds}
+              onChange={setListingBusinessTypeIds}
+              options={businessTypesForCategory().map((t) => ({ value: t.id, label: t.name }))}
+              placeholder="选择业务类型"
+              disabled={!listingCategoryId}
+            />
+          </div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>菜系/品类 (cuisine_types, free text)</Text>
+            <Select
+              mode="tags"
+              style={{ width: '100%' }}
+              value={cuisineTypes}
+              onChange={setCuisineTypes}
+              tokenSeparators={[',']}
+              placeholder="输入并回车"
+            />
+          </div>
+        </Space>
+      )}
+
+      {(type === 'job_post' || type === 'job_seek') && (
+        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>行业 (JobIndustry)</Text>
+            <Select
+              style={{ width: '100%' }}
+              allowClear
+              value={industryId ?? undefined}
+              onChange={(v) => { setIndustryId(v ?? null); setJobTypeIds([]) }}
+              options={industries.map((i) => ({ value: i.id, label: i.name }))}
+              placeholder="选择行业"
+            />
+          </div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>工种 (JobType)</Text>
+            <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              value={jobTypeIds}
+              onChange={setJobTypeIds}
+              options={jobTypes.map((j) => ({ value: j.id, label: j.name }))}
+              placeholder="选择工种"
+              disabled={!industryId}
+            />
+          </div>
+        </Space>
+      )}
+
+      {(type === 'market' || type === 'housing' || type === 'local_service') && (
+        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>子分类 (ClassifiedSubcategory)</Text>
+            <Select
+              style={{ width: '100%' }}
+              allowClear
+              value={subcategory || undefined}
+              onChange={(v) => { setSubcategory(v ?? ''); setSubType('') }}
+              options={subs.map((s) => ({ value: s.name, label: s.name }))}
+              placeholder="选择子分类"
+            />
+          </div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>细分类型 (ClassifiedSubType)</Text>
+            <Select
+              style={{ width: '100%' }}
+              allowClear
+              value={subType || undefined}
+              onChange={(v) => setSubType(v ?? '')}
+              options={subTypesForSubcategory().map((t) => ({ value: t.name, label: t.name }))}
+              placeholder="选择细分类型"
+              disabled={!subcategory}
+            />
+          </div>
+        </Space>
+      )}
+
+      <div style={{ marginTop: 16 }}>
+        <Button type="primary" loading={saving} onClick={save}>保存</Button>
+      </div>
+    </Card>
+  )
+}
+
+
 export function PublicationDetailPage() {
   const { type, id } = useParams<{ type: string; id: string }>()
   const navigate = useNavigate()
@@ -250,13 +455,16 @@ export function PublicationDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
     if (!type || !id) return
+    setLoading(true)
     adminApi.getPublicationStats(type as PublicationType, id)
       .then((r) => setStats(r.data))
       .catch(() => setError('无法加载此内容的统计数据。'))
       .finally(() => setLoading(false))
   }, [type, id])
+
+  useEffect(() => { fetchStats() }, [fetchStats])
 
   const goBack = () => {
     const backMap: Record<string, string> = {
@@ -309,6 +517,13 @@ export function PublicationDetailPage() {
       </Card>
 
       {stats.details && <DetailsCard type={stats.type} details={stats.details} />}
+
+      <ClassificationEditor
+        type={stats.type}
+        pubId={stats.id}
+        initial={stats.details?.classification}
+        onSaved={fetchStats}
+      />
 
       {/* KPI */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>

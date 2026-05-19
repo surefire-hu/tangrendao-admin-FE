@@ -225,6 +225,41 @@ export const adminApi = {
   rejectPublication: (type: PublicationType, id: string, reason?: string) =>
     apiClient.post(`/admin/publications/${type}/${id}/reject/`, { reason }),
 
+  updatePublicationClassification: (
+    type: PublicationType,
+    id: string,
+    payload: {
+      category_id?: string | null
+      business_type_ids?: string[]
+      cuisine_types?: string[]
+      industry_id?: string | null
+      job_type_ids?: string[]
+      subcategory?: string
+      sub_type?: string
+    },
+  ) =>
+    apiClient.patch(`/admin/publications/${type}/${id}/classification/`, payload),
+
+  // Options for the classification editor
+  getMerchantCategories: () =>
+    apiClient.get<Array<{ id: string; name: string; types: Array<{ id: string; name: string }> }>>(
+      '/merchants/categories/',
+    ),
+
+  getJobIndustries: () =>
+    apiClient.get<Array<{ id: string; name: string }>>('/jobs/industries/'),
+
+  getJobTypesForIndustry: (industryId: string) =>
+    apiClient.get<Array<{ id: string; name: string }>>(`/jobs/industries/${industryId}/job_types/`),
+
+  // Canonical classifieds taxonomy backed by the navigation tree
+  // (housing/market/local_service ServiceSection + ServiceItem).
+  getClassifiedTaxonomy: () =>
+    apiClient.get<Record<
+      'housing' | 'market' | 'local_service',
+      Array<{ id: number; name: string; sub_types: Array<{ id: number; name: string }> }>
+    >>('/classifieds/taxonomy/'),
+
   // ── Forum (posts + videos) ────────────────────────────────────────────────
   getForumPosts: (params?: {
     page?: number
