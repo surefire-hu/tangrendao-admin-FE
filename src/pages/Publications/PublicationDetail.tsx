@@ -212,17 +212,12 @@ function DetailsCard({ type, details }: { type: string; details: PublicationDeta
         </div>
       )}
 
-      {(details.author || details.merchant || details.rejection_reason) && (
+      {(details.author || details.rejection_reason) && (
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
           <Descriptions column={{ xs: 1, sm: 2, md: 3 }} size="small">
             {details.author && (
               <Descriptions.Item label="发布者">
                 {details.author.username || details.author.email}
-              </Descriptions.Item>
-            )}
-            {details.merchant && (
-              <Descriptions.Item label="商家">
-                {details.merchant.business_name}
               </Descriptions.Item>
             )}
             {details.is_sponsored && (
