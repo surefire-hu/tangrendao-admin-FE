@@ -313,6 +313,7 @@ export interface ClassifiedItem {
   category: string
   item_type: 'local_service' | 'housing' | 'market'
   status: 'pending' | 'approved' | 'rejected'
+  is_active?: boolean
   price: string | null
   country: string
   city: string
@@ -331,6 +332,7 @@ export interface JobPost {
   title: string
   company: string | null
   status: 'pending' | 'approved' | 'rejected'
+  is_active?: boolean
   country: string
   city: string
   cover_image?: string | null
@@ -344,6 +346,7 @@ export interface JobSeek {
   id: string
   title: string
   status: 'pending' | 'approved' | 'rejected'
+  is_active?: boolean
   country: string
   city: string
   created_at: string
@@ -354,7 +357,7 @@ export interface JobSeek {
 export interface Listing {
   id: string
   name: string
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'deleted'
   country: string
   city: string
   cover_url?: string | null

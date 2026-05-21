@@ -170,9 +170,19 @@ export function PublicationListPage({ type }: Props) {
     },
     {
       title: '状态',
-      dataIndex: 'status',
-      width: 110,
-      render: (s: string) => <Tag color={statusColors[s]}>{statusLabels[s] ?? s}</Tag>,
+      key: 'status',
+      width: 150,
+      render: (_, item) => {
+        const s = (item as { status: string }).status
+        const isDeleted = s === 'deleted'
+          || (item as { is_active?: boolean }).is_active === false
+        return (
+          <Space size={4} wrap>
+            {!isDeleted && <Tag color={statusColors[s]}>{statusLabels[s] ?? s}</Tag>}
+            {isDeleted && <Tag color="default">已删除</Tag>}
+          </Space>
+        )
+      },
     },
     {
       title: '国家',

@@ -138,9 +138,14 @@ export function ForumListPage({ kind }: Props) {
     },
     {
       title: '状态',
-      dataIndex: 'status',
-      width: 100,
-      render: (s: string) => <Tag color={statusColors[s]}>{statusLabels[s] ?? s}</Tag>,
+      key: 'status',
+      width: 140,
+      render: (_, item) => (
+        <Space size={4} wrap>
+          <Tag color={statusColors[item.status]}>{statusLabels[item.status] ?? item.status}</Tag>
+          {item.is_active === false && <Tag color="default">已删除</Tag>}
+        </Space>
+      ),
     },
     {
       title: '国家',

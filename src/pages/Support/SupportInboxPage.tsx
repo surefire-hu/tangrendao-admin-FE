@@ -3,7 +3,7 @@ import {
   Layout, List, Avatar, Typography, Badge, Button, Input, Empty,
   Popconfirm, Tabs, Tag, Space, Tooltip, message,
 } from 'antd'
-import { UserOutlined, LockOutlined, SendOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, SendOutlined, ReloadOutlined, TeamOutlined, FilePdfOutlined } from '@ant-design/icons'
 import {
   supportApi,
   type SupportConversation,
@@ -343,6 +343,41 @@ export function SupportInboxPage() {
                         wordBreak: 'break-word',
                       }}
                     >
+                      {msg.attachment_url && msg.attachment_kind === 'image' && (
+                        <a
+                          href={msg.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: 'block', marginBottom: msg.content ? 6 : 0 }}
+                        >
+                          <img
+                            src={msg.attachment_url}
+                            alt={msg.attachment_name || ''}
+                            style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 6, display: 'block' }}
+                          />
+                        </a>
+                      )}
+                      {msg.attachment_url && msg.attachment_kind === 'pdf' && (
+                        <a
+                          href={msg.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '6px 8px',
+                            marginBottom: msg.content ? 6 : 0,
+                            background: fromOperator ? 'rgba(255,255,255,0.15)' : '#f5f5f5',
+                            color: fromOperator ? '#fff' : '#1677ff',
+                            borderRadius: 6,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <FilePdfOutlined />
+                          <span>{msg.attachment_name || 'PDF'}</span>
+                        </a>
+                      )}
                       {msg.content}
                       <div
                         style={{
