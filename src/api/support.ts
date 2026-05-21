@@ -10,6 +10,10 @@ export interface SupportMessage {
   content: string
   metadata?: Record<string, unknown>
   created_at: string
+  attachment_url?: string | null
+  attachment_kind?: '' | 'image' | 'pdf'
+  attachment_name?: string
+  attachment_size?: number | null
 }
 
 export interface OperatorDisplay {
