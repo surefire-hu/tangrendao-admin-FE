@@ -9,6 +9,9 @@ import type {
   AdProduct,
   AdCard,
   AdCardCreate,
+  SplashAd,
+  SplashAdCreate,
+  SplashAdConfig,
   ClassifiedItem,
   JobPost,
   JobSeek,
@@ -143,6 +146,40 @@ export const adminApi = {
 
   searchProducts: (params: { type: string; q?: string; country?: string; page?: number; page_size?: number }) =>
     apiClient.get<{ count: number; has_next: boolean; page: number; results: AdProduct[] }>('/ads/products/', { params }),
+
+  // ── Splash (interstitial / 开屏广告) ──────────────────────────────────────
+  getSplashAds: (params?: { page?: number; is_active?: boolean; country?: string }) =>
+    apiClient.get<PaginatedResponse<SplashAd>>('/ads/splash/admin/', { params }),
+
+  getSplashAd: (id: string) => apiClient.get<SplashAd>(`/ads/splash/admin/${id}/`),
+
+  createSplashAd: (data: SplashAdCreate) => {
+    const form = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) form.append(k, v as string | Blob)
+    })
+    return apiClient.post<SplashAd>('/ads/splash/admin/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  updateSplashAd: (id: string, data: Partial<SplashAdCreate> & { image?: File }) => {
+    const form = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) form.append(k, v as string | Blob)
+    })
+    return apiClient.patch<SplashAd>(`/ads/splash/admin/${id}/`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteSplashAd: (id: string) => apiClient.delete(`/ads/splash/admin/${id}/`),
+
+  getSplashConfig: () =>
+    apiClient.get<SplashAdConfig>('/ads/splash/admin/config/'),
+
+  updateSplashConfig: (data: SplashAdConfig) =>
+    apiClient.patch<SplashAdConfig>('/ads/splash/admin/config/', data),
 
   // ── AdCards (Advertisement) ───────────────────────────────────────────────
   getAdCards: (params?: { page?: number; country?: string; is_active?: boolean }) =>

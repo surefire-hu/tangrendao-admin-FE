@@ -17,6 +17,7 @@ import {
   SendOutlined,
   AuditOutlined,
   IdcardOutlined,
+  MobileOutlined,
   GiftOutlined,
   MessageOutlined,
   CommentOutlined,
@@ -136,6 +137,11 @@ export function AdminLayout() {
       label: '卡片广告',
     },
     {
+      key: '/splash',
+      icon: <MobileOutlined />,
+      label: '开屏广告',
+    },
+    {
       key: '/currency',
       icon: <GiftOutlined />,
       label: '糖果/金币',
@@ -236,6 +242,7 @@ export function AdminLayout() {
     if (path.startsWith('/users')) return '/users'
     if (path.startsWith('/advertisements')) return '/advertisements'
     if (path.startsWith('/adcards')) return '/adcards'
+    if (path.startsWith('/splash')) return '/splash'
     if (path.startsWith('/currency')) return '/currency'
     if (path.startsWith('/broadcast')) return '/broadcast'
     if (path.startsWith('/feedback')) return '/feedback'

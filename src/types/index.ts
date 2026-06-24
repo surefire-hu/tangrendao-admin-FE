@@ -303,6 +303,46 @@ export interface AdCardCreate {
   priority?: number
 }
 
+// ── Splash (interstitial / 开屏广告) ────────────────────────────────────────────
+
+export interface SplashAd {
+  id: string
+  image_url: string | null
+  cta_label: string
+  link_url: string
+  linked_content_type: string
+  linked_content_subtype: string
+  linked_content_id: string
+  country: AdCountry
+  is_active: boolean
+  priority: number
+  display_probability: number
+  start_date: string | null
+  end_date: string | null
+  created_at: string
+  impressions: number
+  clicks: number
+}
+
+export interface SplashAdCreate {
+  image?: File
+  cta_label?: string
+  link_url?: string
+  linked_content_type?: string
+  linked_content_subtype?: string
+  linked_content_id?: string
+  country: AdCountry
+  is_active: boolean
+  priority: number
+  display_probability: number
+  start_date?: string
+  end_date?: string
+}
+
+export interface SplashAdConfig {
+  frequency_per_day: number
+}
+
 // ── Publications ──────────────────────────────────────────────────────────────
 
 export type PublicationType = 'market' | 'local_service' | 'housing' | 'job_post' | 'job_seek' | 'listing'
