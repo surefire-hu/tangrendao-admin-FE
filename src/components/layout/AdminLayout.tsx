@@ -52,15 +52,19 @@ export function AdminLayout() {
   const [supportOnlineLoading, setSupportOnlineLoading] = useState(false)
 
   useEffect(() => {
-    const fetchUnread = () => {
+    // Support is time-sensitive (a customer just opened a chat) → poll it
+    // frequently so the red dot appears without a manual refresh.
+    const fetchSupportUnread = () => {
+      apiClient.get<{ unread_count: number }>('/chat/support/admin/inbox/unread-count/')
+        .then(r => setSupportUnread(r.data.unread_count))
+        .catch(() => {})
+    }
+    const fetchOthers = () => {
       apiClient.get<{ count: number }>('/admin/feedback/unread-count/')
         .then(r => setFeedbackUnread(r.data.count))
         .catch(() => {})
       apiClient.get<{ count: number }>('/admin/promotions/unread-count/')
         .then(r => setPromotionsUnread(r.data.count))
-        .catch(() => {})
-      apiClient.get<{ unread_count: number }>('/chat/support/admin/inbox/unread-count/')
-        .then(r => setSupportUnread(r.data.unread_count))
         .catch(() => {})
       apiClient.get<{ count: number }>('/admin/listing-claims/unread-count/')
         .then(r => setClaimsUnread(r.data.count))
@@ -69,9 +73,18 @@ export function AdminLayout() {
         .then(r => setUnbanPending(r.data.count ?? 0))
         .catch(() => {})
     }
-    fetchUnread()
-    const interval = setInterval(fetchUnread, 30_000)
-    return () => clearInterval(interval)
+    fetchSupportUnread()
+    fetchOthers()
+    const supportInterval = setInterval(fetchSupportUnread, 8_000)
+    const othersInterval  = setInterval(fetchOthers, 30_000)
+    // Catch up the moment the tab regains focus (browsers throttle background timers).
+    const onFocus = () => { fetchSupportUnread(); fetchOthers() }
+    window.addEventListener('focus', onFocus)
+    return () => {
+      clearInterval(supportInterval)
+      clearInterval(othersInterval)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [])
 
   useEffect(() => {
