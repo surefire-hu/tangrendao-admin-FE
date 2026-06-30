@@ -87,6 +87,24 @@ export function AdminLayout() {
     }
   }, [])
 
+  // Real-time support badge: a customer opening/writing a support chat pushes
+  // the live unread count over the inbox WebSocket (polling above is a fallback).
+  useEffect(() => {
+    let ws: WebSocket | null = null
+    let retry: ReturnType<typeof setTimeout> | null = null
+    let closed = false
+    const connect = () => {
+      ws = supportApi.openInboxSocket((count) => setSupportUnread(count))
+      ws.onclose = () => { if (!closed) retry = setTimeout(connect, 5_000) }
+    }
+    connect()
+    return () => {
+      closed = true
+      if (retry) clearTimeout(retry)
+      ws?.close()
+    }
+  }, [])
+
   useEffect(() => {
     supportApi.getPresence()
       .then(r => setSupportOnline(r.online))

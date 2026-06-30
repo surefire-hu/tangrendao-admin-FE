@@ -160,4 +160,19 @@ export const supportApi = {
     }
     return ws
   },
+
+  // Global operator inbox socket — live unread count for the sidebar red dot.
+  openInboxSocket(onUpdate: (unreadCount: number) => void): WebSocket {
+    const token = getAccessToken()
+    const ws = new WebSocket(`${wsBase()}/ws/support/inbox/?token=${encodeURIComponent(token)}`)
+    ws.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data)
+        if (data.type === 'inbox_update' && typeof data.unread_count === 'number') {
+          onUpdate(data.unread_count)
+        }
+      } catch { /* ignore */ }
+    }
+    return ws
+  },
 }
