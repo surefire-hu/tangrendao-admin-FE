@@ -262,6 +262,9 @@ export const adminApi = {
   rejectPublication: (type: PublicationType, id: string, reason?: string) =>
     apiClient.post(`/admin/publications/${type}/${id}/reject/`, { reason }),
 
+  deletePublication: (type: PublicationType, id: string) =>
+    apiClient.post(`/admin/publications/${type}/${id}/delete/`),
+
   updatePublicationClassification: (
     type: PublicationType,
     id: string,
@@ -324,6 +327,9 @@ export const adminApi = {
 
   rejectForumPost: (id: string, reason?: string) =>
     apiClient.post(`/admin/forum/posts/${id}/reject/`, { reason }),
+
+  deleteForumPost: (id: string) =>
+    apiClient.post(`/admin/forum/posts/${id}/delete/`),
 
   // ── Activity Log (solo superadmin) ────────────────────────────────────────
   getActivityLog: (params?: {

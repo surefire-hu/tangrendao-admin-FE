@@ -4,11 +4,12 @@ import {
   Button, Tooltip, Popconfirm, message, Tabs, theme,
 } from 'antd'
 import {
-  SearchOutlined, EyeOutlined, CheckOutlined, CloseOutlined,
+  SearchOutlined, EyeOutlined, CheckOutlined, CloseOutlined, DeleteOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
+import { RejectReasonModal } from '../../components/RejectReasonModal'
 import type { ClassifiedItem, JobPost, JobSeek, PublicationType } from '../../types'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -113,10 +114,24 @@ export function PublicationListPage({ type }: Props) {
     } catch { message.error('操作失败') }
   }
 
-  const handleReject = async (id: string) => {
+  const [rejectId, setRejectId] = useState<string | null>(null)
+  const [rejecting, setRejecting] = useState(false)
+
+  const handleReject = async (reason: string) => {
+    if (!rejectId) return
+    setRejecting(true)
     try {
-      await adminApi.rejectPublication(activeTab, id)
-      message.success('已拒绝')
+      await adminApi.rejectPublication(activeTab, rejectId, reason)
+      message.success('已不通过')
+      setRejectId(null)
+      fetchItems()
+    } catch { message.error('操作失败') } finally { setRejecting(false) }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await adminApi.deletePublication(activeTab, id)
+      message.success('已删除')
       fetchItems()
     } catch { message.error('操作失败') }
   }
@@ -229,26 +244,37 @@ export function PublicationListPage({ type }: Props) {
             />
           </Tooltip>
           {item.status === 'pending' && (
-            <>
-              <Tooltip title="通过">
-                <Button
-                  type="text"
-                  icon={<CheckOutlined style={{ color: token.colorSuccess }} />}
-                  onClick={() => handleApprove(item.id)}
-                />
-              </Tooltip>
-              <Popconfirm
-                title="确定拒绝此内容？"
-                onConfirm={() => handleReject(item.id)}
-                okText="确定"
-                cancelText="取消"
-              >
-                <Tooltip title="拒绝">
-                  <Button type="text" icon={<CloseOutlined style={{ color: token.colorError }} />} />
-                </Tooltip>
-              </Popconfirm>
-            </>
+            <Tooltip title="通过">
+              <Button
+                type="text"
+                icon={<CheckOutlined style={{ color: token.colorSuccess }} />}
+                onClick={() => handleApprove(item.id)}
+              />
+            </Tooltip>
           )}
+          {item.status !== 'rejected'
+            && (item as { status?: string }).status !== 'deleted'
+            && (item as { is_active?: boolean }).is_active !== false && (
+            <Tooltip title="不通过">
+              <Button
+                type="text"
+                icon={<CloseOutlined style={{ color: token.colorError }} />}
+                onClick={() => setRejectId(item.id)}
+              />
+            </Tooltip>
+          )}
+          <Popconfirm
+            title="确定删除此内容？"
+            description="将直接删除，不通知发布者"
+            onConfirm={() => handleDelete(item.id)}
+            okText="删除"
+            cancelText="取消"
+            okButtonProps={{ danger: true }}
+          >
+            <Tooltip title="删除">
+              <Button type="text" icon={<DeleteOutlined style={{ color: token.colorError }} />} />
+            </Tooltip>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -307,6 +333,13 @@ export function PublicationListPage({ type }: Props) {
           items={config.tabs!.map((t) => ({ key: t.key, label: t.label, children: tableContent }))}
         />
       ) : tableContent}
+
+      <RejectReasonModal
+        open={rejectId !== null}
+        loading={rejecting}
+        onCancel={() => setRejectId(null)}
+        onSubmit={handleReject}
+      />
     </div>
   )
 }
