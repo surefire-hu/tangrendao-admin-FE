@@ -522,15 +522,18 @@ function MonitorTab() {
 }
 
 const SOURCE_TAG: Record<CurrencyMovementSource, JSX.Element> = {
- admin_topup:    <Tag color="purple">管理员</Tag>,
- stripe_purchase:  <Tag color="green">Stripe</Tag>,
- promotion_spend:  <Tag color="magenta">推广</Tag>,
- promotion_refund: <Tag color="lime">推广退款</Tag>,
- mission_spend:   <Tag color="geekblue">任务发布</Tag>,
- mission_refund:  <Tag color="lime">任务退款</Tag>,
- mission_reward:  <Tag color="cyan">任务奖励</Tag>,
- specialist_spend: <Tag color="volcano">专家咨询</Tag>,
+ recharge:          <Tag color="green">充值</Tag>,
+ mission_reward:    <Tag color="cyan">任务奖励</Tag>,
+ mission_fund:      <Tag color="geekblue">任务发布</Tag>,
+ mission_refund:    <Tag color="lime">任务退款</Tag>,
+ promotion_paid:    <Tag color="magenta">推广</Tag>,
+ promotion_refund:  <Tag color="lime">推广退款</Tag>,
+ recommend:         <Tag color="blue">推荐消费</Tag>,
+ specialist_charge: <Tag color="volcano">专家咨询</Tag>,
  specialist_refund: <Tag color="lime">咨询退款</Tag>,
+ admin_adjust:      <Tag color="purple">管理员调整</Tag>,
+ daily_replenish:   <Tag color="gold">每日补充</Tag>,
+ other:             <Tag>其他</Tag>,
 }
 
 // ── Anomaly Detection Tab ─────────────────────────────────────────────────────
