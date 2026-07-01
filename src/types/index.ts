@@ -627,15 +627,18 @@ export interface CurrencyTopupRecord {
 }
 
 export type CurrencyMovementSource =
-  | 'admin_topup'
-  | 'stripe_purchase'
-  | 'promotion_spend'
-  | 'promotion_refund'
-  | 'mission_spend'
-  | 'mission_refund'
+  | 'recharge'
   | 'mission_reward'
-  | 'specialist_spend'
+  | 'mission_fund'
+  | 'mission_refund'
+  | 'promotion_paid'
+  | 'promotion_refund'
+  | 'recommend'
+  | 'specialist_charge'
   | 'specialist_refund'
+  | 'admin_adjust'
+  | 'daily_replenish'
+  | 'other'
 
 export type CurrencyMovementsRange = '50' | 'month' | 'year' | 'all'
 
