@@ -3,7 +3,7 @@ import {
  Tabs, Card, Row, Col, Statistic, Table, Tag, Typography,
  Form, InputNumber, Input, Button, Select, Space, Alert,
  Tooltip, message, Spin, theme, Divider, Descriptions, Switch,
- Radio,
+ Radio, Badge,
 } from 'antd'
 import {
  SearchOutlined, SendOutlined, WarningOutlined,
@@ -913,6 +913,7 @@ function PackagesTab() {
  const [editing, setEditing] = useState<CandyPackage | null>(null)
  const [creating, setCreating] = useState(false)
  const [form] = Form.useForm<CandyPackageInput>()
+ const formPlatform = Form.useWatch('platform', form)
 
  const load = useCallback(async () => {
   setLoading(true)
@@ -935,6 +936,7 @@ function PackagesTab() {
   form.setFieldsValue({
    currency, platform,
    amount: 10, candy: 70,
+   apple_product_id: '',
    is_popular: false, popular_label: '最受欢迎',
    display_order: rows.length,
    is_active: true,
@@ -991,30 +993,39 @@ function PackagesTab() {
 
  const columns: ColumnsType<CandyPackage> = [
   {
-   title: '排序', dataIndex: 'display_order', width: 70,
+   title: '排序', dataIndex: 'display_order', width: 60,
    sorter: (a, b) => a.display_order - b.display_order,
    defaultSortOrder: 'ascend',
   },
   {
-   title: '价格', dataIndex: 'amount', width: 110,
+   title: '价格', dataIndex: 'amount', width: 100,
    render: (v: number, r) => <Text strong>{v} {r.currency}</Text>,
   },
   {
-   title: '糖果数量', dataIndex: 'candy', width: 110,
+   title: '糖果数量', dataIndex: 'candy', width: 100,
    render: (v: number) => <Tag color="gold">{v.toLocaleString()} 糖果</Tag>,
   },
   {
-   title: '兑换比例', key: 'rate', width: 140,
+   title: '兑换比例', key: 'rate', width: 120,
    render: (_, r) => <Text type="secondary" style={{ fontSize: 11 }}>{ratePreview(r)}</Text>,
   },
   {
-   title: '热门', dataIndex: 'is_popular', width: 130,
+   title: 'App Store Product ID',
+   dataIndex: 'apple_product_id',
+   render: (v: string, r) => {
+    if (r.platform !== 'ios') return <Text type="secondary">—</Text>
+    if (!v) return <Badge status="error" text={<Text type="danger" style={{ fontSize: 11 }}>未设置</Text>} />
+    return <Text code style={{ fontSize: 11 }}>{v}</Text>
+   },
+  },
+  {
+   title: '热门', dataIndex: 'is_popular', width: 120,
    render: (v: boolean, r) => v
     ? <Tag color="orange">⭐ {r.popular_label || '最受欢迎'}</Tag>
     : <Text type="secondary">—</Text>,
   },
   {
-   title: '状态', dataIndex: 'is_active', width: 80,
+   title: '状态', dataIndex: 'is_active', width: 70,
    render: (v: boolean) => v
     ? <Tag color="green">启用</Tag>
     : <Tag color="red">停用</Tag>,
@@ -1062,7 +1073,11 @@ function PackagesTab() {
      type="info"
      showIcon
      style={{ marginTop: 12 }}
-     message="iOS 与 Android/Web 必须分别配置（Apple 抽成不同）。自定义金额按当前币种最便宜套餐的兑换比例计算。"
+     message={
+      platform === 'ios'
+       ? 'iOS 套餐需在 App Store Connect 创建同名 Consumable 产品后，将 Product ID 填入此处。iOS 不支持自定义金额——每个套餐对应一个固定的 App Store 产品。'
+       : 'Android/Web 支持固定套餐与自定义金额（按最便宜套餐兑换比例计算）。与 iOS 必须分开配置。'
+     }
     />
    </Card>
 
@@ -1099,9 +1114,37 @@ function PackagesTab() {
        </Form.Item>
       </Col>
      </Row>
+
+     {/* iOS-only: App Store Product ID */}
+     {formPlatform === 'ios' && (
+      <>
+       <Alert
+        type="warning"
+        showIcon
+        style={{ marginBottom: 12 }}
+        message="iOS 不支持自定义金额"
+        description="每个套餐必须对应一个已在 App Store Connect 创建并审核的 Consumable IAP 产品。"
+       />
+       <Form.Item
+        name="apple_product_id"
+        label="App Store Product ID"
+        rules={[{ required: true, message: 'iOS 套餐必须填写 Product ID' }]}
+        tooltip="App Store Connect → My Apps → [App] → Monetization → In-App Purchases → 创建 Consumable → 复制 Product ID"
+        extra={<Text type="secondary" style={{ fontSize: 11 }}>例：com.tangrendao.app.candy.small</Text>}
+       >
+        <Input placeholder="com.tangrendao.app.candy.xxx" maxLength={200} />
+       </Form.Item>
+      </>
+     )}
+
      <Row gutter={12}>
       <Col span={12}>
-       <Form.Item name="amount" label="价格" rules={[{ required: true, type: 'number', min: 1 }]}>
+       <Form.Item
+        name="amount"
+        label={formPlatform === 'ios' ? '参考价格（仅记录）' : '价格'}
+        tooltip={formPlatform === 'ios' ? 'iOS 实际价格由 App Store 定价层决定，此字段仅内部记录' : undefined}
+        rules={[{ required: true, type: 'number', min: 1 }]}
+       >
         <InputNumber min={1} style={{ width: '100%' }} />
        </Form.Item>
       </Col>

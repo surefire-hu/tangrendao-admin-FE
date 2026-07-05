@@ -720,6 +720,7 @@ export interface CandyPackage {
   platform: CandyPackagePlatform
   amount: number
   candy: number
+  apple_product_id: string   // required for iOS, empty string for other platforms
   is_popular: boolean
   popular_label: string
   display_order: number
