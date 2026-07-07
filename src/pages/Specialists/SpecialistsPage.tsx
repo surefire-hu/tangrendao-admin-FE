@@ -32,6 +32,17 @@ const CATEGORY_OPTIONS: { value: SpecialistCategoryCode; label: string }[] = [
   { value: 'doctor',      label: '医生服务' },
 ]
 
+// Service country — specialists only match users of the SAME country.
+const COUNTRY_OPTIONS = [
+  { value: 'IT', label: '🇮🇹 意大利' },
+  { value: 'DE', label: '🇩🇪 德国' },
+  { value: 'FR', label: '🇫🇷 法国' },
+  { value: 'ES', label: '🇪🇸 西班牙' },
+  { value: 'NL', label: '🇳🇱 荷兰' },
+  { value: 'GB', label: '🇬🇧 英国' },
+  { value: 'CH', label: '🇨🇭 瑞士' },
+]
+
 const STATUS_LABEL: Record<ServiceRequestStatus, { color: string; text: string }> = {
   searching: { color: 'processing', text: '匹配中' },
   matched:   { color: 'cyan',       text: '已匹配' },
@@ -175,7 +186,7 @@ function SpecialistsTab() {
   const [promoteOpen, setPromoteOpen] = useState(false)
   const [searching, setSearching] = useState(false)
   const [users, setUsers] = useState<AdminUser[]>([])
-  const [form] = Form.useForm<{ user_id: string; category: SpecialistCategoryCode; bio?: string; years_exp?: number; city?: string }>()
+  const [form] = Form.useForm<{ user_id: string; category: SpecialistCategoryCode; bio?: string; years_exp?: number; city?: string; country?: string }>()
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -231,6 +242,16 @@ function SpecialistsTab() {
     }
   }
 
+  const changeCountry = async (userId: string, country: string) => {
+    try {
+      await specialistsApi.updateSpecialist(userId, { country })
+      message.success('已更新服务国家')
+      setRows(prev => prev.map(r => r.id === userId ? { ...r, country } : r))
+    } catch {
+      message.error('更新失败')
+    }
+  }
+
   const columns: ColumnsType<SpecialistPublic> = [
     {
       title: '专家', key: 'user', width: 220,
@@ -250,6 +271,18 @@ function SpecialistsTab() {
         v ? <Tag color="blue">{CATEGORY_OPTIONS.find(o => o.value === v)?.label ?? v}</Tag> : '—',
     },
     { title: '城市', dataIndex: 'city', width: 100 },
+    {
+      title: '服务国家', dataIndex: 'country', width: 130,
+      render: (v: string, r) => (
+        <Select
+          size="small"
+          style={{ width: 110 }}
+          value={v || 'IT'}
+          options={COUNTRY_OPTIONS}
+          onChange={(val) => changeCountry(r.id, val)}
+        />
+      ),
+    },
     { title: '经验', dataIndex: 'years_exp', width: 80, render: (v: number | null) => v ? `${v} 年` : '—' },
     {
       title: '评分', dataIndex: 'rating', width: 90,
@@ -331,6 +364,10 @@ function SpecialistsTab() {
           </Form.Item>
           <Form.Item name="category" label="分类" rules={[{ required: true }]}>
             <Select options={CATEGORY_OPTIONS} />
+          </Form.Item>
+          <Form.Item name="country" label="服务国家" initialValue="IT" rules={[{ required: true }]}
+            extra="专家只接同国家用户的订单">
+            <Select options={COUNTRY_OPTIONS} />
           </Form.Item>
           <Form.Item name="city" label="所在城市">
             <Input maxLength={100} placeholder="Milano" />

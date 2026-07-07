@@ -22,6 +22,7 @@ export interface SpecialistPublic {
   bio: string
   years_exp: number | null
   city: string
+  country: string
   rating: string | number
   total_orders: number
   is_online: boolean
@@ -70,7 +71,13 @@ export const specialistsApi = {
     bio?: string
     years_exp?: number
     city?: string
+    country?: string
   }) => apiClient.post<SpecialistPublic>('/specialists/admin/specialists/promote/', data),
+
+  updateSpecialist: (
+    userId: string,
+    data: Partial<{ country: string; category: SpecialistCategoryCode; bio: string; city: string; years_exp: number }>,
+  ) => apiClient.patch<SpecialistPublic>(`/specialists/admin/specialists/${userId}/`, data),
 
   revokeSpecialist: (userId: string) =>
     apiClient.post<{ ok: true }>(`/specialists/admin/specialists/${userId}/revoke/`),
