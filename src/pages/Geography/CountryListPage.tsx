@@ -230,21 +230,18 @@ export function CountryListPage() {
     }
   }
 
+  // autoDetect=true → AI picks the admin level. Otherwise the row's selected
+  // province_admin_level (admin1/2/3) is used explicitly.
   const runImport = async (row: AdminCountry, autoDetect = false) => {
     setImporting(row.code)
     try {
-      const r = await geographyApi.importGeoNames([row.code], autoDetect)
-      const result = r.data.results[row.code]
-      setImportLog({ code: row.code, result })
-      if (result.ok) {
-        const detect = result.detected_level
-          ? ` (auto-level: admin${result.detected_level})`
-          : ''
-        message.success(`${row.code}: 已导入 ${result.inserted} 条邮编${detect}`)
-      } else {
-        message.error(`${row.code}: ${result.error ?? '导入失败'}`)
-      }
-      await load()
+      const adminLevel = autoDetect ? undefined : row.province_admin_level
+      const r = await geographyApi.importGeoNames([row.code], autoDetect, adminLevel)
+      message.success(r.data.detail || `${row.code}: 导入已在后台开始`)
+      // Refresh a few times so the count updates as the background import finishes.
+      setTimeout(load, 8000)
+      setTimeout(load, 20000)
+      setTimeout(load, 45000)
     } catch {
       message.error('导入失败 — 请检查后台日志')
     } finally {

@@ -65,10 +65,13 @@ export const geographyApi = {
   remove: (code: string) =>
     apiClient.delete(`/geo/admin/countries/${code}/`),
 
-  importGeoNames: (countries: string[], autoDetect = false) =>
-    apiClient.post<ImportResponse>('/geo/admin/import-geonames/', {
-      countries, auto_detect: autoDetect,
-    }),
+  // Import runs in the background now → returns { started, ... } (202).
+  // admin_level (1|2|3) forces the province level; omit to let AI auto-detect.
+  importGeoNames: (countries: string[], autoDetect = false, adminLevel?: number) =>
+    apiClient.post<{ started: boolean; countries: string[]; admin_level: number | null; auto_detect: boolean; detail: string }>(
+      '/geo/admin/import-geonames/',
+      { countries, auto_detect: autoDetect, ...(adminLevel ? { admin_level: adminLevel } : {}) },
+    ),
 
   detectAdminLevel: (country: string, apply = false) =>
     apiClient.post<DetectResult>('/geo/admin/detect-admin-level/', { country, apply }),
