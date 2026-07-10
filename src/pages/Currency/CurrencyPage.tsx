@@ -87,7 +87,7 @@ function TopupTab() {
       showSearch
       filterOption={false}
       style={{ width: '100%' }}
-      placeholder="输入邮箱或用户名搜索..."
+      placeholder="输入唐人号 / 邮箱 / 用户名搜索..."
       value={selectedUser?.id}
       onSearch={handleSearch}
       onChange={(id) => {
@@ -101,6 +101,7 @@ function TopupTab() {
         <Space>
          <UserOutlined />
          <span>{u.email ?? u.username}</span>
+         {u.tangren_id && <Text type="secondary" style={{ fontSize: 11 }}>唐人号 {u.tangren_id}</Text>}
          <Text type="secondary" style={{ fontSize: 11 }}>
           {u.candy ?? '?'} {u.coin ?? '?'}
          </Text>

@@ -82,6 +82,7 @@ export interface AdminUser {
   id: string
   email: string | null
   username: string | null
+  tangren_id?: string | null
   first_name: string
   last_name: string
   role: 'user' | 'merchant' | 'moderator' | 'admin'
