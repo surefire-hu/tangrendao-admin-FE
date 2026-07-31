@@ -27,6 +27,7 @@ import { SpecialistsPage } from '../pages/Specialists/SpecialistsPage'
 import { NavigationPage } from '../pages/Navigation/NavigationPage'
 import { ClaimListPage } from '../pages/Claims/ClaimList'
 import { UnbanRequestListPage } from '../pages/UnbanRequests/UnbanRequestList'
+import { SpecialistRefundListPage } from '../pages/SpecialistRefunds/SpecialistRefundList'
 import { NewsListPage } from '../pages/News/NewsList'
 import { NewsEditPage } from '../pages/News/NewsEdit'
 
@@ -87,6 +88,7 @@ export function AppRouter() {
           <Route path="support" element={<SupportInboxPage />} />
           <Route path="geography" element={<CountryListPage />} />
           <Route path="specialists" element={<SpecialistsPage />} />
+          <Route path="specialist-refunds" element={<SpecialistRefundListPage />} />
           <Route path="navigation" element={<NavigationPage />} />
           <Route path="classifieds-taxonomy" element={<NavigationPage />} />
           <Route path="claims" element={<ClaimListPage />} />

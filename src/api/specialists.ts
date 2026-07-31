@@ -44,11 +44,33 @@ export interface ServiceRequest {
   rating_comment: string
   cancelled_by: string | null
   refunded: boolean
+  is_free_trial: boolean
+  resolved: boolean | null
+  specialist_paid: boolean
+  specialist_payout_amount: number
   created_at: string
   matched_at: string | null
   confirmed_at: string | null
   completed_at: string | null
   cancelled_at: string | null
+}
+
+export type SpecialistRefundStatus = 'pending' | 'approved' | 'rejected'
+
+export interface SpecialistRefundRequest {
+  id: string
+  request: ServiceRequest
+  user: string
+  user_email: string
+  user_username: string
+  reason: string
+  status: SpecialistRefundStatus
+  refund_amount: number
+  specialist_deduction: number
+  admin_note: string
+  reviewed_by_username: string | null
+  reviewed_at: string | null
+  created_at: string
 }
 
 export const specialistsApi = {
@@ -131,4 +153,13 @@ export const specialistsApi = {
         created_at: string
       }>
     }>(`/specialists/admin/requests/${requestId}/messages/`),
+
+  // ── Refund requests ─────────────────────────────────────────────
+  listRefundRequests: (params?: { status?: SpecialistRefundStatus | 'all'; page?: number; page_size?: number }) =>
+    apiClient.get<{ count: number; page: number; page_size: number; results: SpecialistRefundRequest[] }>(
+      '/specialists/admin/refund-requests/', { params },
+    ),
+
+  resolveRefundRequest: (id: string, action: 'approve' | 'reject', admin_note: string) =>
+    apiClient.post<SpecialistRefundRequest>(`/specialists/admin/refund-requests/${id}/${action}/`, { admin_note }),
 }

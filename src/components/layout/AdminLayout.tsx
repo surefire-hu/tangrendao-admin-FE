@@ -48,6 +48,7 @@ export function AdminLayout() {
   const [supportUnread, setSupportUnread]       = useState(0)
   const [claimsUnread, setClaimsUnread]         = useState(0)
   const [unbanPending, setUnbanPending]         = useState(0)
+  const [refundsPending, setRefundsPending]     = useState(0)
   const [supportOnline, setSupportOnline]       = useState(false)
   const [supportOnlineLoading, setSupportOnlineLoading] = useState(false)
 
@@ -71,6 +72,9 @@ export function AdminLayout() {
         .catch(() => {})
       apiClient.get<{ count: number }>('/admin/unban-requests/?status=pending&page_size=1')
         .then(r => setUnbanPending(r.data.count ?? 0))
+        .catch(() => {})
+      apiClient.get<{ count: number }>('/specialists/admin/refund-requests/?status=pending&page_size=1')
+        .then(r => setRefundsPending(r.data.count ?? 0))
         .catch(() => {})
     }
     fetchSupportUnread()
@@ -243,6 +247,15 @@ export function AdminLayout() {
       label: '专家咨询',
     },
     {
+      key: '/specialist-refunds',
+      icon: <MedicineBoxOutlined />,
+      label: (
+        <Badge count={refundsPending} size="small" offset={[6, 0]}>
+          专家退款申请
+        </Badge>
+      ),
+    },
+    {
       key: '/navigation',
       icon: <PartitionOutlined />,
       label: '服务导航',
@@ -280,6 +293,7 @@ export function AdminLayout() {
     if (path.startsWith('/promotions')) return '/promotions'
     if (path.startsWith('/support')) return '/support'
     if (path.startsWith('/geography')) return '/geography'
+    if (path.startsWith('/specialist-refunds')) return '/specialist-refunds'
     if (path.startsWith('/specialists')) return '/specialists'
     if (path.startsWith('/navigation')) return '/navigation'
     if (path.startsWith('/claims')) return '/claims'
