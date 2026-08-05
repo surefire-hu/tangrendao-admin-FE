@@ -208,6 +208,11 @@ export function UserListPage() {
               </Text>
             </div>
             <Text type="secondary" style={{ fontSize: 11 }}>{u.email ?? '游客'}</Text>
+            {u.tangren_id && (
+              <div>
+                <Text type="secondary" style={{ fontSize: 11 }}>唐人号：{u.tangren_id}</Text>
+              </div>
+            )}
           </div>
         </Space>
       ),
