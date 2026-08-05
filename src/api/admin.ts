@@ -262,6 +262,9 @@ export const adminApi = {
   rejectPublication: (type: PublicationType, id: string, reason?: string) =>
     apiClient.post(`/admin/publications/${type}/${id}/reject/`, { reason }),
 
+  setPublicationPending: (type: PublicationType, id: string) =>
+    apiClient.post(`/admin/publications/${type}/${id}/pending/`),
+
   deletePublication: (type: PublicationType, id: string) =>
     apiClient.post(`/admin/publications/${type}/${id}/delete/`),
 
@@ -327,6 +330,9 @@ export const adminApi = {
 
   rejectForumPost: (id: string, reason?: string) =>
     apiClient.post(`/admin/forum/posts/${id}/reject/`, { reason }),
+
+  setForumPostPending: (id: string) =>
+    apiClient.post(`/admin/forum/posts/${id}/pending/`),
 
   deleteForumPost: (id: string) =>
     apiClient.post(`/admin/forum/posts/${id}/delete/`),

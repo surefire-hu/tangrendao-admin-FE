@@ -4,7 +4,7 @@ import {
   Button, Tooltip, Popconfirm, message, theme,
 } from 'antd'
 import {
-  SearchOutlined, EyeOutlined, CheckOutlined, CloseOutlined,
+  SearchOutlined, EyeOutlined, CheckOutlined,
   PlayCircleOutlined, HeartOutlined, MessageOutlined, DeleteOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -48,6 +48,18 @@ export function ForumListPage({ kind }: Props) {
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 20
 
+  // Status picked in the editable dropdown but not yet confirmed via the
+  // checkmark button — keyed by item id, cleared once applied or cancelled.
+  const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({})
+  const clearPendingOverride = (id: string) => {
+    setPendingStatus((prev) => {
+      if (!(id in prev)) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
   const fetchItems = useCallback(async () => {
     setLoading(true)
     try {
@@ -66,12 +78,13 @@ export function ForumListPage({ kind }: Props) {
   }, [kind, page, search, status, category])
 
   useEffect(() => { fetchItems() }, [fetchItems])
-  useEffect(() => { setPage(1) }, [kind])
+  useEffect(() => { setPage(1); setPendingStatus({}) }, [kind])
 
   const handleApprove = async (id: string) => {
     try {
       await adminApi.approveForumPost(id)
       message.success('已通过')
+      clearPendingOverride(id)
       fetchItems()
     } catch { message.error('操作失败') }
   }
@@ -85,9 +98,27 @@ export function ForumListPage({ kind }: Props) {
     try {
       await adminApi.rejectForumPost(rejectId, reason)
       message.success('已不通过')
+      clearPendingOverride(rejectId)
       setRejectId(null)
       fetchItems()
     } catch { message.error('操作失败') } finally { setRejecting(false) }
+  }
+
+  const handleSetPending = async (id: string) => {
+    try {
+      await adminApi.setForumPostPending(id)
+      message.success('已重置为待审核')
+      clearPendingOverride(id)
+      fetchItems()
+    } catch { message.error('操作失败') }
+  }
+
+  const handleConfirmStatus = (item: ForumPost) => {
+    const target = pendingStatus[item.id]
+    if (!target || target === item.status) return
+    if (target === 'approved') handleApprove(item.id)
+    else if (target === 'rejected') setRejectId(item.id)
+    else if (target === 'pending') handleSetPending(item.id)
   }
 
   const handleDelete = async (id: string) => {
@@ -155,12 +186,22 @@ export function ForumListPage({ kind }: Props) {
       title: '状态',
       key: 'status',
       width: 140,
-      render: (_, item) => (
-        <Space size={4} wrap>
-          <Tag color={statusColors[item.status]}>{statusLabels[item.status] ?? item.status}</Tag>
-          {item.is_active === false && <Tag color="default">已删除</Tag>}
-        </Space>
-      ),
+      render: (_, item) => {
+        if (item.is_active === false) return <Tag color="default">已删除</Tag>
+        return (
+          <Select
+            size="small"
+            variant="borderless"
+            value={pendingStatus[item.id] ?? item.status}
+            style={{ width: 112 }}
+            onChange={(v) => setPendingStatus((prev) => ({ ...prev, [item.id]: v }))}
+            options={Object.entries(statusLabels).map(([v, l]) => ({
+              value: v,
+              label: <Tag color={statusColors[v]} style={{ marginRight: 0 }}>{l}</Tag>,
+            }))}
+          />
+        )
+      },
     },
     {
       title: '国家',
@@ -206,21 +247,12 @@ export function ForumListPage({ kind }: Props) {
           <Tooltip title="查看详情">
             <Button type="text" icon={<EyeOutlined />} onClick={() => navigate(`/forum/posts/${item.id}`)} />
           </Tooltip>
-          {item.status === 'pending' && (
-            <Tooltip title="通过">
+          {pendingStatus[item.id] && pendingStatus[item.id] !== item.status && (
+            <Tooltip title="确认修改状态">
               <Button
                 type="text"
                 icon={<CheckOutlined style={{ color: token.colorSuccess }} />}
-                onClick={() => handleApprove(item.id)}
-              />
-            </Tooltip>
-          )}
-          {item.status !== 'rejected' && (
-            <Tooltip title="不通过">
-              <Button
-                type="text"
-                icon={<CloseOutlined style={{ color: token.colorError }} />}
-                onClick={() => setRejectId(item.id)}
+                onClick={() => handleConfirmStatus(item)}
               />
             </Tooltip>
           )}
@@ -293,7 +325,7 @@ export function ForumListPage({ kind }: Props) {
       <RejectReasonModal
         open={rejectId !== null}
         loading={rejecting}
-        onCancel={() => setRejectId(null)}
+        onCancel={() => { if (rejectId) clearPendingOverride(rejectId); setRejectId(null) }}
         onSubmit={handleReject}
       />
     </div>
