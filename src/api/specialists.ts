@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
 export type SpecialistCategoryCode =
-  | 'accounting' | 'lawyer' | 'immigration' | 'consultant' | 'doctor'
+  | 'accounting' | 'lawyer' | 'immigration' | 'consultant' | 'doctor' | 'study_abroad'
 
 export interface ServiceCategory {
   code: SpecialistCategoryCode

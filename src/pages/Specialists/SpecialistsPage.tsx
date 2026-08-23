@@ -26,11 +26,12 @@ dayjs.extend(relativeTime)
 const { Title, Text } = Typography
 
 const CATEGORY_OPTIONS: { value: SpecialistCategoryCode; label: string }[] = [
-  { value: 'accounting',  label: '会计服务' },
-  { value: 'lawyer',      label: '律师服务' },
-  { value: 'immigration', label: '移民服务' },
-  { value: 'consultant',  label: '公司顾问' },
-  { value: 'doctor',      label: '医生服务' },
+  { value: 'accounting',    label: '会计服务' },
+  { value: 'lawyer',        label: '律师服务' },
+  { value: 'immigration',   label: '移民服务' },
+  { value: 'consultant',    label: '公司顾问' },
+  { value: 'doctor',        label: '医生服务' },
+  { value: 'study_abroad',  label: '留学咨询' },
 ]
 
 // Service country — specialists only match users of the SAME country.
@@ -129,7 +130,7 @@ function CategoriesTab() {
       <Card size="small">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
-          <Text type="secondary">共 5 个固定分类，可调整价格、名称、说明、启用/停用</Text>
+          <Text type="secondary">共 {rows.length} 个固定分类，可调整价格、名称、说明、启用/停用</Text>
         </Space>
       </Card>
 
