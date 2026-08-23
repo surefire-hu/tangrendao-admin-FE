@@ -162,19 +162,14 @@ export function AdminLayout() {
       ],
     },
     {
-      key: '/advertisements',
+      key: 'ads',
       icon: <NotificationOutlined />,
-      label: '横幅广告',
-    },
-    {
-      key: '/adcards',
-      icon: <IdcardOutlined />,
-      label: '卡片广告',
-    },
-    {
-      key: '/splash',
-      icon: <MobileOutlined />,
-      label: '开屏广告',
+      label: '广告',
+      children: [
+        { key: '/adcards', icon: <IdcardOutlined />, label: '卡片广告' },
+        { key: '/advertisements', icon: <NotificationOutlined />, label: '横幅广告' },
+        { key: '/splash', icon: <MobileOutlined />, label: '全屏广告' },
+      ],
     },
     {
       key: '/currency',
@@ -307,6 +302,7 @@ export function AdminLayout() {
     const path = location.pathname
     if (path.startsWith('/publications')) return ['publications']
     if (path.startsWith('/forum')) return ['forum']
+    if (path.startsWith('/advertisements') || path.startsWith('/adcards') || path.startsWith('/splash')) return ['ads']
     return []
   }
 
