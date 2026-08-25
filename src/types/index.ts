@@ -28,27 +28,59 @@ export interface PaginatedResponse<T> {
 
 // ── Admin Stats ───────────────────────────────────────────────────────────────
 
+export type DashboardPeriod = 'day' | 'week' | 'month' | '6month' | 'year' | 'max'
+
 export interface DashboardStats {
+  period: DashboardPeriod
   users_total: number
-  users_today: number
-  users_week: number
+  users_new: number
   guests_total: number
   listings_pending: number
-  listings_approved: number
   listings_total: number
-  jobs_today: number
-  seeks_today: number
-  classifieds_today: number
-  jobs_week: number
-  seeks_week: number
-  classifieds_week: number
-  convs_today: number
-  messages_today: number
-  phone_clicks_today: number
-  phone_clicks_week: number
-  searches_today: number
+  jobs_new: number
+  seeks_new: number
+  classifieds_new: number
+  convs_new: number
+  messages_new: number
+  phone_clicks_new: number
+  searches_new: number
   ads_active: number
   global_ctr: number
+}
+
+export interface RevenueByProvider {
+  provider: 'wechat' | 'alipay' | 'apple'
+  amount: number
+  orders: number
+}
+
+export interface RevenueByPlatform {
+  platform: 'default' | 'ios'
+  amount: number
+  orders: number
+}
+
+export interface RevenueByCurrency {
+  currency: string
+  amount: number
+  orders: number
+}
+
+export interface RevenueSeriesPoint {
+  bucket: string
+  amount: number
+  orders: number
+}
+
+export interface RevenueStats {
+  period: DashboardPeriod
+  currency: string
+  total_amount: number
+  total_orders: number
+  by_provider: RevenueByProvider[]
+  by_platform: RevenueByPlatform[]
+  by_currency: RevenueByCurrency[]
+  series: RevenueSeriesPoint[]
 }
 
 export interface DailyDataPoint {

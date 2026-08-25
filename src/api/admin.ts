@@ -1,6 +1,8 @@
 import { apiClient } from './client'
 import type {
   DashboardStats,
+  DashboardPeriod,
+  RevenueStats,
   AdminUser,
   UserOperationStats,
   PaginatedResponse,
@@ -53,7 +55,10 @@ import type {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export const adminApi = {
-  getStats: () => apiClient.get<DashboardStats>('/admin/stats/'),
+  getStats: (period?: DashboardPeriod) =>
+    apiClient.get<DashboardStats>('/admin/stats/', { params: { period } }),
+  getRevenueStats: (period?: DashboardPeriod) =>
+    apiClient.get<RevenueStats>('/admin/revenue/stats/', { params: { period } }),
 
   // ── Users ────────────────────────────────────────────────────────────────
   getUsers: (params?: {
