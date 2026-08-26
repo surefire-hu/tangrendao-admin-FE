@@ -30,6 +30,13 @@ export interface PaginatedResponse<T> {
 
 export type DashboardPeriod = 'day' | 'week' | 'month' | '6month' | 'year' | 'max'
 
+export interface AdTypeStats {
+  active_count: number
+  impressions: number
+  clicks: number
+  ctr: number
+}
+
 export interface DashboardStats {
   period: DashboardPeriod
   users_total: number
@@ -44,8 +51,11 @@ export interface DashboardStats {
   messages_new: number
   phone_clicks_new: number
   searches_new: number
-  ads_active: number
-  global_ctr: number
+  ads: {
+    card: AdTypeStats
+    banner: AdTypeStats
+    splash: AdTypeStats
+  }
 }
 
 export interface RevenueByProvider {

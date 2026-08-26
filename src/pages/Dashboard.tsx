@@ -5,19 +5,16 @@ import {
 import type { ReactNode } from 'react'
 import {
   UserOutlined,
-  RiseOutlined,
-  ShoppingOutlined,
   EyeOutlined,
-  PhoneOutlined,
   NotificationOutlined,
   ClockCircleOutlined,
-  SolutionOutlined,
   DollarOutlined,
   WechatOutlined,
   AlipayCircleOutlined,
   AppleOutlined,
   MobileOutlined,
   GlobalOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons'
 import { adminApi } from '../api/admin'
 import { RevenueChart } from '../components/charts/RevenueChart'
@@ -43,6 +40,12 @@ const PROVIDER_INFO: { value: 'wechat' | 'alipay' | 'apple'; label: string; icon
 const PLATFORM_INFO: { value: 'ios' | 'default'; label: string; icon: ReactNode }[] = [
   { value: 'ios',     label: 'iOS',        icon: <MobileOutlined /> },
   { value: 'default', label: '安卓 / 网页', icon: <GlobalOutlined /> },
+]
+
+const AD_TYPE_INFO: { value: 'card' | 'banner' | 'splash'; label: string; icon: ReactNode }[] = [
+  { value: 'card',   label: '卡片广告', icon: <IdcardOutlined /> },
+  { value: 'banner', label: '横幅广告', icon: <NotificationOutlined /> },
+  { value: 'splash', label: '全屏广告', icon: <MobileOutlined /> },
 ]
 
 interface StatCardProps {
@@ -108,7 +111,6 @@ export function DashboardPage() {
 
   if (!stats || !revenue) return null
 
-  const ctr = stats.global_ctr ?? 0
   const providerAmounts = Object.fromEntries(revenue.by_provider.map((p) => [p.provider, p]))
   const platformAmounts = Object.fromEntries(revenue.by_platform.map((p) => [p.platform, p]))
   const otherCurrencies = revenue.by_currency.filter((c) => c.currency !== revenue.currency)
@@ -139,6 +141,12 @@ export function DashboardPage() {
             value={stats.users_total}
             prefix={<UserOutlined />}
             color={token.colorPrimary}
+            extra={
+              <Space size={4}>
+                <Badge color="green" />
+                <Text type="secondary" style={{ fontSize: 11 }}>+{stats.users_new}</Text>
+              </Space>
+            }
           />
         </Col>
         <Col xs={12} sm={6}>
@@ -154,13 +162,6 @@ export function DashboardPage() {
             value={stats.listings_pending}
             prefix={<EyeOutlined />}
             color={stats.listings_pending > 0 ? token.colorWarning : undefined}
-          />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard
-            title="活跃横幅广告"
-            value={stats.ads_active}
-            prefix={<NotificationOutlined />}
           />
         </Col>
       </Row>
@@ -219,62 +220,45 @@ export function DashboardPage() {
         </Row>
       </Card>
 
-      {/* ── 新增与发布（随所选时间范围变化）──────────────────────────── */}
-      <SectionLabel>新增与发布</SectionLabel>
-      <Row gutter={[16, 16]} style={{ marginTop: 8, marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <StatCard
-            title="新增用户"
-            value={stats.users_new}
-            prefix={<RiseOutlined />}
-            color={token.colorSuccess}
-            extra={
-              <Space size={4}>
-                <Badge color="green" />
-                <Text type="secondary" style={{ fontSize: 11 }}>所选时段</Text>
-              </Space>
-            }
-          />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard title="招聘信息" value={stats.jobs_new} prefix={<SolutionOutlined />} />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard title="求职信息" value={stats.seeks_new} prefix={<UserOutlined />} />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard title="分类广告" value={stats.classifieds_new} prefix={<ShoppingOutlined />} />
-        </Col>
-      </Row>
-
-      <Divider style={{ margin: '4px 0 20px' }} />
-
-      {/* ── 互动数据（随所选时间范围变化）────────────────────────────── */}
-      <SectionLabel>互动数据</SectionLabel>
-      <Row gutter={[16, 16]} style={{ marginTop: 8, marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <StatCard title="搜索次数" value={stats.searches_new} prefix={<EyeOutlined />} />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard title="电话点击" value={stats.phone_clicks_new} prefix={<PhoneOutlined />} />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard
-            title="AI 对话"
-            value={stats.convs_new}
-            prefix={<NotificationOutlined />}
-            extra={<Text type="secondary" style={{ fontSize: 11 }}>消息数: {stats.messages_new}</Text>}
-          />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard
-            title="广告点击率"
-            value={ctr}
-            suffix="%"
-            prefix={<RiseOutlined />}
-            color={ctr > 2 ? token.colorSuccess : token.colorWarning}
-          />
-        </Col>
+      {/* ── 广告效果（当前实时状态，不随时间范围变化）───────────────── */}
+      <SectionLabel>广告效果</SectionLabel>
+      <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
+        {AD_TYPE_INFO.map((t) => {
+          const s = stats.ads[t.value]
+          return (
+            <Col xs={24} sm={8} key={t.value}>
+              <Card size="small" styles={{ body: { padding: '16px 20px' } }}>
+                <Space size={6}>
+                  {t.icon}
+                  <Text type="secondary" style={{ fontSize: 12 }}>{t.label}</Text>
+                </Space>
+                <Row gutter={8} style={{ marginTop: 8 }}>
+                  <Col span={12}>
+                    <Statistic
+                      title={<Text type="secondary" style={{ fontSize: 11 }}>曝光</Text>}
+                      value={s.impressions}
+                      valueStyle={{ fontSize: 20, fontWeight: 600 }}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Statistic
+                      title={<Text type="secondary" style={{ fontSize: 11 }}>点击</Text>}
+                      value={s.clicks}
+                      valueStyle={{ fontSize: 20, fontWeight: 600 }}
+                    />
+                  </Col>
+                </Row>
+                <div style={{ marginTop: 8 }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>点击率 </Text>
+                  <Text strong style={{ color: s.ctr > 2 ? token.colorSuccess : token.colorWarning, fontSize: 12 }}>
+                    {s.ctr}%
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}> · {s.active_count} 个投放中</Text>
+                </div>
+              </Card>
+            </Col>
+          )
+        })}
       </Row>
     </div>
   )
