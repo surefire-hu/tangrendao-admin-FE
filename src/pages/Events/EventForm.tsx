@@ -115,7 +115,7 @@ export function EventFormPage() {
                   )}
                 </Upload>
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  活动进行中会替代首页默认的龙形图标，点击后进入本活动页面。
+                  活动进行中会替代首页默认的龙形图标，点击后进入本活动页面。建议尺寸 500×500px（正方形），透明背景 PNG。
                 </Text>
               </Form.Item>
             </Col>
@@ -134,7 +134,7 @@ export function EventFormPage() {
                   )}
                 </Upload>
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  活动详情页展示的长图（建议竖版，适合手机整屏浏览）。
+                  活动详情页展示的长图（建议竖版，适合手机整屏浏览）。建议尺寸 750×1600px 或更高（宽 750px，高度不限），JPG/PNG。
                 </Text>
               </Form.Item>
             </Col>
@@ -351,6 +351,9 @@ function PrizePool({ eventId }: { eventId: string }) {
               >
                 {fileList.length === 0 && <div><UploadOutlined /><div style={{ marginTop: 8 }}>上传</div></div>}
               </Upload>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                建议尺寸 300×300px（正方形），透明背景 PNG（金币/糖果类型可不填，使用默认图标）。
+              </Text>
             </Form.Item>
 
             <Row gutter={16}>

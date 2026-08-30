@@ -40,6 +40,7 @@ export function CosmeticFormPage() {
   const isEdit = !!id
 
   const acquireType = Form.useWatch('acquire_type', form)
+  const kind = Form.useWatch('kind', form)
   const isRental = acquireType === 'rent_coin' || acquireType === 'rent_candy'
   const isEventOnly = acquireType === 'event'
 
@@ -100,7 +101,7 @@ export function CosmeticFormPage() {
           onFinish={onFinish}
           initialValues={{ kind: 'frame', acquire_type: 'coin', price: 0, sort_order: 100, is_active: true }}
         >
-          <Form.Item label="图片（建议透明背景 PNG）" required={!isEdit}>
+          <Form.Item label="图片" required={!isEdit}>
             <Upload
               listType="picture-card"
               fileList={fileList}
@@ -117,7 +118,9 @@ export function CosmeticFormPage() {
               )}
             </Upload>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              头像框：环绕头像的透明 PNG。聊天背景：私信聊天页面的整张背景图。
+              {kind === 'background'
+                ? '聊天背景：显示在会话列表中该用户的整行背景（裁切铺满）。建议尺寸 900×300px 或更大，横向，JPG/PNG。'
+                : '头像框：环绕头像四周的装饰，中间必须透明。建议尺寸 500×500px（正方形），透明背景 PNG。'}
             </Text>
           </Form.Item>
 
