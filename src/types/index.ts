@@ -913,3 +913,87 @@ export interface ListingClaim {
     phone: string
   }
 }
+
+// ── Cosmetics (头像框/背景) ────────────────────────────────────────────────
+export type CosmeticKind = 'frame' | 'background'
+export type CosmeticAcquireType = 'coin' | 'candy' | 'rent_coin' | 'rent_candy' | 'event'
+
+export interface Cosmetic {
+  id: string
+  kind: CosmeticKind
+  name: string
+  image_url: string | null
+  acquire_type: CosmeticAcquireType
+  price: number
+  rent_days: number | null
+  is_active: boolean
+  sort_order: number
+  owner_count: number
+  created_at: string
+}
+
+export interface CosmeticCreate {
+  image?: File
+  kind: CosmeticKind
+  name: string
+  acquire_type: CosmeticAcquireType
+  price?: number
+  rent_days?: number
+  is_active?: boolean
+  sort_order?: number
+}
+
+// ── Events (活动 / 抽奖) ─────────────────────────────────────────────────────
+export interface AdminEvent {
+  id: string
+  name: string
+  dragon_image_url: string | null
+  banner_image_url: string | null
+  description: string
+  listing_id: string | null
+  listing_name: string | null
+  start_at: string | null
+  end_at: string | null
+  is_active: boolean
+  is_live: boolean
+  participant_count: number
+  created_at: string
+}
+
+export interface AdminEventCreate {
+  dragon_image?: File
+  banner_image?: File
+  name: string
+  description?: string
+  listing_id?: string
+  start_at?: string
+  end_at?: string
+  is_active?: boolean
+}
+
+export type EventPrizeKind = 'coin' | 'candy' | 'cosmetic' | 'merchant'
+
+export interface EventPrize {
+  id: string
+  event_id: string
+  kind: EventPrizeKind
+  name: string
+  image_url: string | null
+  amount: number
+  cosmetic_id: string | null
+  weight: number
+  stock: number | null
+  sort_order: number
+  win_count: number
+}
+
+export interface EventPrizeCreate {
+  image?: File
+  kind: EventPrizeKind
+  name: string
+  amount?: number
+  cosmetic_id?: string
+  weight?: number
+  stock?: number
+  sort_order?: number
+}

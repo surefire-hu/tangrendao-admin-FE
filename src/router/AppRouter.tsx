@@ -30,6 +30,10 @@ import { UnbanRequestListPage } from '../pages/UnbanRequests/UnbanRequestList'
 import { SpecialistRefundListPage } from '../pages/SpecialistRefunds/SpecialistRefundList'
 import { NewsListPage } from '../pages/News/NewsList'
 import { NewsEditPage } from '../pages/News/NewsEdit'
+import { CosmeticListPage } from '../pages/Cosmetics/CosmeticList'
+import { CosmeticFormPage } from '../pages/Cosmetics/CosmeticForm'
+import { EventListPage } from '../pages/Events/EventList'
+import { EventFormPage } from '../pages/Events/EventForm'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -96,6 +100,12 @@ export function AppRouter() {
           <Route path="news" element={<NewsListPage />} />
           <Route path="news/create" element={<NewsEditPage />} />
           <Route path="news/:id/edit" element={<NewsEditPage />} />
+          <Route path="cosmetics" element={<CosmeticListPage />} />
+          <Route path="cosmetics/create" element={<CosmeticFormPage />} />
+          <Route path="cosmetics/:id/edit" element={<CosmeticFormPage />} />
+          <Route path="events" element={<EventListPage />} />
+          <Route path="events/create" element={<EventFormPage />} />
+          <Route path="events/:id/edit" element={<EventFormPage />} />
           <Route
             path="admin-log"
             element={

@@ -50,6 +50,12 @@ import type {
   AdminUserContentItem,
   AdminNewsArticle,
   AdminNewsArticleInput,
+  Cosmetic,
+  CosmeticCreate,
+  AdminEvent,
+  AdminEventCreate,
+  EventPrize,
+  EventPrizeCreate,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -532,4 +538,103 @@ export const adminApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
+
+  // ── Cosmetics (头像框/背景) ──────────────────────────────────────────────────
+  getCosmetics: (params?: { page?: number; page_size?: number; kind?: string; is_active?: boolean }) =>
+    apiClient.get<PaginatedResponse<Cosmetic>>('/cosmetics/admin/', { params }),
+
+  getCosmetic: (id: string) => apiClient.get<Cosmetic>(`/cosmetics/admin/${id}/`),
+
+  createCosmetic: (data: CosmeticCreate) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.post<Cosmetic>('/cosmetics/admin/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  updateCosmetic: (id: string, data: Partial<CosmeticCreate>) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.patch<Cosmetic>(`/cosmetics/admin/${id}/`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteCosmetic: (id: string) => apiClient.delete<void>(`/cosmetics/admin/${id}/`),
+
+  // ── Events (活动 / 抽奖) ──────────────────────────────────────────────────────
+  getEvents: (params?: { page?: number; is_active?: boolean }) =>
+    apiClient.get<PaginatedResponse<AdminEvent>>('/events/admin/', { params }),
+
+  getEvent: (id: string) => apiClient.get<AdminEvent>(`/events/admin/${id}/`),
+
+  createEvent: (data: AdminEventCreate) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.post<AdminEvent>('/events/admin/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  updateEvent: (id: string, data: Partial<AdminEventCreate>) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.patch<AdminEvent>(`/events/admin/${id}/`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteEvent: (id: string) => apiClient.delete<void>(`/events/admin/${id}/`),
+
+  getEventPrizes: (eventId: string) =>
+    apiClient.get<{ results: EventPrize[] }>(`/events/admin/${eventId}/prizes/`),
+
+  createEventPrize: (eventId: string, data: EventPrizeCreate) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.post<EventPrize>(`/events/admin/${eventId}/prizes/`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  updateEventPrize: (id: string, data: Partial<EventPrizeCreate>) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([k, v]) => {
+      if (v === undefined || v === null) return
+      if (v instanceof File) fd.append(k, v)
+      else if (typeof v === 'boolean') fd.append(k, v ? 'true' : 'false')
+      else fd.append(k, String(v))
+    })
+    return apiClient.patch<EventPrize>(`/events/admin/prizes/${id}/`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteEventPrize: (id: string) => apiClient.delete<void>(`/events/admin/prizes/${id}/`),
 }

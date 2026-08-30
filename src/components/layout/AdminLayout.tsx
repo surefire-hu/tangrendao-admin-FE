@@ -29,6 +29,8 @@ import {
   PartitionOutlined,
   StopOutlined,
   FileTextOutlined,
+  CrownOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -177,6 +179,15 @@ export function AdminLayout() {
       label: '糖果/金币',
     },
     {
+      key: 'cosmetics-events',
+      icon: <CrownOutlined />,
+      label: '装扮 / 活动',
+      children: [
+        { key: '/cosmetics', icon: <CrownOutlined />, label: '头像框/聊天背景' },
+        { key: '/events', icon: <TrophyOutlined />, label: '活动/抽奖' },
+      ],
+    },
+    {
       key: '/broadcast',
       icon: <SendOutlined />,
       label: '广播通知',
@@ -294,6 +305,8 @@ export function AdminLayout() {
     if (path.startsWith('/claims')) return '/claims'
     if (path.startsWith('/unban-requests')) return '/unban-requests'
     if (path.startsWith('/news')) return '/news'
+    if (path.startsWith('/cosmetics')) return '/cosmetics'
+    if (path.startsWith('/events')) return '/events'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
@@ -303,6 +316,7 @@ export function AdminLayout() {
     if (path.startsWith('/publications')) return ['publications']
     if (path.startsWith('/forum')) return ['forum']
     if (path.startsWith('/advertisements') || path.startsWith('/adcards') || path.startsWith('/splash')) return ['ads']
+    if (path.startsWith('/cosmetics') || path.startsWith('/events')) return ['cosmetics-events']
     return []
   }
 
