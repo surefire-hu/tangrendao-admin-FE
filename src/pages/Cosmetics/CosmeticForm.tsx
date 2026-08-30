@@ -11,6 +11,12 @@ import type { CosmeticAcquireType, CosmeticCreate, CosmeticKind } from '../../ty
 
 const { Title, Text } = Typography
 
+// Matches the client's UserAvatar.vue FRAME_SCALE convention: the frame is
+// displayed at 144% of the avatar's own size, so the avatar hole should sit
+// centered occupying ~1/1.44 ≈ 69% of the frame canvas.
+const FRAME_PREVIEW_BOX = 120
+const FRAME_PREVIEW_AVATAR = Math.round(FRAME_PREVIEW_BOX / 1.44)
+
 const acquireOptions: { value: CosmeticAcquireType; label: string }[] = [
   { value: 'coin', label: '金币购买（永久）' },
   { value: 'candy', label: '糖果购买（永久）' },
@@ -43,6 +49,18 @@ export function CosmeticFormPage() {
   const kind = Form.useWatch('kind', form)
   const isRental = acquireType === 'rent_coin' || acquireType === 'rent_candy'
   const isEventOnly = acquireType === 'event'
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  useEffect(() => {
+    const f = fileList[0]
+    if (!f) { setPreviewUrl(null); return }
+    if (f.originFileObj) {
+      const url = URL.createObjectURL(f.originFileObj as File)
+      setPreviewUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setPreviewUrl(f.url ?? null)
+  }, [fileList])
 
   useEffect(() => {
     if (!id) return
@@ -122,6 +140,32 @@ export function CosmeticFormPage() {
                 ? '聊天背景：显示在会话列表中该用户的整行背景（裁切铺满）。建议尺寸 900×300px 或更大，横向，JPG/PNG。'
                 : '头像框：环绕头像四周的装饰，中间必须透明。建议尺寸 500×500px（正方形），透明背景 PNG。'}
             </Text>
+
+            {kind === 'frame' && previewUrl && (
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ position: 'relative', width: FRAME_PREVIEW_BOX, height: FRAME_PREVIEW_BOX, flexShrink: 0 }}>
+                  <div
+                    style={{
+                      position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                      width: FRAME_PREVIEW_AVATAR, height: FRAME_PREVIEW_AVATAR, borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #ffe8d6, #ffd0aa)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: FRAME_PREVIEW_AVATAR * 0.4, color: '#ff8c42', fontWeight: 700, overflow: 'hidden',
+                    }}
+                  >
+                    头
+                  </div>
+                  <img
+                    src={previewUrl}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
+                  />
+                </div>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  实际效果预览（模拟真实头像，App 内头像圆形区域约占画布 69%，居中对齐）
+                </Text>
+              </div>
+            )}
           </Form.Item>
 
           <Row gutter={16}>
