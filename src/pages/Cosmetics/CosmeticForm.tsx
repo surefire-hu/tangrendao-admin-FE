@@ -46,7 +46,6 @@ export function CosmeticFormPage() {
   const isEdit = !!id
 
   const acquireType = Form.useWatch('acquire_type', form)
-  const kind = Form.useWatch('kind', form)
   const isRental = acquireType === 'rent_coin' || acquireType === 'rent_candy'
   const isEventOnly = acquireType === 'event'
 
@@ -136,12 +135,10 @@ export function CosmeticFormPage() {
               )}
             </Upload>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {kind === 'background'
-                ? '聊天背景：显示在会话列表中该用户的整行背景（裁切铺满）。建议尺寸 900×300px 或更大，横向，JPG/PNG。'
-                : '头像框：环绕头像四周的装饰，中间必须透明。建议尺寸 500×500px（正方形），透明背景 PNG。'}
+              头像框：环绕头像四周的装饰，中间必须透明。建议尺寸 500×500px（正方形），透明背景 PNG。
             </Text>
 
-            {kind === 'frame' && previewUrl && (
+            {previewUrl && (
               <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ position: 'relative', width: FRAME_PREVIEW_BOX, height: FRAME_PREVIEW_BOX, flexShrink: 0 }}>
                   <div
@@ -168,18 +165,12 @@ export function CosmeticFormPage() {
             )}
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="kind" label="类型" rules={[{ required: true }]}>
-                <Select options={[{ value: 'frame', label: '头像框' }, { value: 'background', label: '聊天背景' }]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="name" label="名称" rules={[{ required: true, message: '请填写名称' }]}>
-                <Input placeholder="如：星光头像框" maxLength={80} />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item name="kind" hidden initialValue="frame">
+            <Input />
+          </Form.Item>
+          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请填写名称' }]}>
+            <Input placeholder="如：星光头像框" maxLength={80} />
+          </Form.Item>
 
           <Form.Item name="acquire_type" label="获取方式" rules={[{ required: true }]}>
             <Select options={acquireOptions} />

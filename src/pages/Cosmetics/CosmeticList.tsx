@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Table, Button, Image, Space, Typography, Card, Switch,
-  Tooltip, Popconfirm, message, Select, Tag, theme,
+  Tooltip, Popconfirm, message, Tag, theme,
 } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, PictureOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -11,7 +11,6 @@ import type { Cosmetic } from '../../types'
 
 const { Text, Title } = Typography
 
-const KIND_LABEL: Record<string, string> = { frame: '头像框', background: '聊天背景' }
 const ACQUIRE_LABEL: Record<string, string> = {
   coin: '金币购买', candy: '糖果购买', rent_coin: '金币租用', rent_candy: '糖果租用', event: '活动获得',
 }
@@ -26,19 +25,18 @@ export function CosmeticListPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
-  const [kindFilter, setKindFilter] = useState<string | undefined>()
   const PAGE_SIZE = 20
 
   const fetchItems = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await adminApi.getCosmetics({ page, kind: kindFilter })
+      const res = await adminApi.getCosmetics({ page, kind: 'frame' })
       setItems(res.data.results)
       setTotal(res.data.count)
     } finally {
       setLoading(false)
     }
-  }, [page, kindFilter])
+  }, [page])
 
   useEffect(() => { fetchItems() }, [fetchItems])
 
@@ -80,12 +78,6 @@ export function CosmeticListPage() {
         ),
     },
     { title: '名称', dataIndex: 'name', width: 160 },
-    {
-      title: '类型',
-      dataIndex: 'kind',
-      width: 100,
-      render: (k: string) => <Tag>{KIND_LABEL[k] ?? k}</Tag>,
-    },
     {
       title: '获取方式',
       dataIndex: 'acquire_type',
@@ -133,24 +125,13 @@ export function CosmeticListPage() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Title level={4} style={{ margin: 0 }}>头像框 / 聊天背景</Title>
+        <Title level={4} style={{ margin: 0 }}>头像框</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/cosmetics/create')}>
           新建装扮
         </Button>
       </div>
 
       <Card>
-        <Space style={{ marginBottom: 16 }} wrap>
-          <Select
-            placeholder="类型"
-            allowClear
-            style={{ width: 140 }}
-            value={kindFilter}
-            onChange={(v) => { setKindFilter(v); setPage(1) }}
-            options={[{ value: 'frame', label: '头像框' }, { value: 'background', label: '聊天背景' }]}
-          />
-        </Space>
-
         <Table
           columns={columns}
           dataSource={items}

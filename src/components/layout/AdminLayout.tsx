@@ -183,7 +183,7 @@ export function AdminLayout() {
       icon: <CrownOutlined />,
       label: '装扮 / 活动',
       children: [
-        { key: '/cosmetics', icon: <CrownOutlined />, label: '头像框/聊天背景' },
+        { key: '/cosmetics', icon: <CrownOutlined />, label: '头像框' },
         { key: '/events', icon: <TrophyOutlined />, label: '活动/抽奖' },
       ],
     },
