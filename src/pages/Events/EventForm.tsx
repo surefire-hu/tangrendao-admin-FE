@@ -73,8 +73,9 @@ export function EventFormPage() {
         message.success('活动已创建，现在可以添加奖品')
         navigate(`/events/${res.data.id}/edit`)
       }
-    } catch {
-      setError('保存失败，请检查所有字段是否填写正确。')
+    } catch (e) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail || '保存失败，请检查所有字段是否填写正确。')
     } finally {
       setLoading(false)
     }
