@@ -307,7 +307,6 @@ function PrizePool({ eventId }: { eventId: string }) {
       title: '中奖概率', key: 'prob', width: 100,
       render: (_, p) => totalWeight > 0 ? `${((p.weight / totalWeight) * 100).toFixed(1)}%` : '—',
     },
-    { title: '权重', dataIndex: 'weight', width: 70 },
     { title: '库存', dataIndex: 'stock', width: 80, render: (s: number | null) => s === null ? '不限' : s },
     { title: '已中奖', dataIndex: 'win_count', width: 80 },
     {
@@ -329,6 +328,18 @@ function PrizePool({ eventId }: { eventId: string }) {
       extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>添加奖品</Button>}
       style={{ maxWidth: 780 }}
     >
+      {prizes.length > 0 && (
+        <Alert
+          style={{ marginBottom: 12 }}
+          type={totalWeight === 100 ? 'success' : 'warning'}
+          showIcon
+          message={
+            totalWeight === 100
+              ? '概率总和为 100%'
+              : `概率总和为 ${totalWeight}%，不是 100% —— 系统仍会按比例正常抽奖，但建议调整到刚好 100% 便于核对`
+          }
+        />
+      )}
       <Table
         columns={columns}
         dataSource={prizes}
@@ -392,8 +403,13 @@ function PrizePool({ eventId }: { eventId: string }) {
 
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item name="weight" label="权重（决定中奖概率）" rules={[{ required: true }]}>
-                  <InputNumber style={{ width: '100%' }} min={1} />
+                <Form.Item
+                  name="weight"
+                  label="中奖概率"
+                  rules={[{ required: true, message: '请填写中奖概率' }]}
+                  extra="所有奖品的概率相加应为 100%"
+                >
+                  <InputNumber style={{ width: '100%' }} min={1} max={100} addonAfter="%" />
                 </Form.Item>
               </Col>
               <Col span={8}>
