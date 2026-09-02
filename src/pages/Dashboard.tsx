@@ -109,7 +109,6 @@ export function DashboardPage() {
   if (!stats || !revenue) return null
 
   const providerAmounts = Object.fromEntries(revenue.by_provider.map((p) => [p.provider, p]))
-  const otherCurrencies = revenue.by_currency.filter((c) => c.currency !== revenue.currency)
 
   return (
     <div>
@@ -190,13 +189,6 @@ export function DashboardPage() {
               valueStyle={{ color: token.colorSuccess, fontSize: 28, fontWeight: 700 }}
             />
             <Text type="secondary" style={{ fontSize: 12 }}>{revenue.total_orders} 笔订单</Text>
-            {otherCurrencies.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <Text type="warning" style={{ fontSize: 11 }}>
-                  另有 {otherCurrencies.map((c) => `${c.amount} ${c.currency}`).join('、')} 非 {revenue.currency} 订单，未计入总额
-                </Text>
-              </div>
-            )}
           </Col>
           <Col xs={24} md={18}>
             <RevenueChart data={revenue.series} period={period} height={200} />
