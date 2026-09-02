@@ -3,6 +3,7 @@ import type {
   DashboardStats,
   DashboardPeriod,
   RevenueStats,
+  RevenueTransaction,
   AdminUser,
   UserOperationStats,
   PaginatedResponse,
@@ -65,6 +66,14 @@ export const adminApi = {
     apiClient.get<DashboardStats>('/admin/stats/', { params: { period } }),
   getRevenueStats: (period?: DashboardPeriod) =>
     apiClient.get<RevenueStats>('/admin/revenue/stats/', { params: { period } }),
+  getRevenueTransactions: (params: {
+    period?: DashboardPeriod
+    currency?: string
+    provider?: 'wechat' | 'alipay' | 'apple'
+    page?: number
+    page_size?: number
+  }) =>
+    apiClient.get<PaginatedResponse<RevenueTransaction>>('/admin/revenue/transactions/', { params }),
 
   // ── Users ────────────────────────────────────────────────────────────────
   getUsers: (params?: {

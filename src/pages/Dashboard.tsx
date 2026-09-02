@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  Row, Col, Card, Statistic, Typography, Spin, Alert, Divider, Badge, Space, Radio, theme,
+  Row, Col, Card, Statistic, Typography, Spin, Alert, Divider, Badge, Space, Radio, Button, theme,
 } from 'antd'
 import type { ReactNode } from 'react'
 import {
@@ -13,11 +13,12 @@ import {
   AlipayCircleOutlined,
   AppleOutlined,
   MobileOutlined,
-  GlobalOutlined,
   IdcardOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons'
 import { adminApi } from '../api/admin'
 import { RevenueChart } from '../components/charts/RevenueChart'
+import { RevenueTransactionsModal } from '../components/RevenueTransactionsModal'
 import type { DashboardStats, RevenueStats, DashboardPeriod } from '../types'
 
 const { Title, Text } = Typography
@@ -35,11 +36,6 @@ const PROVIDER_INFO: { value: 'wechat' | 'alipay' | 'apple'; label: string; icon
   { value: 'wechat', label: '微信支付', icon: <WechatOutlined /> },
   { value: 'alipay', label: '支付宝',   icon: <AlipayCircleOutlined /> },
   { value: 'apple',  label: 'Apple Pay', icon: <AppleOutlined /> },
-]
-
-const PLATFORM_INFO: { value: 'ios' | 'default'; label: string; icon: ReactNode }[] = [
-  { value: 'ios',     label: 'iOS',        icon: <MobileOutlined /> },
-  { value: 'default', label: '安卓 / 网页', icon: <GlobalOutlined /> },
 ]
 
 const AD_TYPE_INFO: { value: 'card' | 'banner' | 'splash'; label: string; icon: ReactNode }[] = [
@@ -91,6 +87,7 @@ export function DashboardPage() {
   const [revenue, setRevenue] = useState<RevenueStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [transactionsOpen, setTransactionsOpen] = useState(false)
   const { token } = theme.useToken()
 
   useEffect(() => {
@@ -112,7 +109,6 @@ export function DashboardPage() {
   if (!stats || !revenue) return null
 
   const providerAmounts = Object.fromEntries(revenue.by_provider.map((p) => [p.provider, p]))
-  const platformAmounts = Object.fromEntries(revenue.by_platform.map((p) => [p.platform, p]))
   const otherCurrencies = revenue.by_currency.filter((c) => c.currency !== revenue.currency)
 
   return (
@@ -170,7 +166,20 @@ export function DashboardPage() {
 
       {/* ── 真实收入（微信/支付宝/Apple Pay，不含后台充值）──────────── */}
       <SectionLabel>真实收入</SectionLabel>
-      <Card size="small" style={{ marginTop: 8, marginBottom: 24 }}>
+      <Card
+        size="small"
+        style={{ marginTop: 8, marginBottom: 24 }}
+        extra={
+          <Button
+            type="link"
+            size="small"
+            icon={<UnorderedListOutlined />}
+            onClick={() => setTransactionsOpen(true)}
+          >
+            查看交易明细
+          </Button>
+        }
+      >
         <Row gutter={[24, 16]} align="middle">
           <Col xs={24} md={6}>
             <Statistic
@@ -198,7 +207,7 @@ export function DashboardPage() {
 
         <Row gutter={[16, 16]}>
           {PROVIDER_INFO.map((p) => (
-            <Col xs={12} sm={8} md={4} key={p.value}>
+            <Col xs={24} sm={8} key={p.value}>
               <StatCard
                 title={p.label}
                 value={providerAmounts[p.value]?.amount ?? 0}
@@ -207,18 +216,15 @@ export function DashboardPage() {
               />
             </Col>
           ))}
-          {PLATFORM_INFO.map((p) => (
-            <Col xs={12} sm={8} md={4} key={p.value}>
-              <StatCard
-                title={p.label}
-                value={platformAmounts[p.value]?.amount ?? 0}
-                suffix={revenue.currency}
-                prefix={p.icon}
-              />
-            </Col>
-          ))}
         </Row>
       </Card>
+
+      <RevenueTransactionsModal
+        open={transactionsOpen}
+        period={period}
+        currencies={revenue.by_currency.map((c) => c.currency)}
+        onClose={() => setTransactionsOpen(false)}
+      />
 
       {/* ── 广告效果（当前实时状态，不随时间范围变化）───────────────── */}
       <SectionLabel>广告效果</SectionLabel>

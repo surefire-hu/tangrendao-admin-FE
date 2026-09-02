@@ -93,6 +93,24 @@ export interface RevenueStats {
   series: RevenueSeriesPoint[]
 }
 
+export interface RevenueTransactionUser {
+  id: string
+  display: string
+  tangren_id: string | null
+  avatar: string | null
+}
+
+export interface RevenueTransaction {
+  id: string
+  user: RevenueTransactionUser
+  amount: number
+  currency: string
+  candy_amount: number
+  provider: 'wechat' | 'alipay' | 'apple'
+  platform: 'default' | 'ios'
+  paid_at: string | null
+}
+
 export interface DailyDataPoint {
   date: string
   count: number
