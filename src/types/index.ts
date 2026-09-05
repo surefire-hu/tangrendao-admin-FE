@@ -1015,3 +1015,24 @@ export interface EventPrizeCreate {
   stock?: number
   sort_order?: number
 }
+
+// ── Content leaderboard ──────────────────────────────────────────────────────
+
+export type LeaderboardContentType =
+  | 'forum' | 'listing' | 'job_post' | 'job_seek' | 'housing' | 'market' | 'local_service'
+
+export interface LeaderboardItem {
+  id: string
+  rank: number
+  title: string
+  score: number
+  created_at: string
+  pub_type: string
+  status: string
+  cover_image?: string | null
+  paid_boost?: number
+  social_score?: number
+  social_boost?: number
+  recommendation_score?: number
+  view_count?: number
+}

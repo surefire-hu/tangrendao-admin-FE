@@ -24,6 +24,8 @@ import type {
   ForumPost,
   ForumPostStats,
   ForumKind,
+  LeaderboardContentType,
+  LeaderboardItem,
   AdminActivityLogList,
   BroadcastPayload,
   BroadcastResult,
@@ -356,6 +358,14 @@ export const adminApi = {
 
   deleteForumPost: (id: string) =>
     apiClient.post(`/admin/forum/posts/${id}/delete/`),
+
+  // ── Content leaderboard ────────────────────────────────────────────────────
+  getLeaderboard: (params: {
+    content_type: LeaderboardContentType
+    search?: string
+    page?: number
+    page_size?: number
+  }) => apiClient.get<{ count: number; results: LeaderboardItem[] }>('/admin/leaderboard/', { params }),
 
   // ── Activity Log (solo superadmin) ────────────────────────────────────────
   getActivityLog: (params?: {

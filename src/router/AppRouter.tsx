@@ -13,6 +13,7 @@ import { SplashListPage } from '../pages/SplashAds/SplashList'
 import { SplashFormPage } from '../pages/SplashAds/SplashForm'
 import { PublicationListPage } from '../pages/Publications/PublicationList'
 import { PublicationDetailPage } from '../pages/Publications/PublicationDetail'
+import { LeaderboardPage } from '../pages/Leaderboard/LeaderboardPage'
 import { ForumListPage } from '../pages/Forum/ForumList'
 import { ForumDetailPage } from '../pages/Forum/ForumDetail'
 import { HotKeywordsPage } from '../pages/Forum/HotKeywordsPage'
@@ -85,6 +86,7 @@ export function AppRouter() {
           <Route path="forum/videos" element={<ForumListPage kind="video" />} />
           <Route path="forum/hot-keywords" element={<HotKeywordsPage />} />
           <Route path="forum/posts/:id" element={<ForumDetailPage />} />
+          <Route path="leaderboard" element={<LeaderboardPage />} />
           <Route path="broadcast" element={<BroadcastPage />} />
           <Route path="currency" element={<CurrencyPage />} />
           <Route path="feedback" element={<FeedbackPage />} />

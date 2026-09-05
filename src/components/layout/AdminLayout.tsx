@@ -164,6 +164,11 @@ export function AdminLayout() {
       ],
     },
     {
+      key: '/leaderboard',
+      icon: <TrophyOutlined />,
+      label: '内容排行榜',
+    },
+    {
       key: 'ads',
       icon: <NotificationOutlined />,
       label: '广告',
