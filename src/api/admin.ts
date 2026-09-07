@@ -270,8 +270,13 @@ export const adminApi = {
     apiClient.get<PaginatedResponse<JobSeek>>('/jobs/seeks/', { params }),
 
   // ── Publications – Listings (restaurants etc.) ────────────────────────────
-  getListings: (params?: { page?: number; status?: string; search?: string; ordering?: string }) =>
-    apiClient.get<PaginatedResponse<Listing>>('/listings/', { params }),
+  getListings: (params?: {
+    page?: number
+    page_size?: number
+    status?: string
+    search?: string
+    ordering?: string
+  }) => apiClient.get<PaginatedResponse<Listing>>('/listings/', { params }),
 
   // ── Publication Stats ─────────────────────────────────────────────────────
   getPublicationStats: (type: PublicationType, id: string) =>
@@ -476,6 +481,17 @@ export const adminApi = {
 
   rejectListingClaim: (id: string, reason?: string) =>
     apiClient.post<ListingClaim>(`/admin/listing-claims/${id}/reject/`, { reason }),
+
+  // Direct owner assign/transfer — admin-side 认领, no claim request needed.
+  assignListingOwner: (listingId: string, userId: string) =>
+    apiClient.post<{
+      ok: boolean
+      listing_id: string
+      merchant_id: string
+      owner_id: string
+      owner_name: string
+      owner_email: string | null
+    }>(`/admin/listings/${listingId}/assign-owner/`, { user_id: userId }),
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
   // ── Ban / Unban appeals ──────────────────────────────────────────────────

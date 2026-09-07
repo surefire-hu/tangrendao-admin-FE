@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   Table, Tag, Typography, Card, Select, Space, Button, Avatar, Image, Modal, Input,
-  message, Popconfirm, Tooltip, theme,
+  message, Popconfirm, Tooltip, theme, Spin,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { ShopOutlined, UserOutlined, PhoneOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
-import type { ListingClaim, ListingClaimStatus } from '../../types'
+import type { ListingClaim, ListingClaimStatus, Listing, AdminUser } from '../../types'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -44,6 +44,75 @@ export function ClaimListPage() {
   const [rejectTarget, setRejectTarget] = useState<ListingClaim | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [rejectLoading, setRejectLoading] = useState(false)
+
+  // ── Direct owner assign/transfer — admin-side 认领, no claim request
+  //    needed. Also the only way to move an already-claimed listing to a
+  //    different owner (the request-based flow above only ever matches a
+  //    bot-owned listing to its own requester).
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignLoading, setAssignLoading] = useState(false)
+  const [assignListingId, setAssignListingId] = useState<string | undefined>()
+  const [assignUserId, setAssignUserId] = useState<string | undefined>()
+  const [listingOptions, setListingOptions] = useState<Listing[]>([])
+  const [listingSearching, setListingSearching] = useState(false)
+  const [userOptions, setUserOptions] = useState<AdminUser[]>([])
+  const [userSearching, setUserSearching] = useState(false)
+  const listingSearchTimer = useRef<ReturnType<typeof setTimeout>>()
+  const userSearchTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  const openAssign = () => {
+    setAssignListingId(undefined)
+    setAssignUserId(undefined)
+    setListingOptions([])
+    setUserOptions([])
+    setAssignOpen(true)
+  }
+
+  function searchListings(q: string) {
+    clearTimeout(listingSearchTimer.current)
+    listingSearchTimer.current = setTimeout(async () => {
+      setListingSearching(true)
+      try {
+        const res = await adminApi.getListings({ search: q, page_size: 20 })
+        setListingOptions(res.data.results)
+      } catch {
+        /* silent */
+      } finally {
+        setListingSearching(false)
+      }
+    }, 350)
+  }
+
+  function searchUsers(q: string) {
+    clearTimeout(userSearchTimer.current)
+    userSearchTimer.current = setTimeout(async () => {
+      setUserSearching(true)
+      try {
+        const res = await adminApi.getUsers({ search: q, page_size: 20 })
+        setUserOptions(res.data.results)
+      } catch {
+        /* silent */
+      } finally {
+        setUserSearching(false)
+      }
+    }, 350)
+  }
+
+  const submitAssign = async () => {
+    if (!assignListingId || !assignUserId) return
+    setAssignLoading(true)
+    try {
+      const res = await adminApi.assignListingOwner(assignListingId, assignUserId)
+      const listingName = listingOptions.find(l => l.id === assignListingId)?.name || '该商家'
+      message.success(`已将「${listingName}」分配给 ${res.data.owner_name}`)
+      setAssignOpen(false)
+      fetchItems()
+    } catch (e: any) {
+      message.error(e?.response?.data?.error || '分配失败')
+    } finally {
+      setAssignLoading(false)
+    }
+  }
 
   const fetchItems = useCallback(async () => {
     setLoading(true)
@@ -233,6 +302,7 @@ export function ClaimListPage() {
             ]}
           />
           <Button onClick={() => fetchItems()}>刷新</Button>
+          <Button type="primary" onClick={openAssign}>直接分配所有者</Button>
         </Space>
       </div>
 
@@ -271,6 +341,80 @@ export function ClaimListPage() {
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="例如：电话核实未通过 / 无法证明身份"
             style={{ marginTop: 6 }}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        title="直接分配所有者"
+        open={assignOpen}
+        onCancel={() => setAssignOpen(false)}
+        onOk={submitAssign}
+        okText="确认分配"
+        cancelText="取消"
+        okButtonProps={{ loading: assignLoading, disabled: !assignListingId || !assignUserId }}
+      >
+        <Text type="secondary">
+          无需等待用户提交认领申请，直接把某个商家分配给任意用户——也是唯一能把一个
+          <strong>已经</strong>认领过的商家转让给另一个用户的方式。
+        </Text>
+
+        <div style={{ marginTop: 16 }}>
+          <Text>商家：</Text>
+          <Select
+            showSearch
+            filterOption={false}
+            style={{ width: '100%', marginTop: 6 }}
+            placeholder="搜索商家名称…"
+            value={assignListingId}
+            onSearch={searchListings}
+            onChange={setAssignListingId}
+            loading={listingSearching}
+            notFoundContent={listingSearching ? <Spin size="small" /> : '请输入关键词搜索'}
+            options={listingOptions.map(l => ({
+              value: l.id,
+              label: (
+                <Space>
+                  {(l.cover_url || l.thumbnail_url) ? (
+                    <Image
+                      src={l.cover_url || l.thumbnail_url || ''}
+                      width={24} height={24}
+                      style={{ borderRadius: 4, objectFit: 'cover' }}
+                      preview={false}
+                    />
+                  ) : (
+                    <Avatar shape="square" size={24} icon={<ShopOutlined />} />
+                  )}
+                  <span>{l.name}</span>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{l.city}</Text>
+                </Space>
+              ),
+            }))}
+          />
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          <Text>新所有者：</Text>
+          <Select
+            showSearch
+            filterOption={false}
+            style={{ width: '100%', marginTop: 6 }}
+            placeholder="搜索用户邮箱/用户名/唐人ID…"
+            value={assignUserId}
+            onSearch={searchUsers}
+            onChange={setAssignUserId}
+            loading={userSearching}
+            notFoundContent={userSearching ? <Spin size="small" /> : '请输入关键词搜索'}
+            options={userOptions.map(u => ({
+              value: u.id,
+              label: (
+                <Space>
+                  {u.avatar ? <Avatar src={u.avatar} size={24} /> : <Avatar icon={<UserOutlined />} size={24} />}
+                  <span>{u.first_name || u.username || u.email || u.id}</span>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{u.email}</Text>
+                </Space>
+              ),
+            }))}
           />
         </div>
       </Modal>
