@@ -4,7 +4,7 @@ import {
   Button, Tooltip, Popconfirm, message, Tabs, theme,
 } from 'antd'
 import {
-  SearchOutlined, EyeOutlined, CheckOutlined, DeleteOutlined,
+  SearchOutlined, EyeOutlined, CheckOutlined, DeleteOutlined, RollbackOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import type { ColumnsType } from 'antd/es/table'
@@ -168,6 +168,17 @@ export function PublicationListPage({ type }: Props) {
     } catch { message.error('操作失败') }
   }
 
+  // Delete is a soft status flip (see admin_api.AdminPublicationDeleteView),
+  // so "restore" is just re-approving — same endpoint the approve button
+  // already uses, no dedicated restore API needed.
+  const handleRestore = async (id: string) => {
+    try {
+      await adminApi.approvePublication(activeTab, id)
+      message.success('已恢复，重新出现在列表中')
+      fetchItems()
+    } catch { message.error('操作失败') }
+  }
+
   const getTitle = (item: AnyItem): string => {
     if ('title' in item) return item.title
     if ('name' in item) return (item as unknown as { name: string }).name
@@ -274,38 +285,62 @@ export function PublicationListPage({ type }: Props) {
       title: '',
       key: 'actions',
       width: 120,
-      render: (_, item) => (
-        <Space size={4}>
-          <Tooltip title="查看统计">
-            <Button
-              type="text"
-              icon={<EyeOutlined />}
-              onClick={() => navigate(`/publications/${activeTab}/${item.id}`)}
-            />
-          </Tooltip>
-          {pendingStatus[item.id] && pendingStatus[item.id] !== item.status && (
-            <Tooltip title="确认修改状态">
+      render: (_, item) => {
+        const s = (item as { status: string }).status
+        const isDeleted = s === 'deleted'
+          || (item as { is_active?: boolean }).is_active === false
+        // Restore only re-approves (status='approved') — for non-listing
+        // types the delete action instead flips is_active=False, which
+        // approve doesn't touch, so it wouldn't actually bring them back.
+        // Scoped to listings until that's wired up for the other types too.
+        const canRestore = isDeleted && activeTab === 'listing'
+        return (
+          <Space size={4}>
+            <Tooltip title="查看统计">
               <Button
                 type="text"
-                icon={<CheckOutlined style={{ color: token.colorSuccess }} />}
-                onClick={() => handleConfirmStatus(item)}
+                icon={<EyeOutlined />}
+                onClick={() => navigate(`/publications/${activeTab}/${item.id}`)}
               />
             </Tooltip>
-          )}
-          <Popconfirm
-            title="确定删除此内容？"
-            description="将直接删除，不通知发布者"
-            onConfirm={() => handleDelete(item.id)}
-            okText="删除"
-            cancelText="取消"
-            okButtonProps={{ danger: true }}
-          >
-            <Tooltip title="删除">
-              <Button type="text" icon={<DeleteOutlined style={{ color: token.colorError }} />} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
+            {!isDeleted && pendingStatus[item.id] && pendingStatus[item.id] !== item.status && (
+              <Tooltip title="确认修改状态">
+                <Button
+                  type="text"
+                  icon={<CheckOutlined style={{ color: token.colorSuccess }} />}
+                  onClick={() => handleConfirmStatus(item)}
+                />
+              </Tooltip>
+            )}
+            {canRestore ? (
+              <Popconfirm
+                title="确定恢复此内容？"
+                description="将重新出现在列表中（状态设为已通过）"
+                onConfirm={() => handleRestore(item.id)}
+                okText="恢复"
+                cancelText="取消"
+              >
+                <Tooltip title="恢复">
+                  <Button type="text" icon={<RollbackOutlined style={{ color: token.colorSuccess }} />} />
+                </Tooltip>
+              </Popconfirm>
+            ) : !isDeleted ? (
+              <Popconfirm
+                title="确定删除此内容？"
+                description="将直接删除，不通知发布者"
+                onConfirm={() => handleDelete(item.id)}
+                okText="删除"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+              >
+                <Tooltip title="删除">
+                  <Button type="text" icon={<DeleteOutlined style={{ color: token.colorError }} />} />
+                </Tooltip>
+              </Popconfirm>
+            ) : null}
+          </Space>
+        )
+      },
     },
   ]
 
@@ -329,7 +364,10 @@ export function PublicationListPage({ type }: Props) {
           style={{ width: 140 }}
           value={status}
           onChange={(v) => { setStatus(v); setPage(1) }}
-          options={Object.entries(statusLabels).map(([v, l]) => ({ value: v, label: l }))}
+          options={[
+            ...Object.entries(statusLabels).map(([v, l]) => ({ value: v, label: l })),
+            { value: 'deleted', label: '已删除' },
+          ]}
         />
       </Space>
 
