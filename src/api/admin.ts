@@ -68,6 +68,10 @@ export const adminApi = {
     apiClient.get<DashboardStats>('/admin/stats/', { params: { period } }),
   getRevenueStats: (period?: DashboardPeriod) =>
     apiClient.get<RevenueStats>('/admin/revenue/stats/', { params: { period } }),
+  // Approximate — backed by a heartbeat the client already sends every ~60s
+  // (registered users only, see the backend view's own docstring).
+  getOnlineUsersCount: () =>
+    apiClient.get<{ count: number; threshold_minutes: number }>('/admin/online-users-count/'),
   getRevenueTransactions: (params: {
     period?: DashboardPeriod
     currency?: string

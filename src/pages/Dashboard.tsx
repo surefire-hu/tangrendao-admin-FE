@@ -15,6 +15,7 @@ import {
   MobileOutlined,
   IdcardOutlined,
   UnorderedListOutlined,
+  WifiOutlined,
 } from '@ant-design/icons'
 import { adminApi } from '../api/admin'
 import { RevenueChart } from '../components/charts/RevenueChart'
@@ -88,6 +89,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [transactionsOpen, setTransactionsOpen] = useState(false)
+  const [onlineCount, setOnlineCount] = useState<number | null>(null)
   const { token } = theme.useToken()
 
   useEffect(() => {
@@ -101,6 +103,20 @@ export function DashboardPage() {
       .catch(() => setError('无法加载统计数据，请确认后端服务是否正常运行。'))
       .finally(() => setLoading(false))
   }, [period])
+
+  // Real-time-ish, independent of the period filter above — polled on its
+  // own so it stays fresh without refetching everything else.
+  useEffect(() => {
+    let cancelled = false
+    const fetchOnline = () => {
+      adminApi.getOnlineUsersCount()
+        .then((res) => { if (!cancelled) setOnlineCount(res.data.count) })
+        .catch(() => {})
+    }
+    fetchOnline()
+    const timer = setInterval(fetchOnline, 30_000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [])
 
   if (loading && !stats) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
 
@@ -157,6 +173,15 @@ export function DashboardPage() {
             value={stats.listings_pending}
             prefix={<EyeOutlined />}
             color={stats.listings_pending > 0 ? token.colorWarning : undefined}
+          />
+        </Col>
+        <Col xs={12} sm={6}>
+          <StatCard
+            title="当前在线（约）"
+            value={onlineCount ?? 0}
+            prefix={<WifiOutlined />}
+            color={token.colorSuccess}
+            extra={<Text type="secondary" style={{ fontSize: 11 }}>近3分钟有心跳的注册用户</Text>}
           />
         </Col>
       </Row>
