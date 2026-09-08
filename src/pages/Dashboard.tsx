@@ -89,7 +89,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [transactionsOpen, setTransactionsOpen] = useState(false)
-  const [onlineCount, setOnlineCount] = useState<number | null>(null)
+  const [online, setOnline] = useState<{ count: number; registered_count: number; guest_count: number } | null>(null)
   const { token } = theme.useToken()
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export function DashboardPage() {
     let cancelled = false
     const fetchOnline = () => {
       adminApi.getOnlineUsersCount()
-        .then((res) => { if (!cancelled) setOnlineCount(res.data.count) })
+        .then((res) => { if (!cancelled) setOnline(res.data) })
         .catch(() => {})
     }
     fetchOnline()
@@ -178,10 +178,14 @@ export function DashboardPage() {
         <Col xs={12} sm={6}>
           <StatCard
             title="当前在线（约）"
-            value={onlineCount ?? 0}
+            value={online?.count ?? 0}
             prefix={<WifiOutlined />}
             color={token.colorSuccess}
-            extra={<Text type="secondary" style={{ fontSize: 11 }}>近3分钟有心跳的注册用户</Text>}
+            extra={
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                注册 {online?.registered_count ?? 0} · 游客 {online?.guest_count ?? 0}
+              </Text>
+            }
           />
         </Col>
       </Row>
