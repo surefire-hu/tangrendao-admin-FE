@@ -59,6 +59,7 @@ import type {
   AdminEventCreate,
   EventPrize,
   EventPrizeCreate,
+  ClientConfig,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -681,4 +682,9 @@ export const adminApi = {
   },
 
   deleteEventPrize: (id: string) => apiClient.delete<void>(`/events/admin/prizes/${id}/`),
+
+  // ── Client config (feature flags + app-update prompt) ─────────────────────
+  getClientConfig: () => apiClient.get<ClientConfig>('/admin/client-config/'),
+  updateClientConfig: (data: Partial<ClientConfig>) =>
+    apiClient.patch<ClientConfig>('/admin/client-config/', data),
 }

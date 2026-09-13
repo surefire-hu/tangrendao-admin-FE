@@ -158,6 +158,8 @@ export interface AdminUser {
   country: string
   created_at: string
   last_login: string | null
+  last_active_at: string | null
+  is_online: boolean
   avatar: string | null
   // Virtual currency
   candy?: number
@@ -1035,4 +1037,12 @@ export interface LeaderboardItem {
   social_boost?: number
   recommendation_score?: number
   view_count?: number
+}
+
+export interface ClientConfig {
+  xindong_xinhao_enabled: boolean
+  latest_ios_version: string
+  latest_android_version: string
+  ios_app_store_url: string
+  android_play_store_url: string
 }

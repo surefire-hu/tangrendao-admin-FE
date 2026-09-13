@@ -18,6 +18,7 @@ import { ForumListPage } from '../pages/Forum/ForumList'
 import { ForumDetailPage } from '../pages/Forum/ForumDetail'
 import { HotKeywordsPage } from '../pages/Forum/HotKeywordsPage'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
+import { ClientConfigPage } from '../pages/Settings/ClientConfigPage'
 import { BroadcastPage } from '../pages/Broadcast/BroadcastPage'
 import { CurrencyPage } from '../pages/Currency/CurrencyPage'
 import { FeedbackPage } from '../pages/Feedback/FeedbackPage'
@@ -108,6 +109,7 @@ export function AppRouter() {
           <Route path="events" element={<EventListPage />} />
           <Route path="events/create" element={<EventFormPage />} />
           <Route path="events/:id/edit" element={<EventFormPage />} />
+          <Route path="settings/client-config" element={<ClientConfigPage />} />
           <Route
             path="admin-log"
             element={

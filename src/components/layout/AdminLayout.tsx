@@ -31,6 +31,7 @@ import {
   FileTextOutlined,
   CrownOutlined,
   TrophyOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -271,6 +272,11 @@ export function AdminLayout() {
       icon: <PartitionOutlined />,
       label: '服务导航',
     },
+    {
+      key: '/settings/client-config',
+      icon: <SettingOutlined />,
+      label: '客户端配置',
+    },
     ...(user?.is_superuser
       ? [{
           key: '/admin-log',
@@ -312,6 +318,7 @@ export function AdminLayout() {
     if (path.startsWith('/news')) return '/news'
     if (path.startsWith('/cosmetics')) return '/cosmetics'
     if (path.startsWith('/events')) return '/events'
+    if (path.startsWith('/settings/client-config')) return '/settings/client-config'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
