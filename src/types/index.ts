@@ -1053,7 +1053,7 @@ export interface XindongCircle {
   id: number
   name: string
   description: string
-  cover_image: string
+  icon: string
   is_default: boolean
   is_active: boolean
   member_count: number
@@ -1063,7 +1063,7 @@ export interface XindongCircle {
 export interface XindongCircleInput {
   name?: string
   description?: string
-  cover_image?: string
+  icon?: string
   is_default?: boolean
   is_active?: boolean
 }

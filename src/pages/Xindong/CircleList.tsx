@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Space, Switch, Popconfirm, Typography, message, Image, Tooltip, Tag } from 'antd'
+import { Table, Button, Space, Switch, Popconfirm, Typography, message, Tooltip, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
@@ -39,12 +39,15 @@ export function CircleListPage() {
 
   const columns = [
     {
-      title: '封面',
-      dataIndex: 'cover_image',
-      width: 72,
-      render: (url: string) => url
-        ? <Image src={url} width={52} height={52} style={{ objectFit: 'cover', borderRadius: 8 }} preview={false} />
-        : <div style={{ width: 52, height: 52, background: '#e8e8e8', borderRadius: 8 }} />,
+      title: '图标',
+      dataIndex: 'icon',
+      width: 64,
+      render: (icon: string) => (
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, background: '#F3DEDA',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+        }}>{icon}</div>
+      ),
     },
     {
       title: '名称 / 描述',

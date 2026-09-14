@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Form, Input, Switch, Button, Card, Upload, Typography, Space, Alert, message } from 'antd'
-import { UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { Form, Input, Switch, Button, Card, Typography, Space, Alert, message } from 'antd'
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { UploadFile } from 'antd/es/upload/interface'
 import { adminApi } from '../../api/admin'
 import type { XindongCircleInput } from '../../types'
 
 const { Title } = Typography
+
+const ICON_PRESETS = [
+  '💓', '🇮🇹', '💪', '🎬', '🍜', '🚗', '🐾', '✈️',
+  '📷', '🎵', '☕', '📚', '⚽', '🎨', '🎮', '🍷',
+]
 
 export function CircleFormPage() {
   const { id } = useParams<{ id?: string }>()
@@ -15,9 +19,7 @@ export function CircleFormPage() {
   const [loading, setLoading] = useState(false)
   const [initLoading, setInitLoading] = useState(!!id)
   const [error, setError] = useState<string | null>(null)
-  const [fileList, setFileList] = useState<UploadFile[]>([])
-  const [uploading, setUploading] = useState(false)
-  const [coverUrl, setCoverUrl] = useState('')
+  const [icon, setIcon] = useState('💓')
   const isEdit = !!id
 
   useEffect(() => {
@@ -28,37 +30,14 @@ export function CircleFormPage() {
         name: c.name, description: c.description,
         is_default: c.is_default, is_active: c.is_active,
       })
-      setCoverUrl(c.cover_image)
-      if (c.cover_image) setFileList([{ uid: '-1', name: 'cover.jpg', status: 'done', url: c.cover_image }])
+      setIcon(c.icon || '💓')
     }).finally(() => setInitLoading(false))
   }, [id, form])
-
-  async function onFileChange({ fileList: fl }: { fileList: UploadFile[] }) {
-    const file = fl[0]?.originFileObj
-    if (file) {
-      setFileList([{ uid: fl[0].uid, name: fl[0].name, status: 'uploading' }])
-      setUploading(true)
-      try {
-        const res = await adminApi.uploadXindongCircleCover(file)
-        setCoverUrl(res.data.url)
-        setFileList([{ uid: fl[0].uid, name: fl[0].name, status: 'done', url: res.data.url }])
-      } catch {
-        message.error('图片上传失败')
-        setFileList([])
-        setCoverUrl('')
-      } finally {
-        setUploading(false)
-      }
-    } else if (fl.length === 0) {
-      setCoverUrl('')
-      setFileList([])
-    }
-  }
 
   const onFinish = async (values: Record<string, unknown>) => {
     setLoading(true); setError(null)
     try {
-      const payload: XindongCircleInput = { ...(values as XindongCircleInput), cover_image: coverUrl }
+      const payload: XindongCircleInput = { ...(values as XindongCircleInput), icon }
       if (isEdit && id) {
         await adminApi.updateXindongCircle(Number(id), payload)
         message.success('圈子已更新')
@@ -91,18 +70,37 @@ export function CircleFormPage() {
           onFinish={onFinish}
           initialValues={{ is_default: false, is_active: true }}
         >
-          <Form.Item label="封面图片">
-            <Upload
-              listType="picture-card"
-              fileList={fileList}
-              beforeUpload={() => false}
-              onChange={onFileChange}
-              maxCount={1}
-              accept="image/*"
-              disabled={uploading}
-            >
-              {fileList.length === 0 && <div><UploadOutlined /><div style={{ marginTop: 8 }}>{uploading ? '上传中…' : '上传'}</div></div>}
-            </Upload>
+          <Form.Item label="图标">
+            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 18, background: '#F3DEDA',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
+              }}>
+                {icon}
+              </div>
+              <Input
+                value={icon}
+                onChange={e => setIcon(e.target.value)}
+                maxLength={8}
+                style={{ width: 120 }}
+                placeholder="输入 emoji"
+              />
+              <Space wrap size={8}>
+                {ICON_PRESETS.map(p => (
+                  <Button
+                    key={p}
+                    shape="circle"
+                    size="large"
+                    onClick={() => setIcon(p)}
+                    style={{
+                      fontSize: 18,
+                      borderColor: icon === p ? '#B84C6B' : undefined,
+                      borderWidth: icon === p ? 2 : 1,
+                    }}
+                  >{p}</Button>
+                ))}
+              </Space>
+            </Space>
           </Form.Item>
 
           <Form.Item name="name" label="圈子名称" rules={[{ required: true, message: '请填写圈子名称' }]}>
@@ -122,7 +120,7 @@ export function CircleFormPage() {
           </Form.Item>
 
           <Space>
-            <Button type="primary" htmlType="submit" loading={loading} disabled={uploading}>
+            <Button type="primary" htmlType="submit" loading={loading}>
               {isEdit ? '更新圈子' : '创建圈子'}
             </Button>
             <Button onClick={() => navigate('/xindong/circles')}>取消</Button>

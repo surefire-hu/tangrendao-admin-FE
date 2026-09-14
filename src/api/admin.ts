@@ -702,13 +702,6 @@ export const adminApi = {
   updateXindongCircle: (id: number, data: XindongCircleInput) =>
     apiClient.patch<XindongCircle>(`/xindong/admin/circles/${id}/`, data),
   deleteXindongCircle: (id: number) => apiClient.delete<void>(`/xindong/admin/circles/${id}/`),
-  uploadXindongCircleCover: (file: File) => {
-    const fd = new FormData()
-    fd.append('cover', file)
-    return apiClient.post<{ url: string }>('/xindong/admin/circles/upload-cover/', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-  },
 
   getXindongCircleRequests: (status?: string) =>
     apiClient.get<XindongCircleRequest[]>('/xindong/admin/circle-requests/', { params: status ? { status } : {} }),
