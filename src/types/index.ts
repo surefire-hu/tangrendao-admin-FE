@@ -1046,3 +1046,67 @@ export interface ClientConfig {
   ios_app_store_url: string
   android_play_store_url: string
 }
+
+// ── 心动信号 ──────────────────────────────────────────────────────────────────
+
+export interface XindongCircle {
+  id: number
+  name: string
+  description: string
+  cover_image: string
+  is_default: boolean
+  is_active: boolean
+  member_count: number
+  created_at: string
+}
+
+export interface XindongCircleInput {
+  name?: string
+  description?: string
+  cover_image?: string
+  is_default?: boolean
+  is_active?: boolean
+}
+
+export type XindongCircleRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export interface XindongCircleRequest {
+  id: string
+  profile_numeric_id: string
+  requested_name: string
+  requested_description: string
+  status: XindongCircleRequestStatus
+  admin_response: string
+  created_at: string
+}
+
+export type XindongPhotoStatus = 'pending' | 'approved' | 'rejected'
+
+export interface XindongPhoto {
+  id: string
+  profile_numeric_id: string
+  image_url: string
+  status: XindongPhotoStatus
+  rejection_reason: string
+  created_at: string
+}
+
+export interface XindongReport {
+  id: string
+  match: string
+  reporter_username: string | null
+  reason: string
+  reason_display: string
+  detail: string
+  resolved: boolean
+  created_at: string
+}
+
+export interface XindongConfig {
+  unlock_price_candy: number
+  sub_daily_price: number
+  sub_weekly_price: number
+  sub_monthly_price: number
+  sub_annual_price: number
+  daily_free_matches: number
+}

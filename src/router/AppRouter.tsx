@@ -19,6 +19,11 @@ import { ForumDetailPage } from '../pages/Forum/ForumDetail'
 import { HotKeywordsPage } from '../pages/Forum/HotKeywordsPage'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
 import { ClientConfigPage } from '../pages/Settings/ClientConfigPage'
+import { CircleListPage } from '../pages/Xindong/CircleList'
+import { CircleFormPage } from '../pages/Xindong/CircleForm'
+import { CircleRequestListPage } from '../pages/Xindong/CircleRequestList'
+import { ReviewQueuePage } from '../pages/Xindong/ReviewQueue'
+import { XindongSettingsPage } from '../pages/Xindong/XindongSettingsPage'
 import { BroadcastPage } from '../pages/Broadcast/BroadcastPage'
 import { CurrencyPage } from '../pages/Currency/CurrencyPage'
 import { FeedbackPage } from '../pages/Feedback/FeedbackPage'
@@ -110,6 +115,12 @@ export function AppRouter() {
           <Route path="events/create" element={<EventFormPage />} />
           <Route path="events/:id/edit" element={<EventFormPage />} />
           <Route path="settings/client-config" element={<ClientConfigPage />} />
+          <Route path="xindong/circles" element={<CircleListPage />} />
+          <Route path="xindong/circles/create" element={<CircleFormPage />} />
+          <Route path="xindong/circles/:id/edit" element={<CircleFormPage />} />
+          <Route path="xindong/circle-requests" element={<CircleRequestListPage />} />
+          <Route path="xindong/review" element={<ReviewQueuePage />} />
+          <Route path="xindong/settings" element={<XindongSettingsPage />} />
           <Route
             path="admin-log"
             element={

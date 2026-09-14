@@ -60,6 +60,12 @@ import type {
   EventPrize,
   EventPrizeCreate,
   ClientConfig,
+  XindongCircle,
+  XindongCircleInput,
+  XindongCircleRequest,
+  XindongPhoto,
+  XindongReport,
+  XindongConfig,
 } from '../types'
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -687,4 +693,43 @@ export const adminApi = {
   getClientConfig: () => apiClient.get<ClientConfig>('/admin/client-config/'),
   updateClientConfig: (data: Partial<ClientConfig>) =>
     apiClient.patch<ClientConfig>('/admin/client-config/', data),
+
+  // ── 心动信号 ────────────────────────────────────────────────────────────────
+  getXindongCircles: () => apiClient.get<XindongCircle[]>('/xindong/admin/circles/'),
+  getXindongCircle: (id: number) => apiClient.get<XindongCircle>(`/xindong/admin/circles/${id}/`),
+  createXindongCircle: (data: XindongCircleInput) =>
+    apiClient.post<XindongCircle>('/xindong/admin/circles/', data),
+  updateXindongCircle: (id: number, data: XindongCircleInput) =>
+    apiClient.patch<XindongCircle>(`/xindong/admin/circles/${id}/`, data),
+  deleteXindongCircle: (id: number) => apiClient.delete<void>(`/xindong/admin/circles/${id}/`),
+  uploadXindongCircleCover: (file: File) => {
+    const fd = new FormData()
+    fd.append('cover', file)
+    return apiClient.post<{ url: string }>('/xindong/admin/circles/upload-cover/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  getXindongCircleRequests: (status?: string) =>
+    apiClient.get<XindongCircleRequest[]>('/xindong/admin/circle-requests/', { params: status ? { status } : {} }),
+  approveXindongCircleRequest: (id: string) =>
+    apiClient.post<XindongCircleRequest>(`/xindong/admin/circle-requests/${id}/approve/`),
+  rejectXindongCircleRequest: (id: string, admin_response: string) =>
+    apiClient.post<XindongCircleRequest>(`/xindong/admin/circle-requests/${id}/reject/`, { admin_response }),
+
+  getXindongPhotos: (status = 'pending') =>
+    apiClient.get<XindongPhoto[]>('/xindong/admin/photos/', { params: { status } }),
+  approveXindongPhoto: (id: string) =>
+    apiClient.post<XindongPhoto>(`/xindong/admin/photos/${id}/approve/`),
+  rejectXindongPhoto: (id: string, rejection_reason: string) =>
+    apiClient.post<XindongPhoto>(`/xindong/admin/photos/${id}/reject/`, { rejection_reason }),
+
+  getXindongReports: (resolved?: boolean) =>
+    apiClient.get<XindongReport[]>('/xindong/admin/reports/', { params: resolved === undefined ? {} : { resolved } }),
+  resolveXindongReport: (id: string) =>
+    apiClient.post<XindongReport>(`/xindong/admin/reports/${id}/resolve/`),
+
+  getXindongConfig: () => apiClient.get<XindongConfig>('/xindong/admin/config/'),
+  updateXindongConfig: (data: Partial<XindongConfig>) =>
+    apiClient.patch<XindongConfig>('/xindong/admin/config/', data),
 }

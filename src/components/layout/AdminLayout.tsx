@@ -32,6 +32,7 @@ import {
   CrownOutlined,
   TrophyOutlined,
   SettingOutlined,
+  HeartOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -273,6 +274,17 @@ export function AdminLayout() {
       label: '服务导航',
     },
     {
+      key: 'xindong',
+      icon: <HeartOutlined />,
+      label: '心动信号',
+      children: [
+        { key: '/xindong/circles', icon: <TeamOutlined />, label: '圈子管理' },
+        { key: '/xindong/circle-requests', icon: <SolutionOutlined />, label: '圈子创建申请' },
+        { key: '/xindong/review', icon: <AuditOutlined />, label: '审核' },
+        { key: '/xindong/settings', icon: <SettingOutlined />, label: '设置' },
+      ],
+    },
+    {
       key: '/settings/client-config',
       icon: <SettingOutlined />,
       label: '客户端配置',
@@ -319,6 +331,10 @@ export function AdminLayout() {
     if (path.startsWith('/cosmetics')) return '/cosmetics'
     if (path.startsWith('/events')) return '/events'
     if (path.startsWith('/settings/client-config')) return '/settings/client-config'
+    if (path.startsWith('/xindong/circles')) return '/xindong/circles'
+    if (path.startsWith('/xindong/circle-requests')) return '/xindong/circle-requests'
+    if (path.startsWith('/xindong/review')) return '/xindong/review'
+    if (path.startsWith('/xindong/settings')) return '/xindong/settings'
     if (path.startsWith('/admin-log')) return '/admin-log'
     return '/'
   }
@@ -329,6 +345,7 @@ export function AdminLayout() {
     if (path.startsWith('/forum')) return ['forum']
     if (path.startsWith('/advertisements') || path.startsWith('/adcards') || path.startsWith('/splash')) return ['ads']
     if (path.startsWith('/cosmetics') || path.startsWith('/events')) return ['cosmetics-events']
+    if (path.startsWith('/xindong')) return ['xindong']
     return []
   }
 
