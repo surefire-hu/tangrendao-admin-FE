@@ -1,16 +1,29 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Space, Switch, Popconfirm, Typography, message, Tooltip, Tag } from 'antd'
+import {
+  Table, Button, Space, Switch, Popconfirm, Typography, message, Tooltip, Tag,
+  Modal, Form, Input,
+} from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
-import type { XindongCircle } from '../../types'
+import type { XindongCircle, XindongCircleInput } from '../../types'
 
 const { Title } = Typography
 
+const ICON_PRESETS = [
+  '💓', '🇮🇹', '💪', '🎬', '🍜', '🚗', '🐾', '✈️',
+  '📷', '🎵', '☕', '📚', '⚽', '🎨', '🎮', '🍷',
+]
+
+type EditTarget = { mode: 'create' } | { mode: 'edit'; data: XindongCircle } | null
+
 export function CircleListPage() {
-  const navigate = useNavigate()
   const [items, setItems] = useState<XindongCircle[]>([])
   const [loading, setLoading] = useState(true)
+
+  const [target, setTarget] = useState<EditTarget>(null)
+  const [form] = Form.useForm()
+  const [icon, setIcon] = useState('💓')
+  const [saving, setSaving] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -35,6 +48,39 @@ export function CircleListPage() {
     await adminApi.deleteXindongCircle(id)
     message.success('已删除')
     load()
+  }
+
+  function openCreate() {
+    form.resetFields()
+    setIcon('💓')
+    setTarget({ mode: 'create' })
+  }
+
+  function openEdit(c: XindongCircle) {
+    form.setFieldsValue({ name: c.name, description: c.description, is_default: c.is_default, is_active: c.is_active })
+    setIcon(c.icon || '💓')
+    setTarget({ mode: 'edit', data: c })
+  }
+
+  async function handleSubmit() {
+    const values = await form.validateFields()
+    const payload: XindongCircleInput = { ...values, icon }
+    setSaving(true)
+    try {
+      if (target?.mode === 'edit') {
+        await adminApi.updateXindongCircle(target.data.id, payload)
+        message.success('圈子已更新')
+      } else {
+        await adminApi.createXindongCircle(payload)
+        message.success('圈子已创建')
+      }
+      setTarget(null)
+      load()
+    } catch {
+      message.error('保存失败，请检查所有字段')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const columns = [
@@ -86,7 +132,7 @@ export function CircleListPage() {
       render: (_: unknown, r: XindongCircle) => (
         <Space>
           <Tooltip title="编辑">
-            <Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/xindong/circles/${r.id}/edit`)} />
+            <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
           </Tooltip>
           <Popconfirm title="确认删除？" onConfirm={() => deleteCircle(r.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
@@ -100,7 +146,7 @@ export function CircleListPage() {
     <div>
       <Space style={{ marginBottom: 16, justifyContent: 'space-between', width: '100%' }}>
         <Title level={4} style={{ margin: 0 }}>圈子管理</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/xindong/circles/create')}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新建圈子
         </Button>
       </Space>
@@ -117,6 +163,51 @@ export function CircleListPage() {
       {items.length === 0 && !loading && (
         <Tag style={{ marginTop: 8 }}>还没有圈子 — 点击右上角新建一个默认圈子</Tag>
       )}
+
+      <Modal
+        open={!!target}
+        onCancel={() => setTarget(null)}
+        onOk={handleSubmit}
+        confirmLoading={saving}
+        title={target?.mode === 'edit' ? '编辑圈子' : '新建圈子'}
+        destroyOnClose
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%', marginBottom: 16 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, background: '#F3DEDA',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
+          }}>
+            {icon}
+          </div>
+          <Input value={icon} onChange={e => setIcon(e.target.value)} maxLength={8} style={{ width: 120 }} placeholder="输入 emoji" />
+          <Space wrap size={8}>
+            {ICON_PRESETS.map(p => (
+              <Button
+                key={p}
+                shape="circle"
+                size="large"
+                onClick={() => setIcon(p)}
+                style={{ fontSize: 18, borderColor: icon === p ? '#B84C6B' : undefined, borderWidth: icon === p ? 2 : 1 }}
+              >{p}</Button>
+            ))}
+          </Space>
+        </Space>
+
+        <Form form={form} layout="vertical" initialValues={{ is_default: false, is_active: true }}>
+          <Form.Item name="name" label="圈子名称" rules={[{ required: true, message: '请填写圈子名称' }]}>
+            <Input placeholder="如：旅行搭子" maxLength={40} />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <Input.TextArea placeholder="简单介绍一下这个圈子" maxLength={200} rows={3} />
+          </Form.Item>
+          <Form.Item name="is_default" label="默认圈子" valuePropName="checked" extra="默认圈子会在首页优先展示">
+            <Switch />
+          </Form.Item>
+          <Form.Item name="is_active" label="启用" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }
