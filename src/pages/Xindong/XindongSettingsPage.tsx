@@ -68,7 +68,7 @@ export function XindongSettingsPage() {
           </Card>
 
           <Card title="匹配限制" size="small">
-            <Form.Item name="daily_free_matches" label="每个圈子每天可发起的免费匹配次数" style={{ marginBottom: 0 }}>
+            <Form.Item name="daily_free_matches" label="每天可发起的免费匹配次数（所有圈子共用）" style={{ marginBottom: 0 }}>
               <InputNumber min={1} style={{ width: '100%' }} />
             </Form.Item>
           </Card>
