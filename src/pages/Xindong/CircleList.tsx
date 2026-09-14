@@ -10,9 +10,12 @@ import type { XindongCircle, XindongCircleInput } from '../../types'
 const { Title } = Typography
 
 const ICON_PRESETS = [
-  '💓', '🇮🇹', '💪', '🎬', '🍜', '🚗', '🐾', '✈️',
-  '📷', '🎵', '☕', '📚', '⚽', '🎨', '🎮', '🍷',
+  'fa-solid fa-heart', 'fa-solid fa-users', 'fa-solid fa-plane', 'fa-solid fa-dumbbell',
+  'fa-solid fa-film', 'fa-solid fa-utensils', 'fa-solid fa-car', 'fa-solid fa-paw',
+  'fa-solid fa-camera', 'fa-solid fa-music', 'fa-solid fa-mug-hot', 'fa-solid fa-book',
+  'fa-solid fa-futbol', 'fa-solid fa-palette', 'fa-solid fa-gamepad', 'fa-solid fa-wine-glass',
 ]
+const DEFAULT_ICON = 'fa-solid fa-heart'
 
 type EditTarget = { mode: 'create' } | { mode: 'edit'; data: XindongCircle } | null
 
@@ -22,7 +25,7 @@ export function CircleListPage() {
 
   const [target, setTarget] = useState<EditTarget>(null)
   const [form] = Form.useForm()
-  const [icon, setIcon] = useState('💓')
+  const [icon, setIcon] = useState(DEFAULT_ICON)
   const [saving, setSaving] = useState(false)
 
   async function load() {
@@ -52,13 +55,13 @@ export function CircleListPage() {
 
   function openCreate() {
     form.resetFields()
-    setIcon('💓')
+    setIcon(DEFAULT_ICON)
     setTarget({ mode: 'create' })
   }
 
   function openEdit(c: XindongCircle) {
     form.setFieldsValue({ name: c.name, description: c.description, is_default: c.is_default, is_active: c.is_active })
-    setIcon(c.icon || '💓')
+    setIcon(c.icon || DEFAULT_ICON)
     setTarget({ mode: 'edit', data: c })
   }
 
@@ -91,8 +94,8 @@ export function CircleListPage() {
       render: (icon: string) => (
         <div style={{
           width: 44, height: 44, borderRadius: 12, background: '#F3DEDA',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-        }}>{icon}</div>
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#B84C6B',
+        }}><i className={icon} /></div>
       ),
     },
     {
@@ -175,11 +178,14 @@ export function CircleListPage() {
         <Space direction="vertical" size={12} style={{ width: '100%', marginBottom: 16 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18, background: '#F3DEDA',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#B84C6B',
           }}>
-            {icon}
+            <i className={icon} />
           </div>
-          <Input value={icon} onChange={e => setIcon(e.target.value)} maxLength={8} style={{ width: 120 }} placeholder="输入 emoji" />
+          <Input
+            value={icon} onChange={e => setIcon(e.target.value)} style={{ width: 220 }}
+            placeholder="Font Awesome class，如 fa-solid fa-heart"
+          />
           <Space wrap size={8}>
             {ICON_PRESETS.map(p => (
               <Button
@@ -187,8 +193,8 @@ export function CircleListPage() {
                 shape="circle"
                 size="large"
                 onClick={() => setIcon(p)}
-                style={{ fontSize: 18, borderColor: icon === p ? '#B84C6B' : undefined, borderWidth: icon === p ? 2 : 1 }}
-              >{p}</Button>
+                style={{ borderColor: icon === p ? '#B84C6B' : undefined, borderWidth: icon === p ? 2 : 1 }}
+              ><i className={p} /></Button>
             ))}
           </Space>
         </Space>
