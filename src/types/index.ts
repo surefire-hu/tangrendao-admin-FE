@@ -1021,7 +1021,7 @@ export interface EventPrizeCreate {
 // ── Content leaderboard ──────────────────────────────────────────────────────
 
 export type LeaderboardContentType =
-  | 'forum' | 'listing' | 'job_post' | 'job_seek' | 'housing' | 'market' | 'local_service'
+  | 'forum' | 'listing' | 'job_post' | 'job_seek' | 'housing' | 'market' | 'local_service' | 'news'
 
 export interface LeaderboardItem {
   id: string

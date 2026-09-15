@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Table, Tag, Typography, Card, Input, Space, Tabs, Tooltip, theme } from 'antd'
-import { SearchOutlined } from '@ant-design/icons'
+import { SearchOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
 import type { LeaderboardContentType, LeaderboardItem } from '../../types'
@@ -28,11 +28,25 @@ const TABS: { key: LeaderboardContentType; label: string }[] = [
   { key: 'housing', label: '房屋租售' },
   { key: 'market', label: '买卖市场' },
   { key: 'local_service', label: '本地服务' },
+  { key: 'news', label: '新闻' },
 ]
 
 // Signal breakdown differs per content type — forum/listing have a real
 // organic-engagement component, job/classifieds only have paid_boost + raw
 // view_count (see AdminLeaderboardView docstring on the backend).
+// 每个内容类型的积分公式不一样 — 论坛/商家列表有真实的"自然互动"分量并带时间
+// 衰减，招聘/分类信息/新闻只有推广加成和/或浏览量，没有衰减。
+const SCORE_EXPLANATIONS: Record<LeaderboardContentType, string> = {
+  forum: '社交分（点赞 + 收藏×1 + 评论×4 + 转发×4 + 关注×8，7天半衰期衰减）+ 推广加成（付费推广金额，15天半衰期衰减）',
+  listing: '推广加成（付费推广，衰减）+ 社交加成 + 推荐分（综合浏览/互动等信号）',
+  job_post: '推广加成（付费推广，衰减）+ 浏览量',
+  job_seek: '推广加成（付费推广，衰减）+ 浏览量',
+  housing: '推广加成（付费推广，衰减）+ 浏览量',
+  market: '推广加成（付费推广，衰减）+ 浏览量',
+  local_service: '推广加成（付费推广，衰减）+ 浏览量',
+  news: '浏览量 + 评论数 × 2（新闻没有推广加成，也没有时间衰减）',
+}
+
 function breakdown(item: LeaderboardItem): string {
   const parts: string[] = []
   if (item.social_score !== undefined) parts.push(`社交分 ${item.social_score.toFixed(1)}`)
@@ -116,7 +130,12 @@ export function LeaderboardPage() {
 
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 20 }}>内容排行榜</Title>
+      <Title level={4} style={{ marginBottom: 20 }}>
+        内容排行榜{' '}
+        <Tooltip title={SCORE_EXPLANATIONS[activeTab]}>
+          <QuestionCircleOutlined style={{ fontSize: 15, color: token.colorTextTertiary, verticalAlign: 'middle' }} />
+        </Tooltip>
+      </Title>
 
       <Tabs
         activeKey={activeTab}
