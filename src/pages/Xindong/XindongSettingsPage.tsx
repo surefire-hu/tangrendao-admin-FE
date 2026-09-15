@@ -41,16 +41,10 @@ export function XindongSettingsPage() {
   return (
     <div style={{ maxWidth: 560 }}>
       <Title level={4} style={{ marginBottom: 4 }}>心动信号设置</Title>
-      <Text type="secondary">解锁价格、订阅价格与每日免费匹配次数，改动实时生效</Text>
+      <Text type="secondary">订阅价格与每日免费匹配次数，改动实时生效</Text>
 
       <Spin spinning={loading}>
         <Form form={form} layout="vertical" onFinish={onSave} style={{ marginTop: 24 }}>
-          <Card title="解锁价格" size="small" style={{ marginBottom: 20 }}>
-            <Form.Item name="unlock_price_candy" label="单次解锁（糖果）" extra="用户查看单个匹配对象的完整资料 / 开始聊天需要支付">
-              <InputNumber min={0} style={{ width: '100%' }} />
-            </Form.Item>
-          </Card>
-
           <Card title="订阅价格（糖果）" size="small" style={{ marginBottom: 20 }}>
             <Form.Item name="sub_daily_price" label="日卡">
               <InputNumber min={0} style={{ width: '100%' }} />

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Table, Tag, Typography, Card, Input, Space, Tabs, Tooltip, theme } from 'antd'
-import { SearchOutlined, QuestionCircleOutlined } from '@ant-design/icons'
+import { SearchOutlined, QuestionCircleOutlined, FireFilled } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { adminApi } from '../../api/admin'
 import type { LeaderboardContentType, LeaderboardItem } from '../../types'
@@ -96,7 +96,16 @@ export function LeaderboardPage() {
     {
       title: '标题',
       key: 'title',
-      render: (_, item) => <Text strong>{item.title}</Text>,
+      render: (_, item) => (
+        <Space size={6}>
+          <Text strong>{item.title}</Text>
+          {!!item.traffic_tier && (
+            <Tooltip title={`已进入流量池第 ${item.traffic_tier} 层，正在获得推荐流量`}>
+              <Tag color="volcano" icon={<FireFilled />}>火爆</Tag>
+            </Tooltip>
+          )}
+        </Space>
+      ),
     },
     {
       title: '状态',

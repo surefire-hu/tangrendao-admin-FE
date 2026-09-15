@@ -1037,6 +1037,7 @@ export interface LeaderboardItem {
   social_boost?: number
   recommendation_score?: number
   view_count?: number
+  traffic_tier?: number
 }
 
 export interface ClientConfig {
@@ -1103,7 +1104,6 @@ export interface XindongReport {
 }
 
 export interface XindongConfig {
-  unlock_price_candy: number
   sub_daily_price: number
   sub_weekly_price: number
   sub_monthly_price: number
