@@ -7,7 +7,7 @@ import {
 import {
   ArrowLeftOutlined, EyeOutlined, HeartOutlined, MessageOutlined,
   StarOutlined, FundOutlined, CheckOutlined, CloseOutlined,
-  PlayCircleOutlined,
+  PlayCircleOutlined, ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
@@ -226,7 +226,8 @@ export function ForumDetailPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         {[
           { label: '卡片曝光', value: stats.total_impressions, icon: <FundOutlined />, color: token.colorSuccess },
-          { label: '浏览量', value: d.view_count, icon: <EyeOutlined />, color: token.colorPrimary },
+          { label: '真实浏览量', value: stats.total_views, icon: <EyeOutlined />, color: token.colorPrimary },
+          { label: '虚拟浏览量 (boost)', value: d.boosted_view_count, icon: <ThunderboltOutlined />, color: token.colorWarning },
           { label: '点赞', value: d.like_count, icon: <HeartOutlined />, color: token.colorError },
           { label: '评论', value: d.comment_count, icon: <MessageOutlined />, color: token.colorInfo },
           { label: '收藏', value: d.saved_count, icon: <StarOutlined />, color: token.colorWarning },

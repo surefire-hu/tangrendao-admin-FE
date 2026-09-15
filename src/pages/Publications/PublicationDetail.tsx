@@ -5,7 +5,7 @@ import {
 } from 'antd'
 import {
   ArrowLeftOutlined, EyeOutlined, PhoneOutlined,
-  HeartOutlined, FundOutlined,
+  HeartOutlined, FundOutlined, ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
@@ -543,7 +543,8 @@ export function PublicationDetailPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         {[
           { label: '卡片曝光量', value: stats.total_impressions, icon: <FundOutlined />, color: token.colorSuccess },
-          { label: '总浏览量', value: stats.total_views, icon: <EyeOutlined />, color: token.colorPrimary },
+          { label: '真实浏览量', value: stats.total_views, icon: <EyeOutlined />, color: token.colorPrimary },
+          { label: '虚拟浏览量 (boost)', value: stats.details?.boosted_view_count ?? 0, icon: <ThunderboltOutlined />, color: token.colorWarning },
           { label: '电话点击', value: stats.total_phone_clicks, icon: <PhoneOutlined />, color: token.colorWarning },
           { label: '收藏数', value: stats.total_saves, icon: <HeartOutlined />, color: token.colorError },
         ].map((s) => (

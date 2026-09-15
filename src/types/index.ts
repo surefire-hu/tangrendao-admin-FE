@@ -482,6 +482,7 @@ export interface PublicationDetails {
   country?: string
   city?: string
   view_count?: number
+  boosted_view_count?: number
   phone_click_count?: number
   is_sponsored?: boolean
   rejection_reason?: string
@@ -613,6 +614,7 @@ export interface ForumPostDetails {
   latitude: number | null
   longitude: number | null
   view_count: number
+  boosted_view_count: number
   like_count: number
   comment_count: number
   saved_count: number
