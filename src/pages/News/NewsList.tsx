@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Table, Tag, Typography, Card, Select, Space, Button, Input, message,
-  Image, Popconfirm,
+  Image, Popconfirm, Tooltip,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
@@ -117,7 +117,11 @@ export function NewsListPage() {
       title: '阅读',
       dataIndex: 'view_count',
       width: 70,
-      render: (v: number) => <Space size={4}><EyeOutlined /><Text style={{ fontSize: 12 }}>{v}</Text></Space>,
+      render: (v: number, record) => (
+        <Tooltip title={`真实 ${v - (record.boosted_view_count ?? 0)} · 虚拟(boost) ${record.boosted_view_count ?? 0}`}>
+          <Space size={4}><EyeOutlined /><Text style={{ fontSize: 12 }}>{v}</Text></Space>
+        </Tooltip>
+      ),
     },
     {
       title: '发布时间',

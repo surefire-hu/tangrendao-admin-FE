@@ -229,6 +229,7 @@ export interface AdminNewsArticle {
   is_published: boolean
   published_at: string | null
   view_count: number
+  boosted_view_count: number
   comment_count: number
   created_at: string | null
   author: { id: string; username: string; avatar: string | null } | null
