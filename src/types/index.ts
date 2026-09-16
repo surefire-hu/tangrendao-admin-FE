@@ -152,6 +152,7 @@ export interface AdminUser {
   is_superuser: boolean
   is_journalist: boolean
   is_content_creator: boolean
+  is_xindong_tester: boolean
   is_bot: boolean
   gender: Gender | null
   moderator_roles: ModeratorContentType[]

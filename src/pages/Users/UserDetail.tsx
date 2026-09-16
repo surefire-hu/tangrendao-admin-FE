@@ -55,6 +55,7 @@ export function UserDetailPage() {
   const [localRoles, setLocalRoles] = useState<ModeratorContentType[]>([])
   const [localJournalist, setLocalJournalist] = useState(false)
   const [localContentCreator, setLocalContentCreator] = useState(false)
+  const [localXindongTester, setLocalXindongTester] = useState(false)
   const [localBot, setLocalBot] = useState(false)
   const [localGender, setLocalGender] = useState<Gender | null>(null)
 
@@ -68,6 +69,7 @@ export function UserDetailPage() {
         setLocalRoles((r.data.moderator_roles ?? []) as ModeratorContentType[])
         setLocalJournalist(r.data.is_journalist ?? false)
         setLocalContentCreator(r.data.is_content_creator ?? false)
+        setLocalXindongTester(r.data.is_xindong_tester ?? false)
         setLocalBot(r.data.is_bot ?? false)
         setLocalGender((r.data.gender ?? null) as Gender | null)
       }),
@@ -84,6 +86,7 @@ export function UserDetailPage() {
       const res = await adminApi.updateUser(id, {
         is_journalist: localJournalist,
         is_content_creator: localContentCreator,
+        is_xindong_tester: localXindongTester,
         is_bot: localBot,
         gender: localGender,
         moderator_roles: localRoles,
@@ -267,6 +270,19 @@ export function UserDetailPage() {
                 size="small"
                 checked={localContentCreator}
                 onChange={setLocalContentCreator}
+              />
+            </div>
+
+            {/* 心动信号测试员 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+              <Space>
+                <span style={{ fontSize: 13 }}>心动信号测试员</span>
+                <Text type="secondary" style={{ fontSize: 11 }}>即使功能未全局开放，也可试用</Text>
+              </Space>
+              <Switch
+                size="small"
+                checked={localXindongTester}
+                onChange={setLocalXindongTester}
               />
             </div>
 
