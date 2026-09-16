@@ -1091,6 +1091,8 @@ export interface XindongPhoto {
   id: string
   profile_numeric_id: string
   image_url: string
+  media_type: 'photo' | 'video'
+  video_url: string | null
   status: XindongPhotoStatus
   rejection_reason: string
   created_at: string

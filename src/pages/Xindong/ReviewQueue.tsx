@@ -64,7 +64,22 @@ function PhotoReviewTab() {
   }
 
   const columns: ColumnsType<XindongPhoto> = [
-    { title: '预览', dataIndex: 'image_url', width: 90, render: (url: string) => <Image src={url} width={64} height={64} style={{ objectFit: 'cover', borderRadius: 8 }} /> },
+    {
+      title: '预览', width: 90,
+      render: (_, r) => (
+        <div style={{ position: 'relative', width: 64, height: 64 }}>
+          <Image src={r.image_url} width={64} height={64} style={{ objectFit: 'cover', borderRadius: 8 }} />
+          {r.media_type === 'video' && (
+            <Button
+              size="small" type="link" href={r.video_url ?? undefined} target="_blank"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', color: '#fff', fontSize: 22, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+            >
+              ▶
+            </Button>
+          )}
+        </div>
+      ),
+    },
     { title: '用户', dataIndex: 'profile_numeric_id', width: 120, render: (v: string) => <Text code>#{v}</Text> },
     { title: '提交时间', dataIndex: 'created_at', width: 140, render: (t: string) => dayjs(t).format('YYYY-MM-DD HH:mm') },
     { title: '状态', dataIndex: 'status', width: 90, render: (s: XindongPhotoStatus) => <Tag color={photoStatusColors[s]}>{photoStatusLabels[s]}</Tag> },
