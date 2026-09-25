@@ -1059,6 +1059,7 @@ export interface XindongCircle {
   name: string
   description: string
   icon: string
+  cover_image: string | null
   is_default: boolean
   is_active: boolean
   member_count: number
@@ -1069,6 +1070,7 @@ export interface XindongCircleInput {
   name?: string
   description?: string
   icon?: string
+  cover_image?: File
   is_default?: boolean
   is_active?: boolean
 }
@@ -1093,6 +1095,7 @@ export interface XindongPhoto {
   image_url: string
   media_type: 'photo' | 'video'
   video_url: string | null
+  is_avatar: boolean
   status: XindongPhotoStatus
   rejection_reason: string
   created_at: string

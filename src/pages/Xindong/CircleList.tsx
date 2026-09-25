@@ -6,6 +6,7 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { adminApi } from '../../api/admin'
 import type { XindongCircle, XindongCircleInput } from '../../types'
+import { CircleCoverPicker } from './CircleCoverPicker'
 
 const { Title } = Typography
 
@@ -26,6 +27,7 @@ export function CircleListPage() {
   const [target, setTarget] = useState<EditTarget>(null)
   const [form] = Form.useForm()
   const [icon, setIcon] = useState(DEFAULT_ICON)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
 
   async function load() {
@@ -56,18 +58,20 @@ export function CircleListPage() {
   function openCreate() {
     form.resetFields()
     setIcon(DEFAULT_ICON)
+    setCoverFile(null)
     setTarget({ mode: 'create' })
   }
 
   function openEdit(c: XindongCircle) {
     form.setFieldsValue({ name: c.name, description: c.description, is_default: c.is_default, is_active: c.is_active })
     setIcon(c.icon || DEFAULT_ICON)
+    setCoverFile(null)
     setTarget({ mode: 'edit', data: c })
   }
 
   async function handleSubmit() {
     const values = await form.validateFields()
-    const payload: XindongCircleInput = { ...values, icon }
+    const payload: XindongCircleInput = { ...values, icon, cover_image: coverFile ?? undefined }
     setSaving(true)
     try {
       if (target?.mode === 'edit') {
@@ -87,6 +91,14 @@ export function CircleListPage() {
   }
 
   const columns = [
+    {
+      title: '封面',
+      dataIndex: 'cover_image',
+      width: 96,
+      render: (url: string | null) => url
+        ? <img src={url} alt="" style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
+        : <Tag color="orange">未上传</Tag>,
+    },
     {
       title: '图标',
       dataIndex: 'icon',
@@ -198,6 +210,15 @@ export function CircleListPage() {
             ))}
           </Space>
         </Space>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8 }}>封面图（客户端圈子卡片显示，没有时用上面的图标）</div>
+          <CircleCoverPicker
+            currentUrl={target?.mode === 'edit' ? target.data.cover_image : null}
+            file={coverFile}
+            onChange={setCoverFile}
+          />
+        </div>
 
         <Form form={form} layout="vertical" initialValues={{ is_default: false, is_active: true }}>
           <Form.Item name="name" label="圈子名称" rules={[{ required: true, message: '请填写圈子名称' }]}>

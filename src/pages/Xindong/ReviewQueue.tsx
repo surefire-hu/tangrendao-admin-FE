@@ -81,6 +81,12 @@ function PhotoReviewTab() {
       ),
     },
     { title: '用户', dataIndex: 'profile_numeric_id', width: 120, render: (v: string) => <Text code>#{v}</Text> },
+    {
+      title: '类型', dataIndex: 'is_avatar', width: 80,
+      render: (a: boolean, r: XindongPhoto) => a
+        ? <Tag color="magenta">头像</Tag>
+        : <Tag>{r.media_type === 'video' ? '视频' : '照片'}</Tag>,
+    },
     { title: '提交时间', dataIndex: 'created_at', width: 140, render: (t: string) => dayjs(t).format('YYYY-MM-DD HH:mm') },
     { title: '状态', dataIndex: 'status', width: 90, render: (s: XindongPhotoStatus) => <Tag color={photoStatusColors[s]}>{photoStatusLabels[s]}</Tag> },
     {

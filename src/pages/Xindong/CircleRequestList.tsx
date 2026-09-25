@@ -4,6 +4,7 @@ import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { adminApi } from '../../api/admin'
 import type { XindongCircleRequest, XindongCircleRequestStatus } from '../../types'
+import { CircleCoverPicker } from './CircleCoverPicker'
 
 const { Title, Text, Paragraph } = Typography
 const { TextArea } = Input
@@ -38,13 +39,46 @@ export function CircleRequestListPage() {
 
   useEffect(() => { fetchItems() }, [fetchItems])
 
-  async function approve(req: XindongCircleRequest) {
+  // Approving creates the circle, so the admin supplies the cover image
+  // (required) and can tidy the user's name/description first.
+  const [approveTarget, setApproveTarget] = useState<XindongCircleRequest | null>(null)
+  const [approveName, setApproveName] = useState('')
+  const [approveDesc, setApproveDesc] = useState('')
+  const [approveCover, setApproveCover] = useState<File | null>(null)
+  const [approveSaving, setApproveSaving] = useState(false)
+
+  function openApprove(req: XindongCircleRequest) {
+    setApproveTarget(req)
+    setApproveName(req.requested_name)
+    setApproveDesc(req.requested_description)
+    setApproveCover(null)
+  }
+
+  async function submitApprove() {
+    if (!approveTarget) return
+    if (!approveName.trim()) {
+      message.warning('请填写圈子名称')
+      return
+    }
+    if (!approveCover) {
+      message.warning('请上传圈子封面图')
+      return
+    }
+    setApproveSaving(true)
     try {
-      await adminApi.approveXindongCircleRequest(req.id)
+      await adminApi.approveXindongCircleRequest(approveTarget.id, {
+        name: approveName.trim(),
+        description: approveDesc.trim(),
+        icon: 'fa-solid fa-heart',
+        cover_image: approveCover,
+      })
       message.success('已通过，圈子已创建')
+      setApproveTarget(null)
       fetchItems()
     } catch {
       message.error('操作失败')
+    } finally {
+      setApproveSaving(false)
     }
   }
 
@@ -85,7 +119,7 @@ export function CircleRequestListPage() {
       title: '操作', width: 160,
       render: (_, r) => r.status === 'pending' ? (
         <Space>
-          <Button type="primary" size="small" onClick={() => approve(r)}>通过</Button>
+          <Button type="primary" size="small" onClick={() => openApprove(r)}>通过</Button>
           <Button danger size="small" onClick={() => openReject(r)}>拒绝</Button>
         </Space>
       ) : (
@@ -117,6 +151,32 @@ export function CircleRequestListPage() {
       <Card styles={{ body: { padding: 0 } }}>
         <Table rowKey="id" loading={loading} dataSource={items} columns={columns} pagination={{ pageSize: 20 }} />
       </Card>
+
+      <Modal
+        open={!!approveTarget}
+        title="通过申请并创建圈子"
+        okText="创建圈子"
+        okButtonProps={{ loading: approveSaving, disabled: !approveCover || !approveName.trim() }}
+        cancelText="取消"
+        onOk={submitApprove}
+        onCancel={() => setApproveTarget(null)}
+        destroyOnClose
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <div>
+            <div style={{ marginBottom: 6 }}>封面图 <Text type="danger">*</Text></div>
+            <CircleCoverPicker file={approveCover} onChange={setApproveCover} />
+          </div>
+          <div>
+            <div style={{ marginBottom: 6 }}>圈子名称 <Text type="danger">*</Text></div>
+            <Input value={approveName} maxLength={40} onChange={e => setApproveName(e.target.value)} />
+          </div>
+          <div>
+            <div style={{ marginBottom: 6 }}>描述</div>
+            <TextArea rows={3} maxLength={200} showCount value={approveDesc} onChange={e => setApproveDesc(e.target.value)} />
+          </div>
+        </Space>
+      </Modal>
 
       <Modal
         open={!!actionTarget}

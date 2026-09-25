@@ -68,6 +68,17 @@ import type {
   XindongConfig,
 } from '../types'
 
+// Circle payloads go as multipart only when a cover file is attached — the
+// plain switch toggles (is_active / is_default) stay JSON.
+function xindongCircleBody(data: XindongCircleInput) {
+  if (!(data.cover_image instanceof File)) return [data] as const
+  const form = new FormData()
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) form.append(k, v instanceof File ? v : String(v))
+  })
+  return [form, { headers: { 'Content-Type': 'multipart/form-data' } }] as const
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export const adminApi = {
@@ -698,15 +709,15 @@ export const adminApi = {
   getXindongCircles: () => apiClient.get<XindongCircle[]>('/xindong/admin/circles/'),
   getXindongCircle: (id: number) => apiClient.get<XindongCircle>(`/xindong/admin/circles/${id}/`),
   createXindongCircle: (data: XindongCircleInput) =>
-    apiClient.post<XindongCircle>('/xindong/admin/circles/', data),
+    apiClient.post<XindongCircle>('/xindong/admin/circles/', ...xindongCircleBody(data)),
   updateXindongCircle: (id: number, data: XindongCircleInput) =>
-    apiClient.patch<XindongCircle>(`/xindong/admin/circles/${id}/`, data),
+    apiClient.patch<XindongCircle>(`/xindong/admin/circles/${id}/`, ...xindongCircleBody(data)),
   deleteXindongCircle: (id: number) => apiClient.delete<void>(`/xindong/admin/circles/${id}/`),
 
   getXindongCircleRequests: (status?: string) =>
     apiClient.get<XindongCircleRequest[]>('/xindong/admin/circle-requests/', { params: status ? { status } : {} }),
-  approveXindongCircleRequest: (id: string) =>
-    apiClient.post<XindongCircleRequest>(`/xindong/admin/circle-requests/${id}/approve/`),
+  approveXindongCircleRequest: (id: string, data: { name: string; description: string; icon: string; cover_image: File }) =>
+    apiClient.post<XindongCircleRequest>(`/xindong/admin/circle-requests/${id}/approve/`, ...xindongCircleBody(data)),
   rejectXindongCircleRequest: (id: string, admin_response: string) =>
     apiClient.post<XindongCircleRequest>(`/xindong/admin/circle-requests/${id}/reject/`, { admin_response }),
 
