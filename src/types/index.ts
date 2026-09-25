@@ -1087,6 +1087,16 @@ export interface XindongCircleRequest {
   created_at: string
 }
 
+export interface OrderingStoreAdmin {
+  login_id: string
+  login_email: string | null
+  is_enabled: boolean
+  accepting_orders: boolean
+  table_count: number
+  order_count: number
+  created_at: string
+}
+
 export type XindongPhotoStatus = 'pending' | 'approved' | 'rejected'
 
 export interface XindongPhoto {

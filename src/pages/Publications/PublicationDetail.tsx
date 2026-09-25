@@ -13,6 +13,7 @@ import type {
   PublicationStats, PublicationType, PublicationDetails,
 } from '../../types'
 import { DailyChart } from '../../components/charts/DailyChart'
+import { OrderingCard } from './OrderingCard'
 import { MonthlyChart } from '../../components/charts/MonthlyChart'
 import dayjs from 'dayjs'
 
@@ -531,6 +532,8 @@ export function PublicationDetailPage() {
       </Card>
 
       {stats.details && <DetailsCard type={stats.type} details={stats.details} />}
+
+      {stats.type === 'listing' && <OrderingCard listingId={stats.id} />}
 
       <ClassificationEditor
         type={stats.type}

@@ -66,6 +66,7 @@ import type {
   XindongPhoto,
   XindongReport,
   XindongConfig,
+  OrderingStoreAdmin,
 } from '../types'
 
 // Circle payloads go as multipart only when a cover file is attached — the
@@ -732,6 +733,13 @@ export const adminApi = {
     apiClient.get<XindongReport[]>('/xindong/admin/reports/', { params: resolved === undefined ? {} : { resolved } }),
   resolveXindongReport: (id: string) =>
     apiClient.post<XindongReport>(`/xindong/admin/reports/${id}/resolve/`),
+
+  getOrderingStore: (listingId: string) =>
+    apiClient.get<{ store: OrderingStoreAdmin | null }>(`/ordering/admin/listings/${listingId}/`),
+  updateOrderingStore: (listingId: string, data: { is_enabled: boolean }) =>
+    apiClient.patch<{ store: OrderingStoreAdmin | null }>(`/ordering/admin/listings/${listingId}/`, data),
+  issueOrderingCredentials: (listingId: string) =>
+    apiClient.post<{ store: OrderingStoreAdmin; password: string }>(`/ordering/admin/listings/${listingId}/credentials/`),
 
   getXindongConfig: () => apiClient.get<XindongConfig>('/xindong/admin/config/'),
   updateXindongConfig: (data: Partial<XindongConfig>) =>
