@@ -274,6 +274,11 @@ export function AdminLayout() {
       label: '服务导航',
     },
     {
+      key: '/miniapps',
+      icon: <AppstoreOutlined />,
+      label: '小程序',
+    },
+    {
       key: 'xindong',
       icon: <HeartOutlined />,
       label: '心动信号',
@@ -331,6 +336,7 @@ export function AdminLayout() {
     if (path.startsWith('/cosmetics')) return '/cosmetics'
     if (path.startsWith('/events')) return '/events'
     if (path.startsWith('/settings/client-config')) return '/settings/client-config'
+    if (path.startsWith('/miniapps')) return '/miniapps'
     if (path.startsWith('/xindong/circles')) return '/xindong/circles'
     if (path.startsWith('/xindong/circle-requests')) return '/xindong/circle-requests'
     if (path.startsWith('/xindong/review')) return '/xindong/review'

@@ -1129,3 +1129,38 @@ export interface XindongConfig {
   sub_annual_price: number
   daily_free_matches: number
 }
+
+// ── 小程序 ───────────────────────────────────────────────────────────────────
+
+export interface MiniApp {
+  id: number
+  slug: string
+  name: string
+  description: string
+  icon_url: string | null
+  icon_fa: string
+  source: 'url' | 'bundle'
+  url: string
+  entry_url: string
+  bundle_version: string
+  requires_login: boolean
+  countries: string[]
+  is_active: boolean
+  order: number
+  updated_at: string
+}
+
+export interface MiniAppInput {
+  slug?: string
+  name?: string
+  description?: string
+  icon_fa?: string
+  source?: 'url' | 'bundle'
+  url?: string
+  requires_login?: boolean
+  countries?: string
+  is_active?: boolean
+  order?: number
+  icon?: File
+  bundle?: File
+}

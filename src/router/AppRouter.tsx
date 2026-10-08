@@ -20,6 +20,7 @@ import { HotKeywordsPage } from '../pages/Forum/HotKeywordsPage'
 import { AdminLogPage } from '../pages/AdminLog/AdminLogPage'
 import { ClientConfigPage } from '../pages/Settings/ClientConfigPage'
 import { CircleListPage } from '../pages/Xindong/CircleList'
+import { MiniAppListPage } from '../pages/MiniApps/MiniAppList'
 import { CircleRequestListPage } from '../pages/Xindong/CircleRequestList'
 import { ReviewQueuePage } from '../pages/Xindong/ReviewQueue'
 import { XindongSettingsPage } from '../pages/Xindong/XindongSettingsPage'
@@ -114,6 +115,7 @@ export function AppRouter() {
           <Route path="events/create" element={<EventFormPage />} />
           <Route path="events/:id/edit" element={<EventFormPage />} />
           <Route path="settings/client-config" element={<ClientConfigPage />} />
+          <Route path="miniapps" element={<MiniAppListPage />} />
           <Route path="xindong/circles" element={<CircleListPage />} />
           <Route path="xindong/circle-requests" element={<CircleRequestListPage />} />
           <Route path="xindong/review" element={<ReviewQueuePage />} />

@@ -67,12 +67,24 @@ import type {
   XindongReport,
   XindongConfig,
   OrderingStoreAdmin,
+  MiniApp,
+  MiniAppInput,
 } from '../types'
 
 // Circle payloads go as multipart only when a cover file is attached — the
 // plain switch toggles (is_active / is_default) stay JSON.
 function xindongCircleBody(data: XindongCircleInput) {
   if (!(data.cover_image instanceof File)) return [data] as const
+  const form = new FormData()
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) form.append(k, v instanceof File ? v : String(v))
+  })
+  return [form, { headers: { 'Content-Type': 'multipart/form-data' } }] as const
+}
+
+// 小程序 payloads: multipart when an icon / zip is attached, JSON otherwise.
+function miniAppBody(data: MiniAppInput) {
+  if (!(data.icon instanceof File) && !(data.bundle instanceof File)) return [data] as const
   const form = new FormData()
   Object.entries(data).forEach(([k, v]) => {
     if (v !== undefined && v !== null) form.append(k, v instanceof File ? v : String(v))
@@ -707,6 +719,11 @@ export const adminApi = {
     apiClient.patch<ClientConfig>('/admin/client-config/', data),
 
   // ── 心动信号 ────────────────────────────────────────────────────────────────
+  getMiniApps: () => apiClient.get<MiniApp[]>('/miniapps/admin/'),
+  createMiniApp: (data: MiniAppInput) => apiClient.post<MiniApp>('/miniapps/admin/', ...miniAppBody(data)),
+  updateMiniApp: (id: number, data: MiniAppInput) => apiClient.patch<MiniApp>(`/miniapps/admin/${id}/`, ...miniAppBody(data)),
+  deleteMiniApp: (id: number) => apiClient.delete<void>(`/miniapps/admin/${id}/`),
+
   getXindongCircles: () => apiClient.get<XindongCircle[]>('/xindong/admin/circles/'),
   getXindongCircle: (id: number) => apiClient.get<XindongCircle>(`/xindong/admin/circles/${id}/`),
   createXindongCircle: (data: XindongCircleInput) =>
