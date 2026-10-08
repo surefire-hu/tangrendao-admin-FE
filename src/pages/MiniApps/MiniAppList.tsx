@@ -152,10 +152,6 @@ export function MiniAppListPage() {
         <Title level={4} style={{ margin: 0 }}>小程序</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建小程序</Button>
       </Space>
-      <Paragraph type="secondary" style={{ marginBottom: 16 }}>
-        小程序显示在 App「便民工具」里，点开后在 App 内打开网页。上传新的网页包或修改设置后立即生效，不需要更新 App。
-        页面可引用 <Text code>https://api.tangrendao-ai.com/api/miniapps/sdk.js</Text>（TD.getUser / TD.close / TD.setTitle / TD.openUrl / TD.toast）。
-      </Paragraph>
 
       <Table rowKey="id" loading={loading} dataSource={items} columns={columns} pagination={false} />
 

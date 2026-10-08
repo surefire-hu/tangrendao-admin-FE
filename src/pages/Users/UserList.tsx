@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
-  Table, Input, Select, Tag, Avatar, Space, Typography,
+  Table, Input, Select, Tag, Avatar, Badge, Space, Typography,
   Button, Tooltip, Card, Row, Col, Statistic, theme,
   Modal, Form, Switch, Upload, message, Slider, InputNumber, Alert,
 } from 'antd'
@@ -200,7 +200,11 @@ export function UserListPage() {
       key: 'user',
       render: (_, u) => (
         <Space>
-          <Avatar src={mediaUrl(u.avatar)} icon={<UserOutlined />} size={40} />
+          <Tooltip title={u.is_online ? '在线' : (u.last_active_at ? `离线 · 最后活跃 ${dayjs(u.last_active_at).fromNow()}` : '离线')}>
+            <Badge dot status={u.is_online ? 'success' : 'default'} offset={[-4, 34]}>
+              <Avatar src={mediaUrl(u.avatar)} icon={<UserOutlined />} size={40} />
+            </Badge>
+          </Tooltip>
           <div>
             <div>
               <Text strong style={{ fontSize: 13 }}>

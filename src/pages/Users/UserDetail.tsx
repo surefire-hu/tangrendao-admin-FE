@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
-  Card, Row, Col, Avatar, Tag, Typography, Spin, Button,
+  Card, Row, Col, Avatar, Badge, Tag, Typography, Spin, Button,
   Descriptions, Statistic, Space, Tabs, Alert, Divider, theme,
   Switch, Checkbox, message, Select, Modal, Input, Empty, Image, Popconfirm,
 } from 'antd'
@@ -187,12 +187,14 @@ export function UserDetailPage() {
         <Col xs={24} md={8}>
           <Card>
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <Avatar
-                size={80}
-                src={user.avatar}
-                icon={<UserOutlined />}
-                style={{ background: token.colorPrimary, marginBottom: 12 }}
-              />
+              <Badge dot status={user.is_online ? 'success' : 'default'} offset={[-8, 72]}>
+                <Avatar
+                  size={80}
+                  src={user.avatar}
+                  icon={<UserOutlined />}
+                  style={{ background: token.colorPrimary, marginBottom: 12 }}
+                />
+              </Badge>
               <Title level={5} style={{ margin: 0 }}>{displayName}</Title>
               <Text type="secondary">{user.email ?? '游客'}</Text>
               <div style={{ marginTop: 8 }}>
@@ -239,6 +241,15 @@ export function UserDetailPage() {
               </Descriptions.Item>
               <Descriptions.Item label="最后登录">
                 {user.last_login ? dayjs(user.last_login).format('YYYY-MM-DD HH:mm') : '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label="在线状态">
+                {user.is_online
+                  ? <Tag color="success">在线</Tag>
+                  : (
+                    <Text type="secondary">
+                      离线{user.last_active_at ? ` · ${dayjs(user.last_active_at).format('YYYY-MM-DD HH:mm')}` : ''}
+                    </Text>
+                  )}
               </Descriptions.Item>
               <Descriptions.Item label="员工权限">{user.is_staff ? '是' : '否'}</Descriptions.Item>
             </Descriptions>
