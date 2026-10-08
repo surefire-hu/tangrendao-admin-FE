@@ -69,6 +69,7 @@ import type {
   OrderingStoreAdmin,
   MiniApp,
   MiniAppInput,
+  PatenteReportedQuestion,
 } from '../types'
 
 // Circle payloads go as multipart only when a cover file is attached — the
@@ -719,6 +720,11 @@ export const adminApi = {
     apiClient.patch<ClientConfig>('/admin/client-config/', data),
 
   // ── 心动信号 ────────────────────────────────────────────────────────────────
+  getPatenteReports: (q?: string) =>
+    apiClient.get<{ results: PatenteReportedQuestion[]; pending_ai: number }>('/patente/admin/reports/', { params: q ? { q } : {} }),
+  updatePatenteQuestion: (id: string, data: { text_zh?: string; explanation_zh?: string; reset_reports?: boolean; regenerate?: boolean }) =>
+    apiClient.patch<PatenteReportedQuestion>(`/patente/admin/questions/${id}/`, data),
+
   getMiniApps: () => apiClient.get<MiniApp[]>('/miniapps/admin/'),
   createMiniApp: (data: MiniAppInput) => apiClient.post<MiniApp>('/miniapps/admin/', ...miniAppBody(data)),
   updateMiniApp: (id: number, data: MiniAppInput) => apiClient.patch<MiniApp>(`/miniapps/admin/${id}/`, ...miniAppBody(data)),

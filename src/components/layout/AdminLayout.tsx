@@ -274,9 +274,13 @@ export function AdminLayout() {
       label: '服务导航',
     },
     {
-      key: '/miniapps',
+      key: 'miniapps',
       icon: <AppstoreOutlined />,
       label: '小程序',
+      children: [
+        { key: '/miniapps', icon: <AppstoreOutlined />, label: '小程序管理' },
+        { key: '/miniapps/patente-reports', icon: <AuditOutlined />, label: '意驾通 · 题目反馈' },
+      ],
     },
     {
       key: 'xindong',
@@ -336,6 +340,7 @@ export function AdminLayout() {
     if (path.startsWith('/cosmetics')) return '/cosmetics'
     if (path.startsWith('/events')) return '/events'
     if (path.startsWith('/settings/client-config')) return '/settings/client-config'
+    if (path.startsWith('/miniapps/patente-reports')) return '/miniapps/patente-reports'
     if (path.startsWith('/miniapps')) return '/miniapps'
     if (path.startsWith('/xindong/circles')) return '/xindong/circles'
     if (path.startsWith('/xindong/circle-requests')) return '/xindong/circle-requests'
@@ -352,6 +357,7 @@ export function AdminLayout() {
     if (path.startsWith('/advertisements') || path.startsWith('/adcards') || path.startsWith('/splash')) return ['ads']
     if (path.startsWith('/cosmetics') || path.startsWith('/events')) return ['cosmetics-events']
     if (path.startsWith('/xindong')) return ['xindong']
+    if (path.startsWith('/miniapps')) return ['miniapps']
     return []
   }
 

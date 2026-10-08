@@ -1164,3 +1164,16 @@ export interface MiniAppInput {
   icon?: File
   bundle?: File
 }
+
+export interface PatenteReportedQuestion {
+  id: string
+  chapter: string
+  chapter_title: string
+  text_it: string
+  text_zh: string
+  explanation_zh: string
+  answer: boolean
+  image: string | null
+  reports: number
+  is_active: boolean
+}
