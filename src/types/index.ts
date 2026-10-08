@@ -1135,6 +1135,8 @@ export interface XindongConfig {
 export interface MiniApp {
   id: number
   slug: string
+  kind: 'web' | 'builtin'  // builtin = one of the app's own 便民工具 (only label/visibility/order/countries editable)
+  builtin_key: string
   name: string
   description: string
   icon_url: string | null

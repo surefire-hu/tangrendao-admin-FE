@@ -1,13 +1,16 @@
-// 小程序: services opened inside the app as web pages — an external https
-// URL, or a zipped static site uploaded here (served from the media CDN).
+// 便民工具 / 小程序: what the app's tools grid shows, in this order. 小程序 are
+// web pages opened inside the app — an external https URL, or a zipped
+// static site uploaded here (served from the media CDN). 内置工具 are the
+// app's own tools: they can be renamed, hidden and moved, not deleted.
 // Changes go live in the app without an app release.
 import { useEffect, useState } from 'react'
 import {
   Table, Button, Space, Switch, Popconfirm, Typography, message, Tooltip, Tag,
-  Modal, Form, Input, InputNumber, Radio, Upload, Alert,
+  Modal, Form, Input, Radio, Upload, Alert,
 } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, LinkOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, LinkOutlined, HolderOutlined, OrderedListOutlined } from '@ant-design/icons'
 import { adminApi } from '../../api/admin'
+import { SortableList } from '../../components/SortableList'
 import type { MiniApp, MiniAppInput } from '../../types'
 
 const { Title, Paragraph, Text } = Typography
@@ -23,6 +26,35 @@ export function MiniAppListPage() {
   const [bundleFile, setBundleFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const source = Form.useWatch('source', form)
+  const [sorting, setSorting] = useState(false)
+  const [reordering, setReordering] = useState(false)
+  const isBuiltin = target?.mode === 'edit' && target.data.kind === 'builtin'
+
+  async function reorder(ids: number[]) {
+    const byId = new Map(items.map(a => [a.id, a]))
+    setItems(ids.map(id => byId.get(id)!))  // optimistic
+    setReordering(true)
+    try {
+      setItems((await adminApi.reorderMiniApps(ids)).data)
+    } catch {
+      message.error('排序保存失败')
+      load()
+    } finally {
+      setReordering(false)
+    }
+  }
+
+  function Icon({ a, size = 44 }: { a: MiniApp; size?: number }) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: 12, background: a.kind === 'builtin' ? '#EEF2F7' : '#F6E3E3', overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.45, color: a.kind === 'builtin' ? '#4A5568' : '#B8333A',
+      }}>
+        {a.kind === 'builtin' ? <span style={{ fontWeight: 700, fontSize: size * 0.36 }}>{a.name.slice(0, 1)}</span>
+          : a.icon_url ? <img src={a.icon_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <i className={a.icon_fa} />}
+      </div>
+    )
+  }
 
   async function load() {
     setLoading(true)
@@ -88,23 +120,16 @@ export function MiniAppListPage() {
   }
 
   const columns = [
-    {
-      title: '图标',
-      width: 64,
-      render: (_: unknown, a: MiniApp) => (
-        <div style={{
-          width: 44, height: 44, borderRadius: 12, background: '#F6E3E3', overflow: 'hidden',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#B8333A',
-        }}>
-          {a.icon_url ? <img src={a.icon_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <i className={a.icon_fa} />}
-        </div>
-      ),
-    },
+    { title: '#', width: 44, render: (_: unknown, __: MiniApp, i: number) => <Text type="secondary">{i + 1}</Text> },
+    { title: '图标', width: 64, render: (_: unknown, a: MiniApp) => <Icon a={a} /> },
     {
       title: '名称',
       render: (_: unknown, a: MiniApp) => (
         <Space direction="vertical" size={2}>
-          <span style={{ fontWeight: 600 }}>{a.name} <Text type="secondary" style={{ fontSize: 12 }}>/{a.slug}</Text></span>
+          <span style={{ fontWeight: 600 }}>
+            {a.name}{' '}
+            {a.kind === 'builtin' ? <Tag>内置工具</Tag> : <Text type="secondary" style={{ fontSize: 12 }}>/{a.slug}</Text>}
+          </span>
           {a.description && <span style={{ fontSize: 12, color: '#888' }}>{a.description}</span>}
         </Space>
       ),
@@ -112,7 +137,7 @@ export function MiniAppListPage() {
     {
       title: '内容',
       width: 220,
-      render: (_: unknown, a: MiniApp) => a.entry_url ? (
+      render: (_: unknown, a: MiniApp) => a.kind === 'builtin' ? <Text type="secondary">App 内置功能</Text> : a.entry_url ? (
         <Space direction="vertical" size={2}>
           <Tag color={a.source === 'bundle' ? 'purple' : 'blue'}>{a.source === 'bundle' ? `网页包 · ${a.bundle_version}` : '外部网址'}</Tag>
           <a href={a.entry_url} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}><LinkOutlined /> 预览</a>
@@ -124,12 +149,11 @@ export function MiniAppListPage() {
       width: 90,
       render: (_: unknown, a: MiniApp) => a.countries.length ? a.countries.join(', ') : '全部',
     },
-    { title: '排序', dataIndex: 'order', width: 64 },
     {
       title: '上线',
       width: 72,
       render: (_: unknown, a: MiniApp) => (
-        <Switch size="small" checked={a.is_active} disabled={!a.entry_url} onChange={v => toggleActive(a, v)} />
+        <Switch size="small" checked={a.is_active} disabled={a.kind === 'web' && !a.entry_url} onChange={v => toggleActive(a, v)} />
       ),
     },
     {
@@ -138,9 +162,11 @@ export function MiniAppListPage() {
       render: (_: unknown, a: MiniApp) => (
         <Space>
           <Tooltip title="编辑"><Button size="small" icon={<EditOutlined />} onClick={() => openEdit(a)} /></Tooltip>
-          <Popconfirm title="删除这个小程序？" onConfirm={async () => { await adminApi.deleteMiniApp(a.id); load() }}>
-            <Button size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          {a.kind === 'web' && (
+            <Popconfirm title="删除这个小程序？" onConfirm={async () => { await adminApi.deleteMiniApp(a.id); load() }}>
+              <Button size="small" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -149,14 +175,35 @@ export function MiniAppListPage() {
   return (
     <div>
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 12 }}>
-        <Title level={4} style={{ margin: 0 }}>小程序</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建小程序</Button>
+        <Title level={4} style={{ margin: 0 }}>便民工具 · 小程序</Title>
+        <Space>
+          <Button icon={<OrderedListOutlined />} onClick={() => setSorting(true)}>调整顺序</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建小程序</Button>
+        </Space>
       </Space>
 
       <Table rowKey="id" loading={loading} dataSource={items} columns={columns} pagination={false} />
 
+      <Modal open={sorting} title="调整便民工具顺序" footer={null} onCancel={() => setSorting(false)} width={460}>
+        <Paragraph type="secondary">拖动调整顺序，App 里「便民工具」按这个顺序显示（每页 6 个）。松手后自动保存。</Paragraph>
+        <SortableList items={items} onReorder={reorder} disabled={reordering}>
+          {(a, dragging) => (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '8px 10px', marginBottom: 6, borderRadius: 10,
+              border: '1px solid #E5E7EB', background: dragging ? '#F3F4F6' : '#fff', opacity: a.is_active ? 1 : 0.5, cursor: 'grab',
+            }}>
+              <HolderOutlined style={{ color: '#9CA3AF' }} />
+              <Icon a={a} size={32} />
+              <span style={{ flex: 1, fontWeight: 600 }}>{a.name}</span>
+              {a.kind === 'builtin' && <Tag>内置</Tag>}
+              {!a.is_active && <Tag>已下线</Tag>}
+            </div>
+          )}
+        </SortableList>
+      </Modal>
+
       <Modal
-        open={!!target} title={target?.mode === 'edit' ? `编辑：${target.data.name}` : '新建小程序'}
+        open={!!target} title={target?.mode === 'edit' ? `编辑：${target.data.name}${isBuiltin ? '（内置工具）' : ''}` : '新建小程序'}
         onCancel={() => setTarget(null)} onOk={handleSubmit} confirmLoading={saving} okText="保存" width={560} destroyOnClose
       >
         <Form form={form} layout="vertical">
@@ -168,6 +215,7 @@ export function MiniAppListPage() {
               <Input maxLength={40} placeholder="如：driving-license" />
             </Form.Item>
           )}
+          {!isBuiltin && <>
           <Form.Item name="description" label="简介">
             <Input maxLength={120} />
           </Form.Item>
@@ -200,11 +248,11 @@ export function MiniAppListPage() {
                 message="把网站文件夹压缩成 zip 上传，里面要有 index.html（最大 20MB）。只支持静态网页文件（html/css/js/图片/字体/视频）。" />
             </Form.Item>
           )}
+          </>}
 
           <Space size="large" wrap>
-            <Form.Item name="requires_login" label="需要登录" valuePropName="checked"><Switch /></Form.Item>
+            {!isBuiltin && <Form.Item name="requires_login" label="需要登录" valuePropName="checked"><Switch /></Form.Item>}
             <Form.Item name="is_active" label="上线" valuePropName="checked"><Switch /></Form.Item>
-            <Form.Item name="order" label="排序（小的在前）"><InputNumber min={0} max={999} /></Form.Item>
             <Form.Item name="countries" label="只在这些国家显示"><Input placeholder="留空 = 全部；如 IT, ES" style={{ width: 180 }} /></Form.Item>
           </Space>
         </Form>

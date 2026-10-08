@@ -729,6 +729,7 @@ export const adminApi = {
   createMiniApp: (data: MiniAppInput) => apiClient.post<MiniApp>('/miniapps/admin/', ...miniAppBody(data)),
   updateMiniApp: (id: number, data: MiniAppInput) => apiClient.patch<MiniApp>(`/miniapps/admin/${id}/`, ...miniAppBody(data)),
   deleteMiniApp: (id: number) => apiClient.delete<void>(`/miniapps/admin/${id}/`),
+  reorderMiniApps: (ids: number[]) => apiClient.post<MiniApp[]>('/miniapps/admin/reorder/', { ids }),
 
   getXindongCircles: () => apiClient.get<XindongCircle[]>('/xindong/admin/circles/'),
   getXindongCircle: (id: number) => apiClient.get<XindongCircle>(`/xindong/admin/circles/${id}/`),
