@@ -1,13 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Card, Row, Col, Avatar, Badge, Tag, Typography, Spin, Button,
-  Descriptions, Statistic, Space, Tabs, Alert, Divider, theme,
-  Switch, Checkbox, message, Select, Modal, Input, Empty, Image, Popconfirm,
+  Descriptions, Space, Tabs, Alert, Divider, theme,
+  Switch, Checkbox, message, Select, Modal, Input, Empty, Image, Popconfirm, Tooltip,
 } from 'antd'
 import {
-  UserOutlined, ArrowLeftOutlined, CalendarOutlined,
-  PhoneOutlined, EyeOutlined, HeartOutlined,
-  StopOutlined, CheckCircleOutlined,
+  UserOutlined, ArrowLeftOutlined,
+  StopOutlined, CheckCircleOutlined, QuestionCircleOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/admin'
@@ -26,14 +25,20 @@ const roleColors: Record<string, string> = {
   admin: 'red', moderator: 'orange', merchant: 'blue', user: 'default',
 }
 
-const eventLabels: Record<string, string> = {
-  search: '搜索',
-  view: '浏览',
-  phone_click: '电话点击',
-  save: '收藏',
-  create: '发布',
-  ai_rating: 'AI 评分',
-}
+// Every action UserEvent records, in display order: Chinese name + what it
+// counts (shown on hover of the ?). Unknown future types still show, by key.
+const EVENT_INFO: { key: string; label: string; help: string }[] = [
+  { key: 'impression', label: '曝光', help: '内容卡片（商家、招聘、房屋、帖子等）在列表里出现在屏幕上超过 0.3 秒的次数，没有点开也算。' },
+  { key: 'view', label: '浏览', help: '打开内容详情页的次数。' },
+  { key: 'dwell', label: '停留', help: '离开详情页时记录一次，包含在页面上停留了多少秒，用来计算平均阅读时间。' },
+  { key: 'search', label: '搜索', help: '在 App 里搜索的次数。' },
+  { key: 'phone_click', label: '拨打电话', help: '在详情页点「打电话」联系商家或发布者的次数。' },
+  { key: 'save', label: '收藏', help: '收藏内容的次数。' },
+  { key: 'unsave', label: '取消收藏', help: '取消收藏的次数。' },
+  { key: 'create', label: '发布', help: '发布帖子、招聘、求职、房屋、二手等内容的次数。' },
+  { key: 'ai_message', label: 'AI 对话', help: '给 AI 助手发送消息的次数。' },
+  { key: 'ai_rating', label: 'AI 评价', help: '对 AI 的回答点赞或点踩的次数。' },
+]
 
 export function UserDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -359,43 +364,40 @@ export function UserDetailPage() {
 
         {/* ── 统计 & 图表 ──────────────────────────────────────────── */}
         <Col xs={24} md={16}>
-          {/* KPI */}
-          <Row gutter={12} style={{ marginBottom: 16 }}>
-            {[
-              { label: '总操作数', value: opStats?.total_events ?? 0, icon: <CalendarOutlined /> },
-              { label: '浏览次数', value: opStats?.breakdown?.view ?? 0, icon: <EyeOutlined /> },
-              { label: '电话点击', value: opStats?.breakdown?.phone_click ?? 0, icon: <PhoneOutlined /> },
-              { label: '收藏数', value: opStats?.breakdown?.save ?? 0, icon: <HeartOutlined /> },
-            ].map((s) => (
-              <Col key={s.label} xs={12} sm={6}>
-                <Card size="small" styles={{ body: { padding: '12px 14px' } }}>
-                  <Statistic
-                    title={<Text type="secondary" style={{ fontSize: 11 }}>{s.label}</Text>}
-                    value={s.value}
-                    prefix={s.icon}
-                    valueStyle={{ fontSize: 20 }}
-                  />
-                </Card>
+          {/* 操作统计: total first, then every action type (Chinese name, ? explains it) */}
+          <Card size="small" style={{ marginBottom: 16 }}>
+            <Row gutter={[8, 12]}>
+              <Col xs={8} sm={6} md={4}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{opStats?.total_events ?? 0}</div>
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    总操作数{' '}
+                    <Tooltip title="下面所有类型的操作加起来的总数。">
+                      <QuestionCircleOutlined style={{ cursor: 'help' }} />
+                    </Tooltip>
+                  </Text>
+                </div>
               </Col>
-            ))}
-          </Row>
-
-          {/* 操作类型分布 */}
-          {opStats?.breakdown && (
-            <Card size="small" style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 12 }}>操作类型分布</Text>
-              <Row gutter={8} style={{ marginTop: 8 }}>
-                {Object.entries(opStats.breakdown).map(([k, v]) => (
-                  <Col key={k} xs={8} sm={4}>
-                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                      <div style={{ fontSize: 18, fontWeight: 600 }}>{v}</div>
-                      <Text type="secondary" style={{ fontSize: 10 }}>{eventLabels[k] ?? k}</Text>
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-            </Card>
-          )}
+              {[
+                ...EVENT_INFO,
+                ...Object.keys(opStats?.breakdown ?? {})
+                  .filter(k => !EVENT_INFO.some(e => e.key === k))
+                  .map(k => ({ key: k, label: k, help: '其他类型的操作。' })),
+              ].map(e => (
+                <Col key={e.key} xs={8} sm={6} md={4}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 600 }}>{opStats?.breakdown?.[e.key] ?? 0}</div>
+                    <Text type="secondary" style={{ fontSize: 11 }}>
+                      {e.label}{' '}
+                      <Tooltip title={e.help}>
+                        <QuestionCircleOutlined style={{ cursor: 'help' }} />
+                      </Tooltip>
+                    </Text>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Card>
 
           {/* 图表 */}
           <Card styles={{ body: { padding: 16 } }}>
