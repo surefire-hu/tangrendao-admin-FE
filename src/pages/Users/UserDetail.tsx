@@ -18,6 +18,7 @@ import { MODERATOR_CONTENT_LABELS } from '../../types'
 import { DailyChart } from '../../components/charts/DailyChart'
 import { MonthlyChart } from '../../components/charts/MonthlyChart'
 import dayjs from 'dayjs'
+import { formatDuration } from '../../utils/duration'
 
 const { Title, Text } = Typography
 
@@ -30,7 +31,7 @@ const roleColors: Record<string, string> = {
 const EVENT_INFO: { key: string; label: string; help: string }[] = [
   { key: 'impression', label: '曝光', help: '内容卡片（商家、招聘、房屋、帖子等）在列表里出现在屏幕上超过 0.3 秒的次数，没有点开也算。' },
   { key: 'view', label: '浏览', help: '打开内容详情页的次数。' },
-  { key: 'dwell', label: '停留', help: '离开详情页时记录一次，包含在页面上停留了多少秒，用来计算平均阅读时间。' },
+  { key: 'dwell', label: '平均停留', help: '每次打开详情页（商家、招聘、房屋、帖子等）平均停留多久。只算停留 3 秒以上的浏览，每次最多按 30 分钟计（防止手机一直开着同一页）。' },
   { key: 'search', label: '搜索', help: '在 App 里搜索的次数。' },
   { key: 'phone_click', label: '拨打电话', help: '在详情页点「打电话」联系商家或发布者的次数。' },
   { key: 'save', label: '收藏', help: '收藏内容的次数。' },
@@ -386,7 +387,11 @@ export function UserDetailPage() {
               ].map(e => (
                 <Col key={e.key} xs={8} sm={6} md={4}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 20, fontWeight: 600 }}>{opStats?.breakdown?.[e.key] ?? 0}</div>
+                    {e.key === 'dwell' ? (
+                      <div style={{ fontSize: 20, fontWeight: 600 }}>{formatDuration(opStats?.dwell?.avg_seconds)}</div>
+                    ) : (
+                      <div style={{ fontSize: 20, fontWeight: 600 }}>{opStats?.breakdown?.[e.key] ?? 0}</div>
+                    )}
                     <Text type="secondary" style={{ fontSize: 11 }}>
                       {e.label}{' '}
                       <Tooltip title={e.help}>

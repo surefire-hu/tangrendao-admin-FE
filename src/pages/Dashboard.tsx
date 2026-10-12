@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  Row, Col, Card, Statistic, Typography, Spin, Alert, Divider, Badge, Space, Radio, Button, theme,
+  Row, Col, Card, Statistic, Typography, Spin, Alert, Divider, Badge, Space, Radio, Button, Tooltip, theme,
 } from 'antd'
 import type { ReactNode } from 'react'
 import {
@@ -16,7 +16,10 @@ import {
   IdcardOutlined,
   UnorderedListOutlined,
   WifiOutlined,
+  FieldTimeOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons'
+import { formatDuration } from '../utils/duration'
 import { adminApi } from '../api/admin'
 import { RevenueChart } from '../components/charts/RevenueChart'
 import { RevenueTransactionsModal } from '../components/RevenueTransactionsModal'
@@ -46,8 +49,8 @@ const AD_TYPE_INFO: { value: 'card' | 'banner' | 'splash'; label: string; icon: 
 ]
 
 interface StatCardProps {
-  title: string
-  value: number
+  title: ReactNode
+  value: number | string
   suffix?: string
   prefix?: React.ReactNode
   color?: string
@@ -246,6 +249,28 @@ export function DashboardPage() {
         currencies={revenue.by_currency.map((c) => c.currency)}
         onClose={() => setTransactionsOpen(false)}
       />
+
+      {/* ── 用户行为（随上方时间范围变化）──────────────────────────── */}
+      <SectionLabel>用户行为</SectionLabel>
+      <Row gutter={[16, 16]} style={{ marginTop: 8, marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={8}>
+          <StatCard
+            title={
+              <span>
+                平均停留时间{' '}
+                <Tooltip title="所有用户合在一起：每次打开商家、招聘、房屋、帖子等详情页后平均停留多久。只算停留 3 秒以上的浏览，每次最多按 30 分钟计（防止手机一直开着同一页）。随上方时间范围变化。">
+                  <QuestionCircleOutlined style={{ cursor: 'help' }} />
+                </Tooltip>
+              </span>
+            }
+            value={formatDuration(stats.dwell?.avg_seconds)}
+            prefix={<FieldTimeOutlined />}
+            extra={
+              <Text type="secondary" style={{ fontSize: 11 }}>基于 {stats.dwell?.visits ?? 0} 次浏览</Text>
+            }
+          />
+        </Col>
+      </Row>
 
       {/* ── 广告效果（当前实时状态，不随时间范围变化）───────────────── */}
       <SectionLabel>广告效果</SectionLabel>

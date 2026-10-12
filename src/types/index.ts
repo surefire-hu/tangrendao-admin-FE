@@ -51,6 +51,7 @@ export interface DashboardStats {
   messages_new: number
   phone_clicks_new: number
   searches_new: number
+  dwell?: DwellStats
   ads: {
     card: AdTypeStats
     banner: AdTypeStats
@@ -247,11 +248,19 @@ export interface AdminNewsArticleInput {
   cover_image?: File | null
 }
 
+/** Time on detail pages (each visit capped at 30 min). */
+export interface DwellStats {
+  visits: number
+  total_seconds: number
+  avg_seconds: number | null
+}
+
 export interface UserOperationStats {
   daily: DailyDataPoint[]
   monthly: MonthlyDataPoint[]
   total_events: number
   breakdown: Record<string, number>
+  dwell?: DwellStats
 }
 
 // ── Advertisements ────────────────────────────────────────────────────────────
