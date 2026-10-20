@@ -74,9 +74,16 @@ export function MiniAppListPage() {
     setItems(prev => prev.map(a => a.id === app.id ? { ...a, is_active: val } : a))
   }
 
+  // 内测 → 公开: staff-only while testing, then published to every user.
+  async function toggleStaffOnly(app: MiniApp, staffOnly: boolean) {
+    await adminApi.updateMiniApp(app.id, { staff_only: staffOnly })
+    setItems(prev => prev.map(a => a.id === app.id ? { ...a, staff_only: staffOnly } : a))
+    message.success(staffOnly ? '已改为内测：只有员工能看到' : '已公开：所有用户都能看到')
+  }
+
   function openCreate() {
     form.resetFields()
-    form.setFieldsValue({ source: 'bundle', requires_login: true, is_active: false, order: 0, icon_fa: 'fa-solid fa-cube' })
+    form.setFieldsValue({ source: 'bundle', requires_login: true, is_active: false, staff_only: true, order: 0, icon_fa: 'fa-solid fa-cube' })
     setIconFile(null)
     setBundleFile(null)
     setTarget({ mode: 'create' })
@@ -129,6 +136,7 @@ export function MiniAppListPage() {
           <span style={{ fontWeight: 600 }}>
             {a.name}{' '}
             {a.kind === 'builtin' ? <Tag>内置工具</Tag> : <Text type="secondary" style={{ fontSize: 12 }}>/{a.slug}</Text>}
+            {a.staff_only && <Tag color="gold">内测</Tag>}
           </span>
           {a.description && <span style={{ fontSize: 12, color: '#888' }}>{a.description}</span>}
         </Space>
@@ -154,6 +162,15 @@ export function MiniAppListPage() {
       width: 72,
       render: (_: unknown, a: MiniApp) => (
         <Switch size="small" checked={a.is_active} disabled={a.kind === 'web' && !a.entry_url} onChange={v => toggleActive(a, v)} />
+      ),
+    },
+    {
+      title: '对外公开',
+      width: 96,
+      render: (_: unknown, a: MiniApp) => (
+        <Tooltip title={a.staff_only ? '内测中：只有员工能看到。打开后所有用户可见' : '所有用户可见。关闭后只有员工能看到'}>
+          <Switch size="small" checked={!a.staff_only} checkedChildren="公开" unCheckedChildren="内测" onChange={v => toggleStaffOnly(a, !v)} />
+        </Tooltip>
       ),
     },
     {
@@ -196,6 +213,7 @@ export function MiniAppListPage() {
               <Icon a={a} size={32} />
               <span style={{ flex: 1, fontWeight: 600 }}>{a.name}</span>
               {a.kind === 'builtin' && <Tag>内置</Tag>}
+              {a.staff_only && <Tag color="gold">内测</Tag>}
               {!a.is_active && <Tag>已下线</Tag>}
             </div>
           )}
@@ -253,6 +271,7 @@ export function MiniAppListPage() {
           <Space size="large" wrap>
             {!isBuiltin && <Form.Item name="requires_login" label="需要登录" valuePropName="checked"><Switch /></Form.Item>}
             <Form.Item name="is_active" label="上线" valuePropName="checked"><Switch /></Form.Item>
+            <Form.Item name="staff_only" label="内测（只有员工可见）" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="countries" label="只在这些国家显示"><Input placeholder="留空 = 全部；如 IT, ES" style={{ width: 180 }} /></Form.Item>
           </Space>
         </Form>

@@ -1157,6 +1157,7 @@ export interface MiniApp {
   requires_login: boolean
   countries: string[]
   is_active: boolean
+  staff_only: boolean  // 内测: only staff see it in the app until published
   order: number
   updated_at: string
 }
@@ -1171,6 +1172,7 @@ export interface MiniAppInput {
   requires_login?: boolean
   countries?: string
   is_active?: boolean
+  staff_only?: boolean
   order?: number
   icon?: File
   bundle?: File
