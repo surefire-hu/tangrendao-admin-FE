@@ -47,6 +47,7 @@ export function UserDetailPage() {
   const { token } = theme.useToken()
 
   const [user, setUser] = useState<AdminUser | null>(null)
+  const [savingStaff, setSavingStaff] = useState(false)
   const [opStats, setOpStats] = useState<UserOperationStats | null>(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [loadingStats, setLoadingStats] = useState(true)
@@ -84,6 +85,19 @@ export function UserDetailPage() {
       .catch(() => setError('无法加载用户数据。'))
       .finally(() => { setLoadingUser(false); setLoadingStats(false) })
   }, [id])
+
+  async function toggleStaff() {
+    if (!id || !user) return
+    setSavingStaff(true)
+    try {
+      setUser((await adminApi.updateUser(id, { is_staff: !user.is_staff })).data)
+      message.success(user.is_staff ? '已取消员工权限' : '已设为员工，可以登录后台')
+    } catch {
+      message.error('保存失败')
+    } finally {
+      setSavingStaff(false)
+    }
+  }
 
   async function saveRoles() {
     if (!id) return
@@ -257,7 +271,17 @@ export function UserDetailPage() {
                     </Text>
                   )}
               </Descriptions.Item>
-              <Descriptions.Item label="员工权限">{user.is_staff ? '是' : '否'}</Descriptions.Item>
+              <Descriptions.Item label="员工权限">
+                {/* Staff = can log in to this admin (and sees 内测 小程序 in the app). */}
+                <Popconfirm
+                  title={user.is_staff ? '取消员工权限？' : '设为员工？'}
+                  description={user.is_staff ? '取消后将无法登录后台' : '设为员工后可以登录后台，并能看到内测中的小程序'}
+                  onConfirm={toggleStaff}
+                  okText="确定" cancelText="取消"
+                >
+                  <Switch size="small" checked={user.is_staff} loading={savingStaff} checkedChildren="是" unCheckedChildren="否" />
+                </Popconfirm>
+              </Descriptions.Item>
             </Descriptions>
 
             {/* ── 特殊角色管理 ─────────────────────────────────────── */}
